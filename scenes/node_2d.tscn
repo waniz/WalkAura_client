@@ -1,0 +1,54 @@
+[gd_scene load_steps=2 format=3 uid="uid://seeonw2i4fjt"]
+
+[ext_resource type="Script" uid="uid://d4b1svidghskj" path="res://scenes/node_2d.gd" id="1_6e84v"]
+
+[node name="HUD" type="Node2D"]
+script = ExtResource("1_6e84v")
+
+[node name="GetStepsDataVBox" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 808.0
+offset_bottom = 782.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 30
+
+[node name="GetStepsButton" type="Button" parent="GetStepsDataVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "Get Steps data"
+
+[node name="StepsDataLogs" type="RichTextLabel" parent="GetStepsDataVBox"]
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 16
+text = "Raw data text
+"
+fit_content = true
+
+[node name="ConnectVBox2" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 3.0
+offset_top = 819.0
+offset_right = 811.0
+offset_bottom = 1601.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 30
+
+[node name="ConnectButton" type="Button" parent="ConnectVBox2"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "Login
+"
+
+[node name="connectLogs" type="RichTextLabel" parent="ConnectVBox2"]
+layout_mode = 2
+text = "No Logs"
+fit_content = true
+
+[connection signal="pressed" from="GetStepsDataVBox/GetStepsButton" to="." method="_on_get_steps_button_pressed"]
+[connection signal="pressed" from="ConnectVBox2/ConnectButton" to="." method="_on_connect_button_pressed"]

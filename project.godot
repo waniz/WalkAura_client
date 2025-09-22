@@ -1,0 +1,41 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="WalkAura"
+config/version="0.0.6.30"
+run/main_scene="uid://seeonw2i4fjt"
+config/features=PackedStringArray("4.5", "Mobile")
+config/icon="uid://b50kqegp47l3p"
+
+[display]
+
+window/size/viewport_width=800
+window/size/viewport_height=1600
+window/stretch/mode="canvas_items"
+window/handheld/orientation=1
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/GodotAndroidPlugin/plugin.cfg")
+
+[file_customization]
+
+folder_colors={
+"res://addons/": "red",
+"res://android/": "red",
+"res://scenes/": "green"
+}
+
+[rendering]
+
+renderer/rendering_method="mobile"
+textures/vram_compression/import_etc2_astc=true
