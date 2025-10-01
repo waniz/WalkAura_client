@@ -5,6 +5,10 @@ extends Node2D
 var _plugin_name = "GodotAndroidPlugin"
 var _android_plugin = null
 
+var socket := WebSocketPeer.new()
+@export var websocket_url = "ws://91.98.164.230:8888/ws"
+
+
 func _ready() -> void:
 	if Engine.has_singleton(_plugin_name):
 		_android_plugin = Engine.get_singleton(_plugin_name)
@@ -23,6 +27,22 @@ func _on_get_steps_button_pressed() -> void:
 		
 func _on_connect_button_pressed() -> void:
 	connect_logs.text = "Connecting ..."
+	
+	var err = socket.connect_to_url(websocket_url)
+	if err != OK:
+		print("Unable to connect")
+		set_process(false)
+	else:
+		await get_tree().create_timer(1).timeout
+		socket.send_text("Test packet")
+		
+func _process(_delta: float) -> void:
+	socket.poll()
+
+	if socket.get_ready_state() == WebSocketPeer.STATE_OPEN:
+		while socket.get_available_packet_count():
+			connect_logs.text = socket.get_packet().get_string_from_ascii()
+
 	
 func _total_steps_retrieved(json_text: String) -> void:
 	var data = JSON.parse_string(json_text)

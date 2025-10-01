@@ -1,0 +1,119 @@
+[gd_scene load_steps=2 format=3 uid="uid://d1bmiemb8yjfl"]
+
+[ext_resource type="Script" uid="uid://bl74x3r4f613w" path="res://components/ui/create_user_ui.gd" id="1_pjd7g"]
+
+[node name="CreateUserUI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_pjd7g")
+
+[node name="Panel_create_user" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -305.0
+offset_top = -138.0
+offset_right = 305.0
+offset_bottom = 138.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel_create_user"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 15.0
+offset_top = 58.0
+offset_right = -17.0
+offset_bottom = 190.0
+grow_horizontal = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Panel_create_user/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 2
+
+[node name="usernameLabel" type="RichTextLabel" parent="Panel_create_user/VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/normal_font_size = 32
+text = "Username"
+
+[node name="usernameEdit" type="TextEdit" parent="Panel_create_user/VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 2.0
+theme_override_font_sizes/font_size = 32
+text = "test_user"
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="Panel_create_user/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 2
+
+[node name="passwordLabel" type="RichTextLabel" parent="Panel_create_user/VBoxContainer/HBoxContainer2"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/normal_font_size = 32
+text = "Password"
+
+[node name="passwordEdit" type="LineEdit" parent="Panel_create_user/VBoxContainer/HBoxContainer2"]
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 2.0
+theme_override_font_sizes/font_size = 32
+text = "pass"
+secret = true
+
+[node name="button_createuser" type="Button" parent="Panel_create_user"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -129.0
+offset_top = -73.0
+offset_right = 130.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 32
+text = "Create new user
+"
+
+[node name="close" type="Button" parent="Panel_create_user"]
+layout_mode = 0
+offset_left = 545.0
+offset_top = 5.0
+offset_right = 600.0
+offset_bottom = 57.0
+text = "X"
+
+[node name="RichTextLabel" type="RichTextLabel" parent="Panel_create_user"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 12.0
+offset_top = 2.0
+offset_right = -90.0
+offset_bottom = 66.0
+grow_horizontal = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/normal_font_size = 32
+bbcode_enabled = true
+text = "[center]Create a new user"
+fit_content = true
+
+[connection signal="button_down" from="Panel_create_user/button_createuser" to="." method="_on_button_createuser_button_down"]
+[connection signal="button_down" from="Panel_create_user/close" to="." method="_on_close_button_down"]

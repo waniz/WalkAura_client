@@ -11,10 +11,16 @@ config_version=5
 [application]
 
 config/name="WalkAura"
-config/version="0.0.6.30"
-run/main_scene="uid://seeonw2i4fjt"
+config/version="0.0.9.39"
+run/main_scene="uid://dlfywtlps2ee4"
 config/features=PackedStringArray("4.5", "Mobile")
 config/icon="uid://b50kqegp47l3p"
+
+[autoload]
+
+SignalManager="*res://scripts/globals/signal_manager.gd"
+ServerConnector="*res://scripts/globals/server_connector.gd"
+Pedometer="*res://scripts/globals/pedometer.gd"
 
 [display]
 
@@ -32,7 +38,10 @@ enabled=PackedStringArray("res://addons/GodotAndroidPlugin/plugin.cfg")
 folder_colors={
 "res://addons/": "red",
 "res://android/": "red",
-"res://scenes/": "green"
+"res://assets/": "blue",
+"res://components/": "teal",
+"res://scenes/": "green",
+"res://scripts/": "green"
 }
 
 [rendering]

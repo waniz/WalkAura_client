@@ -1,0 +1,171 @@
+[gd_scene load_steps=5 format=3 uid="uid://dlfywtlps2ee4"]
+
+[ext_resource type="Script" uid="uid://uvt4kiay25vo" path="res://scenes/login_screen/login_scene.gd" id="1_yxqlk"]
+[ext_resource type="Texture2D" uid="uid://cfbwlejx6tcu4" path="res://assets/background/background_login.png" id="2_7bkf2"]
+[ext_resource type="PackedScene" uid="uid://d1bmiemb8yjfl" path="res://components/ui/create_user_ui.tscn" id="3_yxqlk"]
+[ext_resource type="PackedScene" uid="uid://caj4vm4x2p0am" path="res://components/ui/cheat_panel.tscn" id="4_7bkf2"]
+
+[node name="LoginScene" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 1.0
+offset_top = 1.0
+offset_right = 1.0
+offset_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_yxqlk")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -3.0
+offset_bottom = -3.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_7bkf2")
+expand_mode = 4
+
+[node name="Panel_main_login" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -307.0
+offset_top = -257.0
+offset_right = 303.0
+offset_bottom = 91.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel_main_login"]
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = 15.0
+offset_top = -93.0
+offset_right = 1.0
+offset_bottom = 39.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Panel_main_login/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 2
+
+[node name="username_loginLabel" type="RichTextLabel" parent="Panel_main_login/VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/normal_font_size = 32
+text = "Username"
+
+[node name="username_loginEdit" type="TextEdit" parent="Panel_main_login/VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 2.0
+theme_override_font_sizes/font_size = 32
+text = "test_user"
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="Panel_main_login/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 2
+
+[node name="password_loginLabel" type="RichTextLabel" parent="Panel_main_login/VBoxContainer/HBoxContainer2"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/normal_font_size = 32
+text = "Password"
+
+[node name="password_loginEdit" type="LineEdit" parent="Panel_main_login/VBoxContainer/HBoxContainer2"]
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 2.0
+theme_override_font_sizes/font_size = 32
+text = "pass"
+secret = true
+
+[node name="button_login" type="Button" parent="Panel_main_login"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -129.0
+offset_top = -82.25
+offset_right = 124.0
+offset_bottom = -26.25
+grow_horizontal = 2
+grow_vertical = 0
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 32
+text = "Enter"
+
+[node name="button_createuser" type="Button" parent="Panel_main_login"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = 39.0
+offset_top = -338.0
+offset_right = 298.0
+offset_bottom = -285.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 32
+text = "Create new user
+"
+
+[node name="status_label" type="RichTextLabel" parent="Panel_main_login"]
+layout_mode = 0
+offset_left = 227.0
+offset_top = 218.0
+offset_right = 603.0
+offset_bottom = 257.0
+bbcode_enabled = true
+
+[node name="debuggerLabel" type="RichTextLabel" parent="."]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -259.0
+offset_top = -221.0
+offset_right = 259.0
+grow_horizontal = 2
+grow_vertical = 0
+bbcode_enabled = true
+scroll_following = true
+
+[node name="CreateUserUI" parent="." instance=ExtResource("3_yxqlk")]
+visible = false
+layout_mode = 1
+
+[node name="CheatPanel" parent="." instance=ExtResource("4_7bkf2")]
+visible = false
+layout_mode = 1
+
+[node name="Client_version_label" type="Label" parent="."]
+layout_mode = 1
+offset_right = 386.0
+offset_bottom = 32.0
+
+[connection signal="button_down" from="Panel_main_login/button_login" to="." method="_on_button_login_button_down"]
+[connection signal="button_down" from="Panel_main_login/button_createuser" to="." method="_on_button_createuser_button_down"]

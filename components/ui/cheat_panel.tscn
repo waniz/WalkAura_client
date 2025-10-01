@@ -1,0 +1,62 @@
+[gd_scene format=3 uid="uid://caj4vm4x2p0am"]
+
+[node name="CheatPanel" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 0
+offset_left = 640.0
+offset_top = 1034.0
+offset_right = 776.0
+offset_bottom = 1358.0
+
+[node name="Label" type="Label" parent="Panel"]
+layout_mode = 0
+offset_left = 3.0
+offset_top = 2.0
+offset_right = 139.0
+offset_bottom = 47.0
+theme_override_font_sizes/font_size = 32
+text = "Cheats"
+horizontal_alignment = 1
+
+[node name="Button" type="Button" parent="Panel"]
+layout_mode = 0
+offset_left = 28.0
+offset_top = 55.0
+offset_right = 128.0
+offset_bottom = 108.0
+theme_override_font_sizes/font_size = 32
+text = "+100"
+
+[node name="Button2" type="Button" parent="Panel"]
+layout_mode = 0
+offset_left = 28.0
+offset_top = 121.0
+offset_right = 128.0
+offset_bottom = 174.0
+theme_override_font_sizes/font_size = 32
+text = "+500"
+
+[node name="Button3" type="Button" parent="Panel"]
+layout_mode = 0
+offset_left = 28.0
+offset_top = 187.0
+offset_right = 128.0
+offset_bottom = 240.0
+theme_override_font_sizes/font_size = 32
+text = "+1k"
+
+[node name="Button4" type="Button" parent="Panel"]
+layout_mode = 0
+offset_left = 28.0
+offset_top = 253.0
+offset_right = 128.0
+offset_bottom = 306.0
+theme_override_font_sizes/font_size = 32
+text = "+10k"
