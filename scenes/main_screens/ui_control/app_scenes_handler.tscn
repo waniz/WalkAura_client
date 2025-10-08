@@ -1,0 +1,24 @@
+[gd_scene load_steps=4 format=3 uid="uid://diqbff883fl7m"]
+
+[ext_resource type="Script" uid="uid://ca34220c45cd4" path="res://scenes/main_screens/ui_control/app_scenes_handler.gd" id="1_s38g1"]
+[ext_resource type="PackedScene" uid="uid://dctyw8m614xg5" path="res://scenes/main_screens/character_stats.tscn" id="2_wo266"]
+[ext_resource type="PackedScene" uid="uid://bikmbnxgn4uqm" path="res://scenes/main_screens/location_activities.tscn" id="3_xja7j"]
+
+[node name="AppScenesHandler" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_s38g1")
+
+[node name="CharacterStats" parent="." instance=ExtResource("2_wo266")]
+layout_mode = 0
+offset_left = 2.0
+offset_right = 2.0
+
+[node name="Activities" parent="." instance=ExtResource("3_xja7j")]
+layout_mode = 1
