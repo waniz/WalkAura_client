@@ -11,16 +11,24 @@ config_version=5
 [application]
 
 config/name="WalkAura"
-config/version="0.0.9.39"
+config/version="0.1.3.49"
 run/main_scene="uid://dlfywtlps2ee4"
 config/features=PackedStringArray("4.5", "Mobile")
+boot_splash/bg_color=Color(0.14117648, 0.14117648, 0.14117648, 0.18039216)
+boot_splash/fullsize=false
+boot_splash/image="uid://85xger1d18ll"
 config/icon="uid://b50kqegp47l3p"
+boot_splash/minimum_display_time=2000
 
 [autoload]
 
 SignalManager="*res://scripts/globals/signal_manager.gd"
 ServerConnector="*res://scripts/globals/server_connector.gd"
 Pedometer="*res://scripts/globals/pedometer.gd"
+SceneManage="*res://scripts/globals/scene_manager.gd"
+AccountManager="*res://scripts/globals/account_manager.gd"
+Account="*res://scripts/globals/base_classes/account.gd"
+Debugger="*res://scripts/globals/debugger.gd"
 
 [display]
 
@@ -43,6 +51,10 @@ folder_colors={
 "res://scenes/": "green",
 "res://scripts/": "green"
 }
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
 
 [rendering]
 
