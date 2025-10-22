@@ -12,5 +12,5 @@ func hash_data(passwordData):
 	var hashContext = HashingContext.new()
 	hashContext.start(HashingContext.HASH_SHA256)
 	hashContext.update(passwordData)
-	var hash = hashContext.finish()
-	return hash.hex_encode()
+	var hash_ = hashContext.finish()
+	return hash_.hex_encode()

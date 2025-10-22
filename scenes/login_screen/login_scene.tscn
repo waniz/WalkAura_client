@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://uvt4kiay25vo" path="res://scenes/login_screen/login_scene.gd" id="1_yxqlk"]
 [ext_resource type="Texture2D" uid="uid://cfbwlejx6tcu4" path="res://assets/background/background_login.png" id="2_7bkf2"]
 [ext_resource type="PackedScene" uid="uid://d1bmiemb8yjfl" path="res://components/ui/create_user_ui.tscn" id="3_yxqlk"]
-[ext_resource type="PackedScene" uid="uid://caj4vm4x2p0am" path="res://components/ui/cheat_panel.tscn" id="4_7bkf2"]
+[ext_resource type="PackedScene" uid="uid://cvndrn0efp2w5" path="res://scenes/support_screens/debug_console.tscn" id="4_7bkf2"]
 
 [node name="LoginScene" type="Control"]
 layout_mode = 3
@@ -50,9 +50,9 @@ anchors_preset = 14
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
-offset_left = 15.0
+offset_left = 31.0
 offset_top = -93.0
-offset_right = 1.0
+offset_right = -11.0
 offset_bottom = 39.0
 grow_horizontal = 2
 grow_vertical = 2
@@ -61,14 +61,15 @@ grow_vertical = 2
 layout_mode = 2
 size_flags_vertical = 2
 
-[node name="username_loginLabel" type="RichTextLabel" parent="Panel_main_login/VBoxContainer/HBoxContainer"]
+[node name="username_loginLabel" type="Label" parent="Panel_main_login/VBoxContainer/HBoxContainer"]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/normal_font_size = 32
 text = "Username"
+horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="username_loginEdit" type="TextEdit" parent="Panel_main_login/VBoxContainer/HBoxContainer"]
+[node name="username_loginEdit" type="LineEdit" parent="Panel_main_login/VBoxContainer/HBoxContainer"]
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -80,12 +81,13 @@ text = "test_user"
 layout_mode = 2
 size_flags_vertical = 2
 
-[node name="password_loginLabel" type="RichTextLabel" parent="Panel_main_login/VBoxContainer/HBoxContainer2"]
+[node name="password_loginLabel" type="Label" parent="Panel_main_login/VBoxContainer/HBoxContainer2"]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/normal_font_size = 32
 text = "Password"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="password_loginEdit" type="LineEdit" parent="Panel_main_login/VBoxContainer/HBoxContainer2"]
 custom_minimum_size = Vector2(0, 16)
@@ -139,26 +141,7 @@ offset_right = 603.0
 offset_bottom = 257.0
 bbcode_enabled = true
 
-[node name="debuggerLabel" type="RichTextLabel" parent="."]
-layout_mode = 1
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -259.0
-offset_top = -221.0
-offset_right = 259.0
-grow_horizontal = 2
-grow_vertical = 0
-bbcode_enabled = true
-scroll_following = true
-
 [node name="CreateUserUI" parent="." instance=ExtResource("3_yxqlk")]
-visible = false
-layout_mode = 1
-
-[node name="CheatPanel" parent="." instance=ExtResource("4_7bkf2")]
 visible = false
 layout_mode = 1
 
@@ -166,6 +149,11 @@ layout_mode = 1
 layout_mode = 1
 offset_right = 386.0
 offset_bottom = 32.0
+
+[node name="DebugConsole" parent="." instance=ExtResource("4_7bkf2")]
+layout_mode = 1
+offset_top = 0.0
+offset_bottom = 0.0
 
 [connection signal="button_down" from="Panel_main_login/button_login" to="." method="_on_button_login_button_down"]
 [connection signal="button_down" from="Panel_main_login/button_createuser" to="." method="_on_button_createuser_button_down"]

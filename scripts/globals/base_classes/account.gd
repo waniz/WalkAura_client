@@ -1,0 +1,64 @@
+extends Node
+
+# main identifiers
+var user_uid
+var userid
+var username
+
+# primary parameters
+var str
+var agi
+var vit
+var int_stat
+var spi
+var luk
+
+# primary_resources
+var hp
+var mp
+var shield
+var hp_max
+var mp_max
+var shield_max
+var level
+var total_steps
+var buffer_steps
+var buffer_steps_max
+var gold
+
+# secondary parameters
+var atk
+var m_atk
+var hit_rating
+var crit_chance
+var crit_damage
+var haste
+var armor_pen
+var magic_pen
+
+var p_def
+var m_def
+var block_chance
+var evasion
+var dmg_reduction
+
+var res_fire
+var res_frost
+var res_lightning
+var res_poison
+var res_death
+var res_holy
+
+var location
+var activity
+
+func to_dict() -> Dictionary:
+	# export everything (flat), matching server keys
+	var out := {}
+	for p in get_property_list():
+		if p.usage & PROPERTY_USAGE_SCRIPT_VARIABLE != 0:
+			var name = p.name
+			# skip signals/constants/methods
+			if has_method(name): continue
+			out[name] = get(name)
+	return out

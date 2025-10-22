@@ -1,0 +1,84 @@
+[gd_scene load_steps=5 format=3 uid="uid://dctyw8m614xg5"]
+
+[ext_resource type="Script" uid="uid://dpmbd35ov7qv5" path="res://scenes/main_screens/character_stats.gd" id="1_pa5b0"]
+[ext_resource type="PackedScene" uid="uid://btkqrwpy7ojlt" path="res://scenes/support_screens/character_hud.tscn" id="2_2y2n2"]
+[ext_resource type="PackedScene" uid="uid://cvndrn0efp2w5" path="res://scenes/support_screens/debug_console.tscn" id="4_pn3l4"]
+[ext_resource type="PackedScene" uid="uid://caj4vm4x2p0am" path="res://components/ui/cheat_panel.tscn" id="4_vrpq8"]
+
+[node name="CharacterStats" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_pa5b0")
+
+[node name="CharacterHUD" parent="." instance=ExtResource("2_2y2n2")]
+layout_mode = 1
+
+[node name="CheatPanel" parent="." instance=ExtResource("4_vrpq8")]
+layout_mode = 1
+offset_left = -724.0
+offset_top = -1281.0
+offset_right = -724.0
+offset_bottom = -1281.0
+
+[node name="CharacterStats" type="PanelContainer" parent="."]
+layout_mode = 0
+offset_left = 6.0
+offset_top = 170.0
+offset_right = 646.0
+offset_bottom = 866.0
+
+[node name="Margin" type="MarginContainer" parent="CharacterStats"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="VBox" type="VBoxContainer" parent="CharacterStats/Margin"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="CharacterStats/Margin/VBox"]
+layout_mode = 2
+
+[node name="StepCard" type="PanelContainer" parent="CharacterStats/Margin/VBox"]
+layout_mode = 2
+
+[node name="StepsGrid" type="GridContainer" parent="CharacterStats/Margin/VBox/StepCard"]
+layout_mode = 2
+columns = 2
+
+[node name="PrimaryCard" type="PanelContainer" parent="CharacterStats/Margin/VBox"]
+layout_mode = 2
+
+[node name="PrimaryGrid" type="GridContainer" parent="CharacterStats/Margin/VBox/PrimaryCard"]
+layout_mode = 2
+columns = 3
+
+[node name="OFFBox" type="HBoxContainer" parent="CharacterStats/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="OffCard" type="PanelContainer" parent="CharacterStats/Margin/VBox/OFFBox"]
+layout_mode = 2
+
+[node name="OffGrid" type="GridContainer" parent="CharacterStats/Margin/VBox/OFFBox/OffCard"]
+layout_mode = 2
+columns = 2
+
+[node name="DEFBox" type="HBoxContainer" parent="CharacterStats/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="DefCard" type="PanelContainer" parent="CharacterStats/Margin/VBox/DEFBox"]
+layout_mode = 2
+
+[node name="DeffGrid" type="GridContainer" parent="CharacterStats/Margin/VBox/DEFBox/DefCard"]
+layout_mode = 2
+columns = 2
+
+[node name="DebugConsole" parent="." instance=ExtResource("4_pn3l4")]
+layout_mode = 1
+offset_top = 0.0
+offset_bottom = 0.0

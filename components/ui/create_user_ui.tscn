@@ -39,14 +39,15 @@ grow_horizontal = 2
 layout_mode = 2
 size_flags_vertical = 2
 
-[node name="usernameLabel" type="RichTextLabel" parent="Panel_create_user/VBoxContainer/HBoxContainer"]
+[node name="usernameLabel" type="Label" parent="Panel_create_user/VBoxContainer/HBoxContainer"]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/normal_font_size = 32
 text = "Username"
+horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="usernameEdit" type="TextEdit" parent="Panel_create_user/VBoxContainer/HBoxContainer"]
+[node name="usernameEdit" type="LineEdit" parent="Panel_create_user/VBoxContainer/HBoxContainer"]
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -58,12 +59,13 @@ text = "test_user"
 layout_mode = 2
 size_flags_vertical = 2
 
-[node name="passwordLabel" type="RichTextLabel" parent="Panel_create_user/VBoxContainer/HBoxContainer2"]
+[node name="passwordLabel" type="Label" parent="Panel_create_user/VBoxContainer/HBoxContainer2"]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/normal_font_size = 32
 text = "Password"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="passwordEdit" type="LineEdit" parent="Panel_create_user/VBoxContainer/HBoxContainer2"]
 custom_minimum_size = Vector2(0, 16)
@@ -99,7 +101,7 @@ offset_right = 600.0
 offset_bottom = 57.0
 text = "X"
 
-[node name="RichTextLabel" type="RichTextLabel" parent="Panel_create_user"]
+[node name="RichTextLabel" type="Label" parent="Panel_create_user"]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 1
 anchors_preset = 10
@@ -110,10 +112,9 @@ offset_right = -90.0
 offset_bottom = 66.0
 grow_horizontal = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/normal_font_size = 32
-bbcode_enabled = true
-text = "[center]Create a new user"
-fit_content = true
+text = "Create a new user"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [connection signal="button_down" from="Panel_create_user/button_createuser" to="." method="_on_button_createuser_button_down"]
 [connection signal="button_down" from="Panel_create_user/close" to="." method="_on_close_button_down"]

@@ -12,8 +12,13 @@ func _ready() -> void:
 	
 	SignalManager.signal_CreateUser.connect(_on_user_creating)
 	SignalManager.signal_LoginUser.connect(_on_user_login)
+	SignalManager.signal_UserActivity.connect(_on_user_activity)
+	SignalManager.signal_StepsUpdatesCheats.connect(_on_step_counter_cheat_update)
+	SignalManager.signal_StepsUpdatesAndroid.connect(_on_step_counter_android_update)
+	SignalManager.signal_StepsRequestLastTimestamp.connect(_on_step_counter_android_request_last_ts)
 
-func connect_to_server() -> void:	
+
+func connect_to_server() -> void:
 	var err = socket.connect_to_url(websocket_url)
 	if err != OK:
 		server_connector_message_bus.emit("[Client] ERROR: Cannot connect to server")
@@ -31,10 +36,7 @@ func _process(_delta: float) -> void:
 
 # ################################
 # """Signal compilator section"""
-
 func _on_user_creating(user, password):
-	#var hashed_password = cryptoUtil.hash_password(password)
-	
 	var payload := {
 		"cmd": "create_user",
 		"payload": {
@@ -47,7 +49,6 @@ func _on_user_creating(user, password):
 	server_connector_message_bus.emit("[Client] Requesting user creating...")
 
 func _on_user_login(user, password):
-	#var hashed_password = cryptoUtil.hash_password(password)
 	var payload := {
 		"cmd": "login_user",
 		"payload": {
@@ -58,3 +59,51 @@ func _on_user_login(user, password):
 	var server_request = JSON.stringify(payload)
 	socket.send_text(server_request)
 	server_connector_message_bus.emit("[Client] Requesting user login...")
+	
+func _on_user_activity(activity, action):
+	var payload := {
+		"cmd": "profession",
+		"payload": {
+			"activity": activity,
+			"action": action,
+		}
+	}	
+	var server_request = JSON.stringify(payload)
+	socket.send_text(server_request)
+	server_connector_message_bus.emit("[Client] Requesting activity: {activity}, action: {action}")
+
+func _on_step_counter_cheat_update(amount):
+	var payload := {
+		"cmd": "steps_update_cheat",
+		"payload": {
+			"amount": amount,
+		}
+	}
+	var server_request = JSON.stringify(payload)
+	socket.send_text(server_request)
+	server_connector_message_bus.emit("[Client] Sending cheat steps: {0}".format(amount))
+
+func _on_step_counter_android_request_last_ts(is_requested):
+	if not is_requested:
+		return
+	
+	var payload := {
+		"cmd": "steps_request_last_ts",
+		"payload": {
+			"data": true,
+		}
+	}
+	var server_request = JSON.stringify(payload)
+	socket.send_text(server_request)
+	server_connector_message_bus.emit("[Client] Sending android steps request last ts")
+		
+func _on_step_counter_android_update(data):
+	var payload := {
+		"cmd": "steps_update_android",
+		"payload": {
+			"data": data,
+		}
+	}
+	var server_request = JSON.stringify(payload)
+	socket.send_text(server_request)
+	server_connector_message_bus.emit("[Client] Sending android steps to server")

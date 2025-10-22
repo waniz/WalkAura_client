@@ -1,0 +1,49 @@
+[gd_scene load_steps=2 format=3 uid="uid://cvndrn0efp2w5"]
+
+[ext_resource type="Script" uid="uid://frlcp1otpq4r" path="res://scenes/support_screens/debug_console.gd" id="1_iijov"]
+
+[node name="DebugConsole" type="Control"]
+layout_mode = 3
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -1278.0
+offset_bottom = -1278.0
+grow_vertical = 0
+size_flags_vertical = 0
+script = ExtResource("1_iijov")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 0
+offset_left = 3.0
+offset_top = -248.0
+offset_right = 573.0
+offset_bottom = -5.0
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ToolBar" type="HBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+
+[node name="ClearButton" type="Button" parent="Panel/VBox/ToolBar"]
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+text = "Clear"
+
+[node name="Pause" type="CheckButton" parent="Panel/VBox/ToolBar"]
+layout_mode = 2
+text = "Pause"
+
+[node name="Log" type="RichTextLabel" parent="Panel/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+focus_mode = 2
+bbcode_enabled = true
+scroll_following = true
+selection_enabled = true
