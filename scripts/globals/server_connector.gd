@@ -15,6 +15,7 @@ func _ready() -> void:
 	SignalManager.signal_UserActivity.connect(_on_user_activity)
 	SignalManager.signal_StepsUpdatesCheats.connect(_on_step_counter_cheat_update)
 	SignalManager.signal_StepsUpdatesAndroid.connect(_on_step_counter_android_update)
+	SignalManager.signal_StepsRequestLastTimestamp.connect(_on_step_counter_android_request_last_ts)
 
 
 func connect_to_server() -> void:
@@ -80,8 +81,22 @@ func _on_step_counter_cheat_update(amount):
 	}
 	var server_request = JSON.stringify(payload)
 	socket.send_text(server_request)
-	server_connector_message_bus.emit("[Client] Sending cheat steps: {amount}")
+	server_connector_message_bus.emit("[Client] Sending cheat steps: {0}".format(amount))
 
+func _on_step_counter_android_request_last_ts(is_requested):
+	if not is_requested:
+		return
+	
+	var payload := {
+		"cmd": "steps_request_last_ts",
+		"payload": {
+			"data": true,
+		}
+	}
+	var server_request = JSON.stringify(payload)
+	socket.send_text(server_request)
+	server_connector_message_bus.emit("[Client] Sending android steps request last ts")
+		
 func _on_step_counter_android_update(data):
 	var payload := {
 		"cmd": "steps_update_android",

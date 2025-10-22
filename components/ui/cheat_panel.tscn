@@ -4,36 +4,33 @@
 
 [node name="CheatPanel" type="Control"]
 layout_mode = 3
-anchors_preset = 15
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+offset_left = -719.0
+offset_top = -1284.0
+offset_right = -719.0
+offset_bottom = -1284.0
+grow_horizontal = 0
+grow_vertical = 0
 script = ExtResource("1_fmce2")
 
 [node name="Panel" type="Panel" parent="."]
-layout_mode = 0
-offset_left = 654.0
-offset_top = 1150.0
-offset_right = 790.0
-offset_bottom = 1527.0
-
-[node name="Label" type="Label" parent="Panel"]
-layout_mode = 0
-offset_left = 3.0
-offset_top = 2.0
-offset_right = 139.0
-offset_bottom = 47.0
-theme_override_font_sizes/font_size = 32
-text = "Cheats"
-horizontal_alignment = 1
+layout_mode = 1
+anchors_preset = -1
+offset_left = 610.0
+offset_top = 986.0
+offset_right = 708.0
+offset_bottom = 1276.0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
 layout_mode = 0
-offset_left = 14.0
-offset_top = 54.0
-offset_right = 95.0
-offset_bottom = 278.0
+offset_left = 6.0
+offset_top = 5.0
+offset_right = 87.0
+offset_bottom = 229.0
 
 [node name="Cheat_100_button" type="Button" parent="Panel/VBoxContainer"]
 layout_mode = 2
@@ -57,10 +54,10 @@ text = "+10k"
 
 [node name="PedometerPluginButton" type="Button" parent="Panel"]
 layout_mode = 0
-offset_left = 26.0
-offset_top = 302.0
-offset_right = 113.0
-offset_bottom = 354.0
+offset_left = 2.0
+offset_top = 233.0
+offset_right = 89.0
+offset_bottom = 285.0
 text = "Mobile"
 
 [connection signal="button_down" from="Panel/VBoxContainer/Cheat_100_button" to="." method="_on_cheat_100_button_button_down"]

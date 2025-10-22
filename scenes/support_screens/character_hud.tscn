@@ -1,0 +1,108 @@
+[gd_scene load_steps=5 format=3 uid="uid://btkqrwpy7ojlt"]
+
+[ext_resource type="Shader" uid="uid://bnw7hvx23mw6m" path="res://shaders/avatar_shader.gdshader" id="1_acak7"]
+[ext_resource type="Script" uid="uid://b4xf2tlt68irp" path="res://scenes/support_screens/character_hud.gd" id="1_rye7s"]
+[ext_resource type="Texture2D" uid="uid://bkj538chw6wh2" path="res://assets/character_faces/pirat.png" id="1_v2ojc"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_acak7"]
+shader = ExtResource("1_acak7")
+shader_parameter/rect_size = Vector2(128, 128)
+shader_parameter/border_color = Color(1, 1, 1, 1)
+shader_parameter/border_px = 6.0
+shader_parameter/feather_px = 2.0
+
+[node name="CharacterHUD" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_rye7s")
+
+[node name="Avatar" type="TextureRect" parent="."]
+material = SubResource("ShaderMaterial_acak7")
+layout_mode = 0
+offset_left = 27.0
+offset_top = 26.0
+offset_right = 155.0
+offset_bottom = 154.0
+texture = ExtResource("1_v2ojc")
+expand_mode = 1
+stretch_mode = 6
+metadata/_edit_use_anchors_ = true
+
+[node name="MainBars" type="VBoxContainer" parent="Avatar"]
+layout_mode = 0
+offset_left = 131.0
+offset_right = 418.0
+offset_bottom = 147.0
+metadata/_edit_use_anchors_ = true
+
+[node name="HPBar" type="ProgressBar" parent="Avatar/MainBars"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+
+[node name="HPLabel" type="Label" parent="Avatar/MainBars/HPBar"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -11.5
+offset_right = 20.0
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MPBar" type="ProgressBar" parent="Avatar/MainBars"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+
+[node name="MPLabel" type="Label" parent="Avatar/MainBars/MPBar"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -11.5
+offset_right = 20.0
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ShieldBar" type="ProgressBar" parent="Avatar/MainBars"]
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+
+[node name="ShieldLabel" type="Label" parent="Avatar/MainBars/ShieldBar"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -11.5
+offset_right = 20.0
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Nameplate" type="PanelContainer" parent="Avatar/MainBars"]
+layout_mode = 2
+
+[node name="LevelLabel" type="Label" parent="Avatar/MainBars/Nameplate"]
+layout_mode = 2
+text = "LVL 1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="XPBar" type="ProgressBar" parent="Avatar/MainBars"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2

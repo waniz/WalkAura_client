@@ -1,624 +1,84 @@
-[gd_scene load_steps=3 format=3 uid="uid://dctyw8m614xg5"]
+[gd_scene load_steps=5 format=3 uid="uid://dctyw8m614xg5"]
 
 [ext_resource type="Script" uid="uid://dpmbd35ov7qv5" path="res://scenes/main_screens/character_stats.gd" id="1_pa5b0"]
-[ext_resource type="Texture2D" uid="uid://c8eul4mfllv73" path="res://assets/character_faces/face0.png" id="2_i5hk0"]
+[ext_resource type="PackedScene" uid="uid://btkqrwpy7ojlt" path="res://scenes/support_screens/character_hud.tscn" id="2_2y2n2"]
+[ext_resource type="PackedScene" uid="uid://cvndrn0efp2w5" path="res://scenes/support_screens/debug_console.tscn" id="4_pn3l4"]
+[ext_resource type="PackedScene" uid="uid://caj4vm4x2p0am" path="res://components/ui/cheat_panel.tscn" id="4_vrpq8"]
 
 [node name="CharacterStats" type="Control"]
 layout_mode = 3
 anchors_preset = 0
 script = ExtResource("1_pa5b0")
 
-[node name="Title" type="RichTextLabel" parent="."]
+[node name="CharacterHUD" parent="." instance=ExtResource("2_2y2n2")]
 layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -176.75
-offset_right = 176.75
-offset_bottom = 50.0
-grow_horizontal = 2
-theme_override_font_sizes/normal_font_size = 32
-bbcode_enabled = true
-text = "[color=\"green\"] Character Attributes[/color]"
-fit_content = true
-scroll_active = false
 
-[node name="AvatarPlaceHolder" type="HBoxContainer" parent="."]
+[node name="CheatPanel" parent="." instance=ExtResource("4_vrpq8")]
+layout_mode = 1
+offset_left = -724.0
+offset_top = -1281.0
+offset_right = -724.0
+offset_bottom = -1281.0
+
+[node name="CharacterStats" type="PanelContainer" parent="."]
 layout_mode = 0
-offset_left = 40.0
-offset_top = 67.0
-offset_right = 299.0
-offset_bottom = 323.0
+offset_left = 6.0
+offset_top = 170.0
+offset_right = 646.0
+offset_bottom = 866.0
 
-[node name="TextureRect" type="TextureRect" parent="AvatarPlaceHolder"]
+[node name="Margin" type="MarginContainer" parent="CharacterStats"]
 layout_mode = 2
-size_flags_horizontal = 3
-texture = ExtResource("2_i5hk0")
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
 
-[node name="MainParamsHolder" type="HBoxContainer" parent="."]
-layout_mode = 0
-offset_left = 321.0
-offset_top = 70.0
-offset_right = 764.0
-offset_bottom = 187.0
-
-[node name="RichTextLabel" type="RichTextLabel" parent="MainParamsHolder"]
+[node name="VBox" type="VBoxContainer" parent="CharacterStats/Margin"]
 layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/normal_font_size = 16
-bbcode_enabled = true
-text = "         ID:
-UserID:
- Name: "
 
-[node name="MainAttrsHolder" type="VBoxContainer" parent="."]
-layout_mode = 0
-offset_left = 364.0
-offset_top = 207.0
-offset_right = 764.0
-offset_bottom = 318.0
-theme_override_constants/separation = 10
-
-[node name="HPProgressBar" type="ProgressBar" parent="MainAttrsHolder"]
+[node name="Title" type="Label" parent="CharacterStats/Margin/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.9490196, 0.02745098, 0.023529412, 1)
-step = 1.0
-value = 25.0
 
-[node name="MPProgressBar" type="ProgressBar" parent="MainAttrsHolder"]
+[node name="StepCard" type="PanelContainer" parent="CharacterStats/Margin/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 1, 1)
-theme_override_colors/font_outline_color = Color(0.12941177, 0, 0.15294118, 1)
-step = 1.0
-value = 25.0
 
-[node name="ShieldProgressBar" type="ProgressBar" parent="MainAttrsHolder"]
+[node name="StepsGrid" type="GridContainer" parent="CharacterStats/Margin/VBox/StepCard"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 0, 1)
-theme_override_colors/font_outline_color = Color(0.12941177, 0, 0.15294118, 1)
-step = 1.0
-value = 25.0
+columns = 2
 
-[node name="MainAttrNamesHolder" type="VBoxContainer" parent="."]
-layout_mode = 0
-offset_left = 320.0
-offset_top = 201.0
-offset_right = 360.0
-offset_bottom = 315.0
-
-[node name="HPLabel" type="Label" parent="MainAttrNamesHolder"]
+[node name="PrimaryCard" type="PanelContainer" parent="CharacterStats/Margin/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0, 0, 1)
-theme_override_font_sizes/font_size = 24
-text = "HP"
 
-[node name="MPLabel" type="Label" parent="MainAttrNamesHolder"]
+[node name="PrimaryGrid" type="GridContainer" parent="CharacterStats/Margin/VBox/PrimaryCard"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 1, 1)
-theme_override_font_sizes/font_size = 24
-text = "MP"
+columns = 3
 
-[node name="ShieldLabel" type="Label" parent="MainAttrNamesHolder"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 0, 1)
-theme_override_font_sizes/font_size = 16
-text = "Shield"
-
-[node name="PrimaryAttrLabel" type="RichTextLabel" parent="."]
-layout_mode = 0
-offset_left = 58.0
-offset_top = 334.0
-offset_right = 448.0
-offset_bottom = 374.0
-theme_override_font_sizes/normal_font_size = 24
-bbcode_enabled = true
-text = "Primary Attributes"
-horizontal_alignment = 1
-
-[node name="PrimaryAttrsHolder" type="HBoxContainer" parent="."]
-layout_mode = 0
-offset_left = 45.0
-offset_top = 376.0
-offset_right = 252.0
-offset_bottom = 562.0
-size_flags_vertical = 3
-
-[node name="VBoxContainer" type="VBoxContainer" parent="PrimaryAttrsHolder"]
-custom_minimum_size = Vector2(5, 5)
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="Label" type="Label" parent="PrimaryAttrsHolder/VBoxContainer"]
-custom_minimum_size = Vector2(5, 5)
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0, 0, 1)
-theme_override_font_sizes/font_size = 24
-text = "Strengh:"
-horizontal_alignment = 2
-
-[node name="Label2" type="Label" parent="PrimaryAttrsHolder/VBoxContainer"]
-custom_minimum_size = Vector2(5, 5)
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 0, 1)
-theme_override_font_sizes/font_size = 24
-text = "Agility:"
-horizontal_alignment = 2
-
-[node name="Label3" type="Label" parent="PrimaryAttrsHolder/VBoxContainer"]
-custom_minimum_size = Vector2(5, 5)
-layout_mode = 2
-theme_override_colors/font_color = Color(0, 1, 0, 1)
-theme_override_font_sizes/font_size = 24
-text = "Vitality:"
-horizontal_alignment = 2
-
-[node name="Label4" type="Label" parent="PrimaryAttrsHolder/VBoxContainer"]
-custom_minimum_size = Vector2(5, 5)
-layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 1, 1)
-theme_override_font_sizes/font_size = 24
-text = "Intellect:"
-horizontal_alignment = 2
-
-[node name="Label5" type="Label" parent="PrimaryAttrsHolder/VBoxContainer"]
-custom_minimum_size = Vector2(5, 5)
-layout_mode = 2
-theme_override_colors/font_color = Color(0.5294118, 0.80784315, 0.92156863, 1)
-theme_override_font_sizes/font_size = 24
-text = "Spirit:"
-horizontal_alignment = 2
-
-[node name="VBoxContainer2" type="VBoxContainer" parent="PrimaryAttrsHolder"]
-custom_minimum_size = Vector2(5, 5)
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="STRLabel" type="Label" parent="PrimaryAttrsHolder/VBoxContainer2"]
-custom_minimum_size = Vector2(5, 5)
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "1"
-
-[node name="AGILabel" type="Label" parent="PrimaryAttrsHolder/VBoxContainer2"]
-custom_minimum_size = Vector2(5, 5)
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "1"
-
-[node name="VITLabel" type="Label" parent="PrimaryAttrsHolder/VBoxContainer2"]
-custom_minimum_size = Vector2(5, 5)
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "1"
-
-[node name="INTLabel" type="Label" parent="PrimaryAttrsHolder/VBoxContainer2"]
-custom_minimum_size = Vector2(5, 5)
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "1"
-
-[node name="SPILabel" type="Label" parent="PrimaryAttrsHolder/VBoxContainer2"]
-custom_minimum_size = Vector2(5, 5)
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "1"
-
-[node name="PrimaryAttrsProgressHolder" type="VBoxContainer" parent="."]
-layout_mode = 0
-offset_left = 232.0
-offset_top = 376.0
-offset_right = 455.0
-offset_bottom = 562.0
-theme_override_constants/separation = 11
-
-[node name="STRProgressBar" type="ProgressBar" parent="PrimaryAttrsProgressHolder"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0, 0, 1)
-
-[node name="AGIProgressBar" type="ProgressBar" parent="PrimaryAttrsProgressHolder"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 0, 1)
-
-[node name="VITProgressBar" type="ProgressBar" parent="PrimaryAttrsProgressHolder"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0, 1, 0, 1)
-
-[node name="INTProgressBar" type="ProgressBar" parent="PrimaryAttrsProgressHolder"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 1, 1)
-
-[node name="SPIProgressBar" type="ProgressBar" parent="PrimaryAttrsProgressHolder"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.5294118, 0.80784315, 0.92156863, 1)
-
-[node name="StepsHolder" type="VBoxContainer" parent="."]
-layout_mode = 0
-offset_left = 508.0
-offset_top = 354.0
-offset_right = 768.0
-offset_bottom = 432.0
-
-[node name="TotalStepsLabel" type="RichTextLabel" parent="StepsHolder"]
+[node name="OFFBox" type="HBoxContainer" parent="CharacterStats/Margin/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 24
-bbcode_enabled = true
-text = "[color=\"green\"]Total   steps: 0[/color]
-"
+theme_override_constants/separation = 16
 
-[node name="BufferStepsLabel" type="RichTextLabel" parent="StepsHolder"]
+[node name="OffCard" type="PanelContainer" parent="CharacterStats/Margin/VBox/OFFBox"]
+layout_mode = 2
+
+[node name="OffGrid" type="GridContainer" parent="CharacterStats/Margin/VBox/OFFBox/OffCard"]
+layout_mode = 2
+columns = 2
+
+[node name="DEFBox" type="HBoxContainer" parent="CharacterStats/Margin/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 24
-bbcode_enabled = true
-text = "[color=\"magenta\"]Buffer steps: 0[/color]
-"
+theme_override_constants/separation = 16
 
-[node name="OffensiveAttrLabel" type="RichTextLabel" parent="."]
-layout_mode = 0
-offset_left = 62.0
-offset_top = 610.0
-offset_right = 319.0
-offset_bottom = 650.0
-theme_override_font_sizes/normal_font_size = 24
-bbcode_enabled = true
-text = "Offensive Attributes"
-horizontal_alignment = 1
-
-[node name="DefensiveAttrLabel" type="RichTextLabel" parent="."]
-layout_mode = 0
-offset_left = 414.0
-offset_top = 609.0
-offset_right = 671.0
-offset_bottom = 649.0
-theme_override_font_sizes/normal_font_size = 24
-bbcode_enabled = true
-text = "Defensive Attributes"
-horizontal_alignment = 1
-
-[node name="OffensiveAttrHolder" type="HBoxContainer" parent="."]
-layout_mode = 0
-offset_left = 40.0
-offset_top = 654.0
-offset_right = 349.0
-offset_bottom = 1047.0
-
-[node name="VBoxContainer2" type="VBoxContainer" parent="OffensiveAttrHolder"]
+[node name="DefCard" type="PanelContainer" parent="CharacterStats/Margin/VBox/DEFBox"]
 layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
 
-[node name="RichTextLabel" type="RichTextLabel" parent="OffensiveAttrHolder/VBoxContainer2"]
+[node name="DeffGrid" type="GridContainer" parent="CharacterStats/Margin/VBox/DEFBox/DefCard"]
 layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-bbcode_enabled = true
-text = "ATK POWER MIN:"
-horizontal_alignment = 2
+columns = 2
 
-[node name="RichTextLabel2" type="RichTextLabel" parent="OffensiveAttrHolder/VBoxContainer2"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-bbcode_enabled = true
-text = "ATK POWER MAX:"
-horizontal_alignment = 2
-
-[node name="RichTextLabel3" type="RichTextLabel" parent="OffensiveAttrHolder/VBoxContainer2"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-bbcode_enabled = true
-text = "SPELL POWER MIN:"
-horizontal_alignment = 2
-
-[node name="RichTextLabel4" type="RichTextLabel" parent="OffensiveAttrHolder/VBoxContainer2"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-bbcode_enabled = true
-text = "SPELL POWER MAX:"
-horizontal_alignment = 2
-
-[node name="RichTextLabel5" type="RichTextLabel" parent="OffensiveAttrHolder/VBoxContainer2"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-bbcode_enabled = true
-text = "HIT RATING:"
-horizontal_alignment = 2
-
-[node name="RichTextLabel6" type="RichTextLabel" parent="OffensiveAttrHolder/VBoxContainer2"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-bbcode_enabled = true
-text = "CRIT CHANCE:"
-horizontal_alignment = 2
-
-[node name="RichTextLabel7" type="RichTextLabel" parent="OffensiveAttrHolder/VBoxContainer2"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-bbcode_enabled = true
-text = "CRIT DAMAGE:"
-horizontal_alignment = 2
-
-[node name="RichTextLabel8" type="RichTextLabel" parent="OffensiveAttrHolder/VBoxContainer2"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-bbcode_enabled = true
-text = "HASTE:"
-horizontal_alignment = 2
-
-[node name="RichTextLabel9" type="RichTextLabel" parent="OffensiveAttrHolder/VBoxContainer2"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-bbcode_enabled = true
-text = "ARMOR PEN:"
-horizontal_alignment = 2
-
-[node name="RichTextLabel10" type="RichTextLabel" parent="OffensiveAttrHolder/VBoxContainer2"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-bbcode_enabled = true
-text = "MAGIC PEN:"
-horizontal_alignment = 2
-
-[node name="VBoxContainer" type="VBoxContainer" parent="OffensiveAttrHolder"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-
-[node name="ATKpowerminLabel" type="RichTextLabel" parent="OffensiveAttrHolder/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-bbcode_enabled = true
-text = "0"
-
-[node name="ATKpowermaxLabel" type="RichTextLabel" parent="OffensiveAttrHolder/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-bbcode_enabled = true
-text = "0"
-
-[node name="SPELLpowerminLabel" type="RichTextLabel" parent="OffensiveAttrHolder/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-bbcode_enabled = true
-text = "0"
-
-[node name="SPELLpowermaxnLabel" type="RichTextLabel" parent="OffensiveAttrHolder/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-bbcode_enabled = true
-text = "0"
-
-[node name="HITratingLabel" type="RichTextLabel" parent="OffensiveAttrHolder/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-bbcode_enabled = true
-text = "0"
-
-[node name="CRITchangeLabel" type="RichTextLabel" parent="OffensiveAttrHolder/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-bbcode_enabled = true
-text = "0"
-
-[node name="CRITdamageLabel" type="RichTextLabel" parent="OffensiveAttrHolder/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-bbcode_enabled = true
-text = "0"
-
-[node name="HASTELabel" type="RichTextLabel" parent="OffensiveAttrHolder/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-bbcode_enabled = true
-text = "0"
-
-[node name="ARMORPenLabel" type="RichTextLabel" parent="OffensiveAttrHolder/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-bbcode_enabled = true
-text = "0"
-
-[node name="MagPenLabel" type="RichTextLabel" parent="OffensiveAttrHolder/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-bbcode_enabled = true
-text = "0"
-
-[node name="DefensiveAttrHolder" type="HBoxContainer" parent="."]
-layout_mode = 0
-offset_left = 423.0
-offset_top = 653.0
-offset_right = 732.0
-offset_bottom = 818.0
-
-[node name="VBoxContainer" type="VBoxContainer" parent="DefensiveAttrHolder"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="RichTextLabel" type="RichTextLabel" parent="DefensiveAttrHolder/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-text = "Physical DEF:"
-horizontal_alignment = 2
-
-[node name="RichTextLabel2" type="RichTextLabel" parent="DefensiveAttrHolder/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-text = "Magical DEF:"
-horizontal_alignment = 2
-
-[node name="RichTextLabel3" type="RichTextLabel" parent="DefensiveAttrHolder/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-text = "BLOCK chance:"
-horizontal_alignment = 2
-
-[node name="RichTextLabel4" type="RichTextLabel" parent="DefensiveAttrHolder/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-text = "EVASION:"
-horizontal_alignment = 2
-
-[node name="RichTextLabel5" type="RichTextLabel" parent="DefensiveAttrHolder/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-text = "DMG. REDUCTION:"
-horizontal_alignment = 2
-
-[node name="VBoxContainer2" type="VBoxContainer" parent="DefensiveAttrHolder"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="ArmorLabel" type="RichTextLabel" parent="DefensiveAttrHolder/VBoxContainer2"]
-layout_mode = 2
-size_flags_vertical = 3
-text = "0"
-
-[node name="MagArmorLabel" type="RichTextLabel" parent="DefensiveAttrHolder/VBoxContainer2"]
-layout_mode = 2
-size_flags_vertical = 3
-text = "0"
-
-[node name="BlockChanceLabel" type="RichTextLabel" parent="DefensiveAttrHolder/VBoxContainer2"]
-layout_mode = 2
-size_flags_vertical = 3
-text = "0"
-
-[node name="EvasionLabel" type="RichTextLabel" parent="DefensiveAttrHolder/VBoxContainer2"]
-layout_mode = 2
-size_flags_vertical = 3
-text = "0"
-
-[node name="DMGReductionLabel" type="RichTextLabel" parent="DefensiveAttrHolder/VBoxContainer2"]
-layout_mode = 2
-size_flags_vertical = 3
-text = "0"
-
-[node name="ResistanceNameLabel" type="Label" parent="."]
-layout_mode = 0
-offset_left = 427.0
-offset_top = 833.0
-offset_right = 736.0
-offset_bottom = 861.0
-theme_override_font_sizes/font_size = 20
-text = "Resistances:"
-
-[node name="ResistanceAttrHolder" type="HBoxContainer" parent="."]
-layout_mode = 0
-offset_left = 425.0
-offset_top = 871.0
-offset_right = 589.0
-offset_bottom = 1035.0
-
-[node name="VBoxContainer" type="VBoxContainer" parent="ResistanceAttrHolder"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="Label1" type="RichTextLabel" parent="ResistanceAttrHolder/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-text = "Fire:
-"
-horizontal_alignment = 2
-
-[node name="Label2" type="RichTextLabel" parent="ResistanceAttrHolder/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-text = "Frost:"
-horizontal_alignment = 2
-
-[node name="Label3" type="RichTextLabel" parent="ResistanceAttrHolder/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-text = "Lightning:"
-horizontal_alignment = 2
-
-[node name="Label4" type="RichTextLabel" parent="ResistanceAttrHolder/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-text = "Poison:"
-horizontal_alignment = 2
-
-[node name="Label5" type="RichTextLabel" parent="ResistanceAttrHolder/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-text = "Death:"
-horizontal_alignment = 2
-
-[node name="Label6" type="RichTextLabel" parent="ResistanceAttrHolder/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-text = "Holy:"
-horizontal_alignment = 2
-
-[node name="VBoxContainer2" type="VBoxContainer" parent="ResistanceAttrHolder"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="FireResLabel" type="RichTextLabel" parent="ResistanceAttrHolder/VBoxContainer2"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-text = "0
-"
-
-[node name="FrostResLabel" type="RichTextLabel" parent="ResistanceAttrHolder/VBoxContainer2"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-text = "0
-"
-
-[node name="LightningResLabel" type="RichTextLabel" parent="ResistanceAttrHolder/VBoxContainer2"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-text = "0
-"
-
-[node name="PoisonResLabel" type="RichTextLabel" parent="ResistanceAttrHolder/VBoxContainer2"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-text = "0
-"
-
-[node name="DeathResLabel" type="RichTextLabel" parent="ResistanceAttrHolder/VBoxContainer2"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-text = "0
-"
-
-[node name="HolyResLabel2" type="RichTextLabel" parent="ResistanceAttrHolder/VBoxContainer2"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 16
-text = "0
-"
+[node name="DebugConsole" parent="." instance=ExtResource("4_pn3l4")]
+layout_mode = 1
+offset_top = 0.0
+offset_bottom = 0.0

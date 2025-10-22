@@ -1,25 +1,17 @@
 extends Control
 
-@onready var rich_text_label: RichTextLabel = $MainParamsHolder/RichTextLabel
-
-@onready var hp_progress_bar: ProgressBar = $MainAttrsHolder/HPProgressBar
-@onready var mp_progress_bar: ProgressBar = $MainAttrsHolder/MPProgressBar
-@onready var shield_progress_bar: ProgressBar = $MainAttrsHolder/ShieldProgressBar
+@onready var location_picture: TextureRect = $LocationDescPanel/LocationPicture
+@onready var location_text: RichTextLabel = $LocationDescPanel/LocationText
 
 
 func _ready() -> void:
-	AccountManager.signal_AccountDataReceived.connect(_update_character_data)
-	_update_character_data()
-		
-func _update_character_data(result_of_call=true):
-	rich_text_label.text = "UID         : " + str(Account.user_uid) + "\n" + "UserID : " + str(Account.userid) + "\n" + "Name  :  " + str(Account.username)
-	
-	hp_progress_bar.max_value = Account.hp_max
-	hp_progress_bar.value = Account.hp_current
-	mp_progress_bar.max_value = Account.mp_max
-	mp_progress_bar.value = Account.mp_current
-	shield_progress_bar.max_value = Account.shield_max
-	shield_progress_bar.value = Account.shield_current
+	#AccountManager.signal_AccountDataReceived.connect(_update_character_data)
+
+	var account_location = int(Account.location)
+	var texture = load("res://assets/background/locations/location_{0}.png".format([account_location])) as Texture2D 
+
+	location_picture.texture = texture
+	location_text.text = GameTextEn.location_texts[account_location]
 
 
 func _on_start_button_button_down() -> void:

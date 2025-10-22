@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://bikmbnxgn4uqm"]
+[gd_scene load_steps=6 format=3 uid="uid://bikmbnxgn4uqm"]
 
 [ext_resource type="Script" uid="uid://wcb1l8b0dhup" path="res://scenes/main_screens/location_activities.gd" id="1_3xprj"]
-[ext_resource type="Texture2D" uid="uid://c8eul4mfllv73" path="res://assets/character_faces/face0.png" id="1_pjl2h"]
 [ext_resource type="PackedScene" uid="uid://caj4vm4x2p0am" path="res://components/ui/cheat_panel.tscn" id="3_22u0r"]
 [ext_resource type="Texture2D" uid="uid://c45svqin8nasu" path="res://assets/professions/herbalist.png" id="4_eg6yx"]
+[ext_resource type="Texture2D" uid="uid://5sfb8p5aidcv" path="res://assets/background/locations/location_1.png" id="5_fl8aw"]
+[ext_resource type="PackedScene" uid="uid://cvndrn0efp2w5" path="res://scenes/support_screens/debug_console.tscn" id="6_wrcjo"]
 
 [node name="LocationActivities" type="Control"]
 layout_mode = 3
@@ -14,112 +15,12 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_3xprj")
 
-[node name="Title" type="RichTextLabel" parent="."]
-layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -176.0
-offset_right = 177.5
-offset_bottom = 50.0
-grow_horizontal = 2
-theme_override_font_sizes/normal_font_size = 32
-bbcode_enabled = true
-text = "[color=\"green\"] Location screen[/color]"
-fit_content = true
-scroll_active = false
-
-[node name="AvatarPlaceHolder" type="HBoxContainer" parent="."]
-layout_mode = 0
-offset_left = 40.0
-offset_top = 67.0
-offset_right = 299.0
-offset_bottom = 323.0
-
-[node name="TextureRect" type="TextureRect" parent="AvatarPlaceHolder"]
-layout_mode = 2
-size_flags_horizontal = 3
-texture = ExtResource("1_pjl2h")
-
-[node name="MainParamsHolder" type="HBoxContainer" parent="."]
-layout_mode = 0
-offset_left = 321.0
-offset_top = 70.0
-offset_right = 764.0
-offset_bottom = 187.0
-
-[node name="RichTextLabel" type="RichTextLabel" parent="MainParamsHolder"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/normal_font_size = 16
-bbcode_enabled = true
-text = "         ID:
-UserID:
- Name: "
-
-[node name="MainAttrsHolder" type="VBoxContainer" parent="."]
-layout_mode = 0
-offset_left = 364.0
-offset_top = 207.0
-offset_right = 764.0
-offset_bottom = 318.0
-theme_override_constants/separation = 10
-
-[node name="HPProgressBar" type="ProgressBar" parent="MainAttrsHolder"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.9490196, 0.02745098, 0.023529412, 1)
-step = 1.0
-value = 25.0
-
-[node name="MPProgressBar" type="ProgressBar" parent="MainAttrsHolder"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 1, 1)
-theme_override_colors/font_outline_color = Color(0.12941177, 0, 0.15294118, 1)
-step = 1.0
-value = 25.0
-
-[node name="ShieldProgressBar" type="ProgressBar" parent="MainAttrsHolder"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 0, 1)
-theme_override_colors/font_outline_color = Color(0.12941177, 0, 0.15294118, 1)
-step = 1.0
-value = 25.0
-
-[node name="MainAttrNamesHolder" type="VBoxContainer" parent="."]
-layout_mode = 0
-offset_left = 320.0
-offset_top = 201.0
-offset_right = 360.0
-offset_bottom = 315.0
-
-[node name="HPLabel" type="Label" parent="MainAttrNamesHolder"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0, 0, 1)
-theme_override_font_sizes/font_size = 24
-text = "HP"
-
-[node name="MPLabel" type="Label" parent="MainAttrNamesHolder"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 1, 1)
-theme_override_font_sizes/font_size = 24
-text = "MP"
-
-[node name="ShieldLabel" type="Label" parent="MainAttrNamesHolder"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 0, 1)
-theme_override_font_sizes/font_size = 16
-text = "Shield
-"
-
-[node name="CheatPanel" parent="." instance=ExtResource("3_22u0r")]
-layout_mode = 1
-
 [node name="ActivitiesPanel" type="Panel" parent="."]
 layout_mode = 0
-offset_left = 867.0
-offset_top = 1254.0
-offset_right = 1601.0
-offset_bottom = 1566.0
+offset_left = 1147.0
+offset_top = 587.0
+offset_right = 1881.0
+offset_bottom = 899.0
 
 [node name="Label" type="Label" parent="ActivitiesPanel"]
 layout_mode = 0
@@ -184,5 +85,83 @@ offset_top = 64.0
 offset_right = 692.182
 offset_bottom = 213.032
 texture = ExtResource("4_eg6yx")
+
+[node name="LocationDescPanel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 1155.0
+offset_top = 949.0
+offset_right = 1155.0
+offset_bottom = 1481.0
+grow_horizontal = 2
+
+[node name="LocationPicture" type="TextureRect" parent="LocationDescPanel"]
+layout_mode = 1
+offset_right = 800.0
+offset_bottom = 400.0
+texture = ExtResource("5_fl8aw")
+
+[node name="LocationText" type="RichTextLabel" parent="LocationDescPanel"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -387.5
+offset_top = -135.0
+offset_right = 387.5
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/normal_font_size = 32
+bbcode_enabled = true
+text = "Location: [color=\"magenta\"]NoobLand[/color]
+[color=\"gray\"]Nothing special, just spawn location for the new players.[/color]"
+fit_content = true
+scroll_active = false
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 1135.0
+offset_top = -492.0
+offset_right = 1933.0
+offset_bottom = -101.0
+grow_vertical = 2
+
+[node name="RichTextLabel" type="RichTextLabel" parent="Panel"]
+layout_mode = 0
+offset_left = 9.0
+offset_top = 1.0
+offset_right = 175.0
+offset_bottom = 47.0
+theme_override_font_sizes/normal_font_size = 32
+bbcode_enabled = true
+text = "Activities:"
+
+[node name="TextureButton" type="TextureButton" parent="Panel"]
+layout_mode = 0
+offset_left = 27.0
+offset_top = 55.0
+offset_right = 91.0
+offset_bottom = 119.0
+texture_normal = ExtResource("4_eg6yx")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="DebugConsole" parent="." instance=ExtResource("6_wrcjo")]
+layout_mode = 1
+anchors_preset = 0
+anchor_top = 0.0
+anchor_bottom = 0.0
+offset_top = 0.0
+offset_bottom = 0.0
+grow_vertical = 1
+
+[node name="CheatPanel" parent="." instance=ExtResource("3_22u0r")]
+layout_mode = 1
 
 [connection signal="button_down" from="ActivitiesPanel/StartButton" to="." method="_on_start_button_button_down"]
