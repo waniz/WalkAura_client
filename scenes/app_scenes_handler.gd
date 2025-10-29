@@ -19,6 +19,7 @@ var _last_x := 0.0
 var _last_t := 0.0
 var _velocity := 0.0
 
+
 func _enter_tree() -> void:
 	_track = HBoxContainer.new()
 	_track.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -26,6 +27,7 @@ func _enter_tree() -> void:
 	add_child(_track)
 
 func _ready() -> void:
+		
 	clip_contents = true
 	mouse_filter = Control.MOUSE_FILTER_PASS
 
@@ -37,6 +39,7 @@ func _ready() -> void:
 
 	_layout_pages()
 	_snap_to(_page, 0.0)
+
 
 func _notification(what):
 	if what == NOTIFICATION_RESIZED and _track:

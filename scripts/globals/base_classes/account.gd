@@ -21,10 +21,36 @@ var hp_max
 var mp_max
 var shield_max
 var level
+var level_exp
 var total_steps
 var buffer_steps
 var buffer_steps_max
 var gold
+
+# professions
+var herbalism_lvl
+var mining_lvl
+var woodcutting_lvl
+var fishing_lvl
+var hunting_lvl
+var blacksmithing_lvl
+var tailoring_lvl
+var jewelcrafting_lvl
+var alchemy_lvl
+var cooking_lvl
+var enchanting_lvl
+
+var herbalism_xp
+var mining_xp
+var woodcutting_xp
+var fishing_xp
+var hunting_xp
+var blacksmithing_xp
+var tailoring_xp
+var jewelcrafting_xp
+var alchemy_xp
+var cooking_xp
+var enchanting_xp
 
 # secondary parameters
 var atk
@@ -51,6 +77,11 @@ var res_holy
 
 var location
 var activity
+var activity_site
+
+var variance
+var vit_crit_soften
+var spirit_healing_mult
 
 func to_dict() -> Dictionary:
 	# export everything (flat), matching server keys

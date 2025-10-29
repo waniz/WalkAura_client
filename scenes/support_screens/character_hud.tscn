@@ -103,6 +103,16 @@ text = "LVL 1"
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="ActivityPlate" type="PanelContainer" parent="Avatar/MainBars"]
+layout_mode = 2
+
+[node name="ActivityLabel" type="Label" parent="Avatar/MainBars/ActivityPlate"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "LVL 1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="XPBar" type="ProgressBar" parent="Avatar/MainBars"]
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2

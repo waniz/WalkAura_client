@@ -5,7 +5,7 @@ func style_name_label(lbl: Label, gold: Color) -> void:
 	var ls := LabelSettings.new()
 	# font: replace with your font if you have one
 	# ls.font = preload("res://fonts/YourFont.ttf")
-	ls.font_size = 18
+	ls.font_size = 14
 	ls.font_color = gold
 	# nice outline & shadow for readability
 	ls.outline_size = 3
@@ -18,12 +18,12 @@ func style_name_label(lbl: Label, gold: Color) -> void:
 	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 
 func style_button(btn: Button, base: Color) -> void:
-	btn.custom_minimum_size = Vector2(0, 44)
+	btn.custom_minimum_size = Vector2(30, 44)
 	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	# Normal
-	var normal := StyleBoxFlat.new()
+	var normal = StyleBoxFlat.new()
 	normal.bg_color = base
-	normal.corner_radius_top_left =10
+	normal.corner_radius_top_left = 10
 	normal.corner_radius_top_right = 10
 	normal.corner_radius_bottom_left = 10
 	normal.corner_radius_bottom_right = 10
@@ -39,12 +39,12 @@ func style_button(btn: Button, base: Color) -> void:
 	hover.bg_color = base.lightened(0.10)
 	hover.shadow_size = 6
 	# Pressed
-	var pressed := normal.duplicate()
+	var pressed = normal.duplicate()
 	pressed.bg_color = base.darkened(0.10)
 	pressed.shadow_size = 2
 	pressed.content_margin_top = 2  # subtle “press” feel
 	# Disabled
-	var disabled := normal.duplicate()
+	var disabled = normal.duplicate()
 	disabled.bg_color = base.darkened(0.55)
 	disabled.border_color = base.darkened(0.6)
 

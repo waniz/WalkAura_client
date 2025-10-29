@@ -60,17 +60,18 @@ func _on_user_login(user, password):
 	socket.send_text(server_request)
 	server_connector_message_bus.emit("[Client] Requesting user login...")
 	
-func _on_user_activity(activity, action):
+func _on_user_activity(activity, activity_site, action):
 	var payload := {
-		"cmd": "profession",
+		"cmd": "activity",
 		"payload": {
 			"activity": activity,
+			"activity_site": activity_site,
 			"action": action,
 		}
 	}	
 	var server_request = JSON.stringify(payload)
 	socket.send_text(server_request)
-	server_connector_message_bus.emit("[Client] Requesting activity: {activity}, action: {action}")
+	server_connector_message_bus.emit("[Client] Requesting activity: {0}, action: {1}".format([activity, action]))
 
 func _on_step_counter_cheat_update(amount):
 	var payload := {
@@ -81,7 +82,7 @@ func _on_step_counter_cheat_update(amount):
 	}
 	var server_request = JSON.stringify(payload)
 	socket.send_text(server_request)
-	server_connector_message_bus.emit("[Client] Sending cheat steps: {0}".format(amount))
+	server_connector_message_bus.emit("[Client] Sending cheat steps: {0}".format([amount]))
 
 func _on_step_counter_android_request_last_ts(is_requested):
 	if not is_requested:
