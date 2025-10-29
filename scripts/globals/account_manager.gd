@@ -3,6 +3,7 @@ extends Node
 signal signal_LoginResult(result)
 signal signal_AccountDataReceived(result)
 signal signal_UserStepLastTSReceived(data)
+signal signal_ActivityProgressReceived(data)
 
 
 func _ready() -> void:
@@ -32,6 +33,8 @@ func parse_message(message):
 		get_account_attrs(json.data)
 	elif json.data.cmd == "_handle_user_steps_last_ts":
 		update_account_steps(json.data)
+	elif json.data.cmd == "activity_progress":
+		show_activity_progress(json.data)
 		
 
 # router handlers
@@ -40,6 +43,7 @@ func check_login_result(json_msg):
 		signal_LoginResult.emit(true)
 	else:
 		signal_LoginResult.emit(false)
+		signal_AccountDataReceived.emit(true)
 		
 func get_account_attrs(json_msg):
 	Account.user_uid = json_msg.data.user_uid
@@ -60,10 +64,36 @@ func get_account_attrs(json_msg):
 	Account.mp_max = int(json_msg.data.primary_resources.mp_max)
 	Account.shield_max = int(json_msg.data.primary_resources.shield_max)
 	Account.level = int(json_msg.data.primary_resources.level)
+	Account.level_exp = json_msg.data.primary_resources.level_exp
 	Account.total_steps = int(json_msg.data.primary_resources.total_steps)
 	Account.buffer_steps = int(json_msg.data.primary_resources.buffer_steps)
 	Account.buffer_steps_max = int(json_msg.data.primary_resources.buffer_steps_max)
 	Account.gold = int(json_msg.data.primary_resources.gold)
+	# professions
+	Account.herbalism_lvl = int(json_msg.data.professions.herbalism_lvl)
+	Account.mining_lvl = int(json_msg.data.professions.mining_lvl)
+	Account.woodcutting_lvl = int(json_msg.data.professions.woodcutting_lvl)
+	Account.fishing_lvl = int(json_msg.data.professions.fishing_lvl)
+	Account.hunting_lvl = int(json_msg.data.professions.hunting_lvl)
+	Account.blacksmithing_lvl = int(json_msg.data.professions.blacksmithing_lvl)
+	Account.tailoring_lvl = int(json_msg.data.professions.tailoring_lvl)
+	Account.jewelcrafting_lvl = int(json_msg.data.professions.jewelcrafting_lvl)
+	Account.alchemy_lvl = int(json_msg.data.professions.alchemy_lvl)
+	Account.cooking_lvl = int(json_msg.data.professions.cooking_lvl)
+	Account.enchanting_lvl = int(json_msg.data.professions.enchanting_lvl)
+	
+	Account.herbalism_xp = int(json_msg.data.professions.herbalism_xp)
+	Account.mining_xp = int(json_msg.data.professions.mining_xp)
+	Account.woodcutting_xp = int(json_msg.data.professions.woodcutting_xp)
+	Account.fishing_xp = int(json_msg.data.professions.fishing_xp)
+	Account.hunting_xp = int(json_msg.data.professions.hunting_xp)
+	Account.blacksmithing_xp = int(json_msg.data.professions.blacksmithing_xp)
+	Account.tailoring_xp = int(json_msg.data.professions.tailoring_xp)
+	Account.jewelcrafting_xp = int(json_msg.data.professions.jewelcrafting_xp)
+	Account.alchemy_xp = int(json_msg.data.professions.alchemy_xp)
+	Account.cooking_xp = int(json_msg.data.professions.cooking_xp)
+	Account.enchanting_xp = int(json_msg.data.professions.enchanting_xp)
+	
 	# secondary parameters
 	Account.atk = json_msg.data.offensive.atk
 	Account.m_atk = json_msg.data.offensive.m_atk
@@ -90,8 +120,31 @@ func get_account_attrs(json_msg):
 	# statuses
 	Account.location = int(json_msg.data.statuses.location)
 	Account.activity = int(json_msg.data.statuses.activity)
+	Account.activity_site = int(json_msg.data.statuses.activity_site)
+	
+	Account.variance = json_msg.data.internal.variance
+	Account.vit_crit_soften = json_msg.data.internal.vit_crit_soften
+	Account.spirit_healing_mult = json_msg.data.internal.spirit_healing_mult
+	
+	update_client_visuals()
 	
 	signal_AccountDataReceived.emit(true)
+	
+func update_client_visuals():
+	var min_atk = snappedf(Account.atk * (1 - Account.variance), 0.1)
+	var max_atk = snappedf(Account.atk * (1 + Account.variance), 0.1)
+	
+	var min_m_atk = snappedf(Account.m_atk * (1 - Account.variance), 0.1)
+	var max_m_atk = snappedf(Account.m_atk * (1 + Account.variance), 0.1)
+		
+	Account.atk = str("{0} - {1}".format([min_atk, max_atk]))
+	Account.m_atk = str("{0} - {1}".format([min_m_atk, max_m_atk]))
+	
+	Account.crit_chance *= 100
+	Account.crit_damage *= 100
 
 func update_account_steps(data):
 	signal_UserStepLastTSReceived.emit(data)
+	
+func show_activity_progress(data):
+	signal_ActivityProgressReceived.emit(data)

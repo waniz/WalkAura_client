@@ -1,12 +1,11 @@
 extends Control
 
-@onready var debugger_label: RichTextLabel = $debuggerLabel
 @onready var panel_main_login: Panel = $Panel_main_login
 @onready var client_version_label: Label = $Client_version_label
 
 @onready var username_login_edit: LineEdit = $Panel_main_login/VBoxContainer/HBoxContainer/username_loginEdit
 @onready var password_login_edit: LineEdit = $Panel_main_login/VBoxContainer/HBoxContainer2/password_loginEdit
-@onready var status_label: RichTextLabel = $Panel_main_login/status_label
+@onready var status_label: Label = $Panel_main_login/status_label
 
 @onready var button_login: Button = $Panel_main_login/button_login
 @onready var button_createuser: Button = $Panel_main_login/button_createuser
@@ -38,9 +37,12 @@ func _ready() -> void:
 	
 	Styler.style_title(username_login_label)
 	Styler.style_title(password_login_label)
+	
+	Styler.style_name_label(status_label, Color.from_rgba8(255, 10, 10, 220))
 
 func _on_button_createuser_button_down() -> void:
 	panel_main_login.visible = false
+	status_label.text = ""
 	
 	child = CREATE_USER_UI.instantiate()
 	add_child(child)
@@ -53,6 +55,7 @@ func _on_child_closed() -> void:
 
 func _on_button_login_button_down() -> void:
 	button_login.disabled = true
+	status_label.text = ""
 	
 	SignalManager.signal_LoginUser.emit(username_login_edit.text, password_login_edit.text)
 	
@@ -60,8 +63,7 @@ func _on_button_login_button_down() -> void:
 	var login_data_result = await AccountManager.signal_AccountDataReceived
 	button_login.disabled = false
 	if login_result and login_data_result:
-		#SceneManage.goto("res://scenes/main_screens/character_stats.tscn")
-		SceneManage.goto("res://scenes/main_screens/ui_control/app_scenes_handler.tscn")
+		SceneManage.goto("res://scenes/app_scenes_handler.tscn")
 		SceneManage.reload()
 	else:
-		status_label.text = "[color=red]" + "Incorrect login data" + "[/color]"
+		status_label.text = "Incorrect login data"

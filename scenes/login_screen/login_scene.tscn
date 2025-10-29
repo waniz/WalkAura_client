@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://uvt4kiay25vo" path="res://scenes/login_screen/login_scene.gd" id="1_yxqlk"]
 [ext_resource type="Texture2D" uid="uid://cfbwlejx6tcu4" path="res://assets/background/background_login.png" id="2_7bkf2"]
-[ext_resource type="PackedScene" uid="uid://d1bmiemb8yjfl" path="res://components/ui/create_user_ui.tscn" id="3_yxqlk"]
+[ext_resource type="PackedScene" uid="uid://d1bmiemb8yjfl" path="res://scenes/login_screen/create_user_ui.tscn" id="3_yxqlk"]
 [ext_resource type="PackedScene" uid="uid://cvndrn0efp2w5" path="res://scenes/support_screens/debug_console.tscn" id="4_7bkf2"]
 
 [node name="LoginScene" type="Control"]
@@ -133,13 +133,12 @@ theme_override_font_sizes/font_size = 32
 text = "Create new user
 "
 
-[node name="status_label" type="RichTextLabel" parent="Panel_main_login"]
+[node name="status_label" type="Label" parent="Panel_main_login"]
 layout_mode = 0
 offset_left = 227.0
 offset_top = 218.0
 offset_right = 603.0
 offset_bottom = 257.0
-bbcode_enabled = true
 
 [node name="CreateUserUI" parent="." instance=ExtResource("3_yxqlk")]
 visible = false

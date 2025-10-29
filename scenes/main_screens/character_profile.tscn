@@ -1,0 +1,118 @@
+[gd_scene load_steps=6 format=3 uid="uid://dctyw8m614xg5"]
+
+[ext_resource type="Script" uid="uid://dpmbd35ov7qv5" path="res://scenes/main_screens/character_profile.gd" id="1_nb0eq"]
+[ext_resource type="PackedScene" uid="uid://btkqrwpy7ojlt" path="res://scenes/support_screens/character_hud.tscn" id="2_aobsr"]
+[ext_resource type="PackedScene" uid="uid://caj4vm4x2p0am" path="res://scenes/support_screens/cheat_panel.tscn" id="3_quhbr"]
+[ext_resource type="PackedScene" uid="uid://cvndrn0efp2w5" path="res://scenes/support_screens/debug_console.tscn" id="4_281ll"]
+[ext_resource type="PackedScene" uid="uid://bjvtquos2r8cj" path="res://scenes/support_screens/progress_update.tscn" id="5_aobsr"]
+
+[node name="CharacterProfile" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_nb0eq")
+
+[node name="CharacterHUD" parent="." instance=ExtResource("2_aobsr")]
+layout_mode = 1
+
+[node name="CheatPanel" parent="." instance=ExtResource("3_quhbr")]
+layout_mode = 1
+offset_left = -724.0
+offset_top = -1281.0
+offset_right = -724.0
+offset_bottom = -1281.0
+
+[node name="DebugConsole" parent="." instance=ExtResource("4_281ll")]
+layout_mode = 1
+offset_top = 0.0
+offset_bottom = 0.0
+
+[node name="TabContainer" type="TabContainer" parent="."]
+layout_mode = 0
+offset_left = 2.0
+offset_top = 177.0
+offset_right = 710.0
+offset_bottom = 973.0
+current_tab = 0
+
+[node name="CharacterStats" type="PanelContainer" parent="TabContainer"]
+layout_mode = 2
+metadata/_tab_index = 0
+
+[node name="Margin" type="MarginContainer" parent="TabContainer/CharacterStats"]
+layout_mode = 2
+theme_override_constants/margin_left = 2
+theme_override_constants/margin_top = 2
+theme_override_constants/margin_right = 2
+theme_override_constants/margin_bottom = 2
+
+[node name="VBox" type="VBoxContainer" parent="TabContainer/CharacterStats/Margin"]
+layout_mode = 2
+
+[node name="PrimaryCard" type="PanelContainer" parent="TabContainer/CharacterStats/Margin/VBox"]
+layout_mode = 2
+
+[node name="PrimaryGrid" type="GridContainer" parent="TabContainer/CharacterStats/Margin/VBox/PrimaryCard"]
+layout_mode = 2
+columns = 3
+
+[node name="OFFBox" type="HBoxContainer" parent="TabContainer/CharacterStats/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="OffCard" type="PanelContainer" parent="TabContainer/CharacterStats/Margin/VBox/OFFBox"]
+layout_mode = 2
+
+[node name="OffGrid" type="GridContainer" parent="TabContainer/CharacterStats/Margin/VBox/OFFBox/OffCard"]
+layout_mode = 2
+columns = 2
+
+[node name="DEFBox" type="HBoxContainer" parent="TabContainer/CharacterStats/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="DefCard" type="PanelContainer" parent="TabContainer/CharacterStats/Margin/VBox/DEFBox"]
+layout_mode = 2
+
+[node name="DeffGrid" type="GridContainer" parent="TabContainer/CharacterStats/Margin/VBox/DEFBox/DefCard"]
+layout_mode = 2
+columns = 2
+
+[node name="StepCard" type="PanelContainer" parent="TabContainer/CharacterStats/Margin/VBox"]
+layout_mode = 2
+
+[node name="StepsGrid" type="GridContainer" parent="TabContainer/CharacterStats/Margin/VBox/StepCard"]
+layout_mode = 2
+columns = 2
+
+[node name="ProfessionsStats" type="PanelContainer" parent="TabContainer"]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 1
+
+[node name="Margin" type="MarginContainer" parent="TabContainer/ProfessionsStats"]
+layout_mode = 2
+theme_override_constants/margin_left = 2
+theme_override_constants/margin_top = 2
+theme_override_constants/margin_right = 2
+theme_override_constants/margin_bottom = 2
+
+[node name="VBox" type="VBoxContainer" parent="TabContainer/ProfessionsStats/Margin"]
+layout_mode = 2
+
+[node name="ProfessionsCard" type="PanelContainer" parent="TabContainer/ProfessionsStats/Margin/VBox"]
+layout_mode = 2
+
+[node name="ProfessionsGrid" type="GridContainer" parent="TabContainer/ProfessionsStats/Margin/VBox/ProfessionsCard"]
+layout_mode = 2
+columns = 3
+
+[node name="Talents" type="PanelContainer" parent="TabContainer"]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 2
+
+[node name="ProgressUpdate" parent="." instance=ExtResource("5_aobsr")]
+visible = false
+layout_mode = 1

@@ -13,7 +13,7 @@ func _on_message(message):
 	elif "Client" in message:
 		_log = "[color=yellow]" + message + "[/color]"
 	elif "SERVER" in message:
-		_log = "[color=green]" + message.substr(0, 100) + "[/color]"
+		_log = "[color=green]" + message.substr(0, 142) + "[/color]"
 	else:
 		_log = message
 	#_log = "\n" + "-----------------"

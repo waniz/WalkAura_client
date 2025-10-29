@@ -1,19 +1,25 @@
 extends Control
 
 @onready var character_hud: CharacterHUD = $CharacterHUD
+@onready var character_stats: PanelContainer = $TabContainer/CharacterStats
 
-@onready var character_stats: PanelContainer = $CharacterStats
-@onready var title: Label = $CharacterStats/Margin/VBox/Title
-@onready var step_card: PanelContainer = $CharacterStats/Margin/VBox/StepCard
-@onready var steps_grid: GridContainer = $CharacterStats/Margin/VBox/StepCard/StepsGrid
-@onready var primary_card: PanelContainer = $CharacterStats/Margin/VBox/PrimaryCard
-@onready var primary_grid: GridContainer = $CharacterStats/Margin/VBox/PrimaryCard/PrimaryGrid
-@onready var off_box: HBoxContainer = $CharacterStats/Margin/VBox/OFFBox
-@onready var def_box: HBoxContainer = $CharacterStats/Margin/VBox/DEFBox
-@onready var off_card: PanelContainer = $CharacterStats/Margin/VBox/OFFBox/OffCard
-@onready var off_grid: GridContainer = $CharacterStats/Margin/VBox/OFFBox/OffCard/OffGrid
-@onready var def_card: PanelContainer = $CharacterStats/Margin/VBox/DEFBox/DefCard
-@onready var deff_grid: GridContainer = $CharacterStats/Margin/VBox/DEFBox/DefCard/DeffGrid
+@onready var step_card: PanelContainer = $TabContainer/CharacterStats/Margin/VBox/StepCard
+@onready var steps_grid: GridContainer = $TabContainer/CharacterStats/Margin/VBox/StepCard/StepsGrid
+@onready var primary_card: PanelContainer = $TabContainer/CharacterStats/Margin/VBox/PrimaryCard
+@onready var primary_grid: GridContainer = $TabContainer/CharacterStats/Margin/VBox/PrimaryCard/PrimaryGrid
+@onready var off_box: HBoxContainer = $TabContainer/CharacterStats/Margin/VBox/OFFBox
+@onready var def_box: HBoxContainer = $TabContainer/CharacterStats/Margin/VBox/DEFBox
+@onready var off_card: PanelContainer = $TabContainer/CharacterStats/Margin/VBox/OFFBox/OffCard
+@onready var off_grid: GridContainer = $TabContainer/CharacterStats/Margin/VBox/OFFBox/OffCard/OffGrid
+@onready var def_card: PanelContainer = $TabContainer/CharacterStats/Margin/VBox/DEFBox/DefCard
+@onready var deff_grid: GridContainer = $TabContainer/CharacterStats/Margin/VBox/DEFBox/DefCard/DeffGrid
+@onready var tab_container: TabContainer = $TabContainer
+
+@onready var professions_card: PanelContainer = $TabContainer/ProfessionsStats/Margin/VBox/ProfessionsCard
+@onready var professions_grid: GridContainer = $TabContainer/ProfessionsStats/Margin/VBox/ProfessionsCard/ProfessionsGrid
+
+const ACTIVITY_PROGRESS_SCENE = preload("uid://bjvtquos2r8cj")
+var overlay = null
 
 # Colors
 var COL_PRIMARY  = Color.from_rgba8(255, 200, 66)
@@ -43,20 +49,37 @@ const OFFENSE_KEYS = [
 	{"k":"crit_damage","n":"Crit Dmg %"},
 	{"k":"hit_rating","n":"Hit"},
 	{"k":"armor_pen","n":"Armor Pen"},	
-	{"k":"haste","n":"Haste %"},	
+	{"k":"haste","n":"Haste"},	
 	{"k":"magic_pen","n":"Magic Pen"},
 ]
 
 const DEFENSE_KEYS = [
 	{"k":"p_def","n":"P.DEF"},
-	{"k":"block_chance","n":"Block %"},
+	{"k":"block_chance","n":"Block"},
 	{"k":"m_def","n":"M.DEF"},	
-	{"k":"evasion","n":"Evasion %"},
-	{"k":"dmg_reduction","n":"D.Reduction %"},
+	{"k":"evasion","n":"Evasion"},
+	{"k":"dmg_reduction","n":"D.Reduction"},
 ]
+
+const PROFESSIONS_KEYS = [
+	{"k":"herbalism_lvl","n":"Herbalism"},
+	{"k":"mining_lvl","n":"Mining"},
+	{"k":"woodcutting_lvl","n":"Woodcutting"},	
+	{"k":"fishing_lvl","n":"Fishing"},
+	{"k":"hunting_lvl","n":"Hunting"},
+	{"k":"blacksmithing_lvl","n":"Blacksmithing"},
+	{"k":"tailoring_lvl","n":"Tailoring"},
+	{"k":"jewelcrafting_lvl","n":"Jewelcrafting"},
+	{"k":"alchemy_lvl","n":"Alchemy"},
+	{"k":"cooking_lvl","n":"Cooking"},
+	{"k":"enchanting_lvl","n":"Enchanting"},
+]
+
 
 func _ready() -> void:
 	AccountManager.signal_AccountDataReceived.connect(_update_character_data)
+	AccountManager.signal_ActivityProgressReceived.connect(_show_progress_hud)
+		
 	Styler.style_panel(character_stats, COL_PANEL_BG, COL_PANEL_BR)
 	
 	_style_section_card(step_card, "Steps Stats", COL_PRIMARY)
@@ -64,40 +87,41 @@ func _ready() -> void:
 	_style_section_card(off_card, "Offense", COL_OFFENSE)
 	_style_section_card(def_card, "Defense", COL_DEFENSE)
 	
-	title.text = "Character Stats"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 20)
-	
-	_update_character_hud()
+	_style_section_card(professions_card, "Professions", COL_PRIMARY)
 	
 	var stats = Account.to_dict()
 	set_stats(stats)
+	
+	for i in tab_container.get_tab_count():
+		var n = tab_container.get_tab_control(i).name
+		if n == "CharacterStats": tab_container.set_tab_title(i, "Character")
+		if n == "ProfessionsStats": tab_container.set_tab_title(i, "Professions")
+		if n == "Talents": tab_container.set_tab_title(i, "Passive Talents")
 	
 func _update_character_data(value):
-	_update_character_hud()
-	
 	var stats = Account.to_dict()
 	set_stats(stats)
 	
+# ------ Handle global update window
+func _show_progress_hud(payload):
+	tab_container.visible = false
 
-func _update_character_hud():
-	character_hud.set_stats(
-		Account.hp,
-		Account.hp_max,
-		Account.mp,
-		Account.mp_max,
-		Account.shield,
-		Account.shield_max,
-		Account.buffer_steps,
-		Account.buffer_steps_max,
-	)
-	character_hud.set_nameplate_text("{0} · Lv. {1}".format([Account.username, Account.level]))
+	overlay = ACTIVITY_PROGRESS_SCENE.instantiate()
+	add_child(overlay)
+	
+	overlay.apply_activity_progress(payload["data"]["data"])
+	overlay.tree_exited.connect(_on_child_closed, Object.CONNECT_ONE_SHOT)
+
+func _on_child_closed() -> void:
+	tab_container.visible = true
+	overlay = null
 	
 func set_stats(d: Dictionary) -> void:
 	_clear(steps_grid);
 	_clear(primary_grid);
 	_clear(off_grid);
 	_clear(deff_grid)
+	_clear(professions_grid)
 	
 	for entry in STEP_KEYS:
 		var val = d.get(entry.k, 0)
@@ -121,7 +145,12 @@ func set_stats(d: Dictionary) -> void:
 		deff_grid.add_child(_make_row(entry.n, _fmt(d.get(entry.k, 0)), COL_DEFENSE))
 		
 	_equalize_off_def_size(380.0)  # tweak width (e.g., 360–420)
-		
+	
+	# Profession grid
+	for entry in PROFESSIONS_KEYS:
+		var val = d.get(entry.k, 0)
+		var card = _make_mini_card(entry.n, _fmt(val), COL_PRIMARY)
+		professions_grid.add_child(card)
 
 # ---------- UI Builders ----------
 func _make_mini_card(name: String, value_in: String, accent: Color) -> Control:

@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://d1bmiemb8yjfl"]
 
-[ext_resource type="Script" uid="uid://bl74x3r4f613w" path="res://components/ui/create_user_ui.gd" id="1_pjd7g"]
+[ext_resource type="Script" uid="uid://bl74x3r4f613w" path="res://scenes/login_screen/create_user_ui.gd" id="1_pjd7g"]
 
 [node name="CreateUserUI" type="Control"]
 layout_mode = 3

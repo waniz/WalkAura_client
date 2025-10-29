@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://diqbff883fl7m"]
 
-[ext_resource type="Script" uid="uid://ca34220c45cd4" path="res://scenes/main_screens/ui_control/app_scenes_handler.gd" id="1_s38g1"]
-[ext_resource type="PackedScene" uid="uid://dctyw8m614xg5" path="res://scenes/main_screens/character_stats.tscn" id="2_wo266"]
+[ext_resource type="Script" uid="uid://ca34220c45cd4" path="res://scenes/app_scenes_handler.gd" id="1_s38g1"]
+[ext_resource type="PackedScene" uid="uid://dctyw8m614xg5" path="res://scenes/main_screens/character_profile.tscn" id="2_wo266"]
 [ext_resource type="PackedScene" uid="uid://bikmbnxgn4uqm" path="res://scenes/main_screens/location_activities.tscn" id="3_xja7j"]
 
 [node name="AppScenesHandler" type="Control"]
