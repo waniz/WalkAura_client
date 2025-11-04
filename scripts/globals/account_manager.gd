@@ -4,6 +4,7 @@ signal signal_LoginResult(result)
 signal signal_AccountDataReceived(result)
 signal signal_UserStepLastTSReceived(data)
 signal signal_ActivityProgressReceived(data)
+signal signal_InventoryReceived(data)
 
 
 func _ready() -> void:
@@ -35,6 +36,8 @@ func parse_message(message):
 		update_account_steps(json.data)
 	elif json.data.cmd == "activity_progress":
 		show_activity_progress(json.data)
+	elif json.data.cmd == "inventory":
+		update_inventory(json.data)
 		
 
 # router handlers
@@ -56,6 +59,13 @@ func get_account_attrs(json_msg):
 	Account.int_stat = json_msg.data.primary_attributes.int_stat
 	Account.spi = json_msg.data.primary_attributes.spi
 	Account.luk = json_msg.data.primary_attributes.luk
+	
+	Account.str_exp = json_msg.data.primary_attributes.str_exp
+	Account.agi_exp = json_msg.data.primary_attributes.agi_exp
+	Account.vit_exp = json_msg.data.primary_attributes.vit_exp
+	Account.int_exp = json_msg.data.primary_attributes.int_exp
+	Account.spi_exp = json_msg.data.primary_attributes.spi_exp
+	Account.luk_exp = json_msg.data.primary_attributes.luk_exp
 	# primary_resources
 	Account.hp = int(json_msg.data.primary_resources.hp)
 	Account.mp = int(json_msg.data.primary_resources.mp)
@@ -121,6 +131,7 @@ func get_account_attrs(json_msg):
 	Account.location = int(json_msg.data.statuses.location)
 	Account.activity = int(json_msg.data.statuses.activity)
 	Account.activity_site = int(json_msg.data.statuses.activity_site)
+	Account.account_step_carry = int(json_msg.data.statuses.account_step_carry)
 	
 	Account.variance = json_msg.data.internal.variance
 	Account.vit_crit_soften = json_msg.data.internal.vit_crit_soften
@@ -148,3 +159,6 @@ func update_account_steps(data):
 	
 func show_activity_progress(data):
 	signal_ActivityProgressReceived.emit(data)
+
+func update_inventory(data):
+	signal_InventoryReceived.emit(data)

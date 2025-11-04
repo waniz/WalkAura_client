@@ -37,7 +37,7 @@ custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 0
-text = " X "
+text = "Continue >"
 
 [node name="Title" type="Label" parent="PanelContainer/VBoxContainer"]
 layout_mode = 2

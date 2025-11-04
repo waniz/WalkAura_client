@@ -19,6 +19,8 @@ var _last_x := 0.0
 var _last_t := 0.0
 var _velocity := 0.0
 
+const ACTIVITY_PROGRESS_SCENE = preload("uid://bjvtquos2r8cj")
+var overlay = null
 
 func _enter_tree() -> void:
 	_track = HBoxContainer.new()
@@ -27,6 +29,8 @@ func _enter_tree() -> void:
 	add_child(_track)
 
 func _ready() -> void:
+	
+	AccountManager.signal_ActivityProgressReceived.connect(_show_progress_hud)
 		
 	clip_contents = true
 	mouse_filter = Control.MOUSE_FILTER_PASS
@@ -39,7 +43,17 @@ func _ready() -> void:
 
 	_layout_pages()
 	_snap_to(_page, 0.0)
-
+	
+# ------ Handle global update window ------
+func _show_progress_hud(payload):
+	overlay = ACTIVITY_PROGRESS_SCENE.instantiate()
+	add_child(overlay)
+	
+	overlay.apply_activity_progress(payload["data"]["data"])
+	overlay.tree_exited.connect(_on_child_closed, Object.CONNECT_ONE_SHOT)
+	
+func _on_child_closed() -> void:
+	overlay = null
 
 func _notification(what):
 	if what == NOTIFICATION_RESIZED and _track:
@@ -49,6 +63,8 @@ func _notification(what):
 func _layout_pages() -> void:
 	var i := 0
 	for c in _track.get_children():
+		if c.name == "ProgressUpdate":
+			continue
 		if c is Control:
 			var cc := c as Control
 			cc.custom_minimum_size = size

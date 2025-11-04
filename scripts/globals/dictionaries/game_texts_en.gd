@@ -11,4 +11,5 @@ var location_descriptions = {
 var activities_texts = {
 	0: "No",
 	1: "Herbalism",
+	2: "Alchemy",
 }
