@@ -1,10 +1,9 @@
-[gd_scene load_steps=6 format=3 uid="uid://dctyw8m614xg5"]
+[gd_scene load_steps=5 format=3 uid="uid://dctyw8m614xg5"]
 
 [ext_resource type="Script" uid="uid://dpmbd35ov7qv5" path="res://scenes/main_screens/character_profile.gd" id="1_nb0eq"]
 [ext_resource type="PackedScene" uid="uid://btkqrwpy7ojlt" path="res://scenes/support_screens/character_hud.tscn" id="2_aobsr"]
 [ext_resource type="PackedScene" uid="uid://caj4vm4x2p0am" path="res://scenes/support_screens/cheat_panel.tscn" id="3_quhbr"]
 [ext_resource type="PackedScene" uid="uid://cvndrn0efp2w5" path="res://scenes/support_screens/debug_console.tscn" id="4_281ll"]
-[ext_resource type="PackedScene" uid="uid://bjvtquos2r8cj" path="res://scenes/support_screens/progress_update.tscn" id="5_aobsr"]
 
 [node name="CharacterProfile" type="Control"]
 layout_mode = 3
@@ -112,7 +111,3 @@ columns = 3
 visible = false
 layout_mode = 2
 metadata/_tab_index = 2
-
-[node name="ProgressUpdate" parent="." instance=ExtResource("5_aobsr")]
-visible = false
-layout_mode = 1

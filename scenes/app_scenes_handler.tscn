@@ -1,8 +1,10 @@
-[gd_scene load_steps=4 format=3 uid="uid://diqbff883fl7m"]
+[gd_scene load_steps=6 format=3 uid="uid://diqbff883fl7m"]
 
 [ext_resource type="Script" uid="uid://ca34220c45cd4" path="res://scenes/app_scenes_handler.gd" id="1_s38g1"]
 [ext_resource type="PackedScene" uid="uid://dctyw8m614xg5" path="res://scenes/main_screens/character_profile.tscn" id="2_wo266"]
-[ext_resource type="PackedScene" uid="uid://bikmbnxgn4uqm" path="res://scenes/main_screens/location_activities.tscn" id="3_xja7j"]
+[ext_resource type="PackedScene" uid="uid://bikmbnxgn4uqm" path="res://scenes/main_screens/character_location.tscn" id="3_xja7j"]
+[ext_resource type="PackedScene" uid="uid://ddualuxj4wcyb" path="res://scenes/main_screens/character_inventory.tscn" id="4_rh1fe"]
+[ext_resource type="PackedScene" uid="uid://bjvtquos2r8cj" path="res://scenes/support_screens/progress_update.tscn" id="4_yr4qo"]
 
 [node name="AppScenesHandler" type="Control"]
 layout_mode = 3
@@ -14,6 +16,10 @@ grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 script = ExtResource("1_s38g1")
+swipe_slop_px = null
+snap_threshold_px = null
+fling_velocity_px_s = null
+anim_time = null
 
 [node name="CharacterStats" parent="." instance=ExtResource("2_wo266")]
 layout_mode = 0
@@ -21,4 +27,11 @@ offset_left = 2.0
 offset_right = 2.0
 
 [node name="Activities" parent="." instance=ExtResource("3_xja7j")]
+layout_mode = 1
+
+[node name="CharacterInventory" parent="." instance=ExtResource("4_rh1fe")]
+layout_mode = 1
+
+[node name="ProgressUpdate" parent="." instance=ExtResource("4_yr4qo")]
+visible = false
 layout_mode = 1

@@ -16,6 +16,7 @@ func _ready() -> void:
 	SignalManager.signal_StepsUpdatesCheats.connect(_on_step_counter_cheat_update)
 	SignalManager.signal_StepsUpdatesAndroid.connect(_on_step_counter_android_update)
 	SignalManager.signal_StepsRequestLastTimestamp.connect(_on_step_counter_android_request_last_ts)
+	SignalManager.signal_RequestInventory.connect(_on_inventory_request)
 
 
 func connect_to_server() -> void:
@@ -108,3 +109,14 @@ func _on_step_counter_android_update(data):
 	var server_request = JSON.stringify(payload)
 	socket.send_text(server_request)
 	server_connector_message_bus.emit("[Client] Sending android steps to server")
+
+func _on_inventory_request(action):
+	var payload := {
+		"cmd": "inventory",
+		"payload": {
+			"action": action,
+		}
+	}
+	var server_request = JSON.stringify(payload)
+	socket.send_text(server_request)
+	server_connector_message_bus.emit("[Client] Request Inventory: {0}".format([action]))

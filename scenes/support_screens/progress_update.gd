@@ -129,7 +129,6 @@ func _build_ui() -> void:
 	root.add_child(scroll)
 #
 	_loot_list.add_theme_constant_override("separation", 6)
-	scroll.add_child(_loot_list)
 	
 func _mk_label(t: String) -> Label:
 	var l := Label.new()

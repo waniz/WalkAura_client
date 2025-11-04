@@ -18,9 +18,6 @@ extends Control
 @onready var professions_card: PanelContainer = $TabContainer/ProfessionsStats/Margin/VBox/ProfessionsCard
 @onready var professions_grid: GridContainer = $TabContainer/ProfessionsStats/Margin/VBox/ProfessionsCard/ProfessionsGrid
 
-const ACTIVITY_PROGRESS_SCENE = preload("uid://bjvtquos2r8cj")
-var overlay = null
-
 # Colors
 var COL_PRIMARY  = Color.from_rgba8(255, 200, 66)
 var COL_OFFENSE  = Color.from_rgba8(255, 120, 90)
@@ -34,12 +31,12 @@ const STEP_KEYS = [
 ]
 
 const PRIMARY_KEYS = [
-	{"k":"str", "n":"STR"},
-	{"k":"agi", "n":"AGI"},
-	{"k":"vit", "n":"VIT"},
-	{"k":"int_stat", "n":"INT"},
-	{"k":"spi", "n":"SPI"},
-	{"k":"luk", "n":"LUK"},	
+	{"k":"str", "n":"STR", "exp": "str_exp"},
+	{"k":"agi", "n":"AGI", "exp": "agi_exp"},
+	{"k":"vit", "n":"VIT", "exp": "vit_exp"},
+	{"k":"int_stat", "n":"INT", "exp": "int_exp"},
+	{"k":"spi", "n":"SPI", "exp": "spi_exp"},
+	{"k":"luk", "n":"LUK", "exp": "luk_exp"},	
 ]
 
 const OFFENSE_KEYS = [
@@ -75,10 +72,24 @@ const PROFESSIONS_KEYS = [
 	{"k":"enchanting_lvl","n":"Enchanting"},
 ]
 
+const STATS_MAX_LEVEL     = 100
+const STATS_EXP_BASE      = 500      # XP needed from level 1 -> 2
+const STATS_EXP_GROWTH    = 1.25     # each level needs ~33% more than previous
+
+var STATS_EXP_LEVELS = {}
+var STATS_TOTAL_TO_LEVEL = {1: 0}
 
 func _ready() -> void:
 	AccountManager.signal_AccountDataReceived.connect(_update_character_data)
-	AccountManager.signal_ActivityProgressReceived.connect(_show_progress_hud)
+	
+	STATS_EXP_LEVELS[0] = 0
+	for lvl in range(1, STATS_MAX_LEVEL):
+		STATS_EXP_LEVELS[lvl] = int(round(STATS_EXP_BASE * pow(STATS_EXP_GROWTH, lvl - 1)))
+		
+	var acc = 0
+	for lvl in range(2, STATS_MAX_LEVEL + 1):
+		acc += STATS_EXP_LEVELS[lvl - 1]
+		STATS_TOTAL_TO_LEVEL[lvl] = acc
 		
 	Styler.style_panel(character_stats, COL_PANEL_BG, COL_PANEL_BR)
 	
@@ -97,24 +108,11 @@ func _ready() -> void:
 		if n == "CharacterStats": tab_container.set_tab_title(i, "Character")
 		if n == "ProfessionsStats": tab_container.set_tab_title(i, "Professions")
 		if n == "Talents": tab_container.set_tab_title(i, "Passive Talents")
+		
 	
 func _update_character_data(value):
 	var stats = Account.to_dict()
 	set_stats(stats)
-	
-# ------ Handle global update window
-func _show_progress_hud(payload):
-	tab_container.visible = false
-
-	overlay = ACTIVITY_PROGRESS_SCENE.instantiate()
-	add_child(overlay)
-	
-	overlay.apply_activity_progress(payload["data"]["data"])
-	overlay.tree_exited.connect(_on_child_closed, Object.CONNECT_ONE_SHOT)
-
-func _on_child_closed() -> void:
-	tab_container.visible = true
-	overlay = null
 	
 func set_stats(d: Dictionary) -> void:
 	_clear(steps_grid);
@@ -134,8 +132,9 @@ func set_stats(d: Dictionary) -> void:
 
 	# Primary cards (big numbers)
 	for entry in PRIMARY_KEYS:
-		var val = d.get(entry.k, 0)
-		var card = _make_mini_card(entry.n, _fmt(val), COL_PRIMARY)
+		var lvl = int(d.get(entry.k, 0))
+		var exp = int(d.get(entry.exp, 0))
+		var card = _make_mini_card_primary(entry.n, lvl, exp, COL_PRIMARY)
 		primary_grid.add_child(card)
 
 	# Offense/Defense rows (compact)
@@ -153,6 +152,57 @@ func set_stats(d: Dictionary) -> void:
 		professions_grid.add_child(card)
 
 # ---------- UI Builders ----------
+func _make_mini_card_primary(name: String, lvl: int, exp: int, accent: Color) -> Control:
+	# --- parse & split value into whole + fractional parts ---
+	
+	var lvl_current = exp - STATS_TOTAL_TO_LEVEL[lvl]
+	var lvl_progress = STATS_TOTAL_TO_LEVEL[lvl + 1] - STATS_TOTAL_TO_LEVEL[lvl]
+	
+	var whole = int(lvl)
+	var frac  = float(lvl_current) / float(lvl_progress)         # 0.0 .. 1.0
+	var pct   = int(round(frac * 100.0))   # 0 .. 100
+	
+	# --- card container ---
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(120, 60)
+	panel.add_theme_stylebox_override("panel", _card_box())  # reuse your _card_box()
+	
+	var vb := VBoxContainer.new()
+	vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vb.size_flags_vertical   = Control.SIZE_EXPAND_FILL
+	panel.add_child(vb)
+	
+	# --- first line: name + value ---
+	var hb := HBoxContainer.new()
+	hb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hb.alignment = BoxContainer.ALIGNMENT_CENTER
+	vb.add_child(hb)
+		
+	var n_lbl := Label.new()
+	n_lbl.text = name
+	n_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	n_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 0.85))
+	hb.add_child(n_lbl)
+
+	var v_lbl := Label.new()
+	v_lbl.text = str(whole)
+	v_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	v_lbl.add_theme_font_size_override("font_size", 20)
+	v_lbl.add_theme_color_override("font_color", accent)
+	hb.add_child(v_lbl)
+
+	# --- second line: fractional progress bar (0..100) ---
+	var pb := ProgressBar.new()
+	pb.min_value = 0
+	pb.max_value = 100
+	pb.value = pct
+	pb.show_percentage = false
+	pb.custom_minimum_size = Vector2(0, 10)   # height of the bar
+	_style_mini_progress(pb, accent)          # style below
+	vb.add_child(pb)
+
+	return panel
+	
 func _make_mini_card(name: String, value_in: String, accent: Color) -> Control:
 	# --- parse & split value into whole + fractional parts ---
 	var v: float = float(value_in)

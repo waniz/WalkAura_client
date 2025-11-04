@@ -13,7 +13,15 @@ func _on_message(message):
 	elif "Client" in message:
 		_log = "[color=yellow]" + message + "[/color]"
 	elif "SERVER" in message:
-		_log = "[color=green]" + message.substr(0, 142) + "[/color]"
+		message = message.substr(9)
+		var json = JSON.new()
+		var error = json.parse(message)
+		if error == OK:
+			pass
+		else:
+			printerr("JSON Parse Error: ", json.get_error_message(), " in ", message, " at line ", json.get_error_line())
+
+		_log = "[color=green][SERVER] OK: {0} CMD: {1} [/color]".format([json.data.ok, json.data.cmd])
 	else:
 		_log = message
 	#_log = "\n" + "-----------------"

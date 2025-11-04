@@ -13,6 +13,13 @@ var int_stat
 var spi
 var luk
 
+var str_exp
+var agi_exp
+var vit_exp
+var int_exp
+var spi_exp
+var luk_exp
+
 # primary_resources
 var hp
 var mp
@@ -78,6 +85,7 @@ var res_holy
 var location
 var activity
 var activity_site
+var account_step_carry
 
 var variance
 var vit_crit_soften
