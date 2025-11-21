@@ -1,6 +1,5 @@
 extends Control
 
-@onready var character_hud: CharacterHUD = $CharacterHUD
 @onready var character_stats: PanelContainer = $TabContainer/CharacterStats
 
 @onready var step_card: PanelContainer = $TabContainer/CharacterStats/Margin/VBox/StepCard
@@ -31,12 +30,12 @@ const STEP_KEYS = [
 ]
 
 const PRIMARY_KEYS = [
-	{"k":"str", "n":"STR", "exp": "str_exp"},
-	{"k":"agi", "n":"AGI", "exp": "agi_exp"},
-	{"k":"vit", "n":"VIT", "exp": "vit_exp"},
-	{"k":"int_stat", "n":"INT", "exp": "int_exp"},
-	{"k":"spi", "n":"SPI", "exp": "spi_exp"},
-	{"k":"luk", "n":"LUK", "exp": "luk_exp"},	
+	{"k":"str", "n":"STR", "exp": "str_exp", "bonus": "bonus_str"},
+	{"k":"agi", "n":"AGI", "exp": "agi_exp", "bonus": "bonus_agi"},
+	{"k":"vit", "n":"VIT", "exp": "vit_exp", "bonus": "bonus_vit"},
+	{"k":"int_stat", "n":"INT", "exp": "int_exp", "bonus": "bonus_int"},
+	{"k":"spi", "n":"SPI", "exp": "spi_exp", "bonus": "bonus_spi"},
+	{"k":"luk", "n":"LUK", "exp": "luk_exp", "bonus": "bonus_luk"},
 ]
 
 const OFFENSE_KEYS = [
@@ -45,43 +44,52 @@ const OFFENSE_KEYS = [
 	{"k":"m_atk","n":"M.ATK"},
 	{"k":"crit_damage","n":"Crit Dmg %"},
 	{"k":"hit_rating","n":"Hit"},
-	{"k":"armor_pen","n":"Armor Pen"},	
-	{"k":"haste","n":"Haste"},	
+	{"k":"armor_pen","n":"Armor Pen"},
+	{"k":"haste","n":"Haste"},
 	{"k":"magic_pen","n":"Magic Pen"},
 ]
 
 const DEFENSE_KEYS = [
 	{"k":"p_def","n":"P.DEF"},
 	{"k":"block_chance","n":"Block"},
-	{"k":"m_def","n":"M.DEF"},	
+	{"k":"m_def","n":"M.DEF"},
 	{"k":"evasion","n":"Evasion"},
 	{"k":"dmg_reduction","n":"D.Reduction"},
 ]
 
 const PROFESSIONS_KEYS = [
-	{"k":"herbalism_lvl","n":"Herbalism"},
-	{"k":"mining_lvl","n":"Mining"},
-	{"k":"woodcutting_lvl","n":"Woodcutting"},	
-	{"k":"fishing_lvl","n":"Fishing"},
-	{"k":"hunting_lvl","n":"Hunting"},
-	{"k":"blacksmithing_lvl","n":"Blacksmithing"},
-	{"k":"tailoring_lvl","n":"Tailoring"},
-	{"k":"jewelcrafting_lvl","n":"Jewelcrafting"},
-	{"k":"alchemy_lvl","n":"Alchemy"},
-	{"k":"cooking_lvl","n":"Cooking"},
-	{"k":"enchanting_lvl","n":"Enchanting"},
+	{"k":"herbalism_lvl","n":"Herbalism", "exp": "herbalism_xp"},
+	{"k":"alchemy_lvl","n":"Alchemy", "exp": "alchemy_xp"},
+	{"k":"hunting_lvl","n":"Hunting", "exp": "hunting__xp"},
+	
+	{"k":"mining_lvl","n":"Mining", "exp": "mining_xp"},
+	{"k":"woodcutting_lvl","n":"Woodcutting", "exp": "woodcutting_xp"},
+	{"k":"fishing_lvl","n":"Fishing", "exp": "fishing_xp"},
+	{"k":"blacksmithing_lvl","n":"Blacksmithing", "exp": "blacksmithing_xp"},
+	{"k":"tailoring_lvl","n":"Tailoring", "exp": "tailoring_xp"},
+	{"k":"jewelcrafting_lvl","n":"Jewelcrafting", "exp": "jewelcrafting_xp"},
+	{"k":"cooking_lvl","n":"Cooking", "exp": "cooking_xp"},
+	{"k":"enchanting_lvl","n":"Enchanting", "exp": "enchanting_xp"},
 ]
 
 const STATS_MAX_LEVEL     = 100
-const STATS_EXP_BASE      = 500      # XP needed from level 1 -> 2
-const STATS_EXP_GROWTH    = 1.25     # each level needs ~33% more than previous
+const STATS_EXP_BASE      = 500
+const STATS_EXP_GROWTH    = 1.25
+
+const ACTIVITY_MAX_LEVEL   = 200
+const ACTIVITY_EXP_BASE    = 100
+const ACTIVITY_EXP_GROWTH  = 1.25
 
 var STATS_EXP_LEVELS = {}
 var STATS_TOTAL_TO_LEVEL = {1: 0}
 
+var ACTIVITY_EXP_LEVELS = {}
+var ACTIVITY_TOTAL_TO_LEVEL = {1: 0}
+
 func _ready() -> void:
 	AccountManager.signal_AccountDataReceived.connect(_update_character_data)
 	
+	# ======== same as server
 	STATS_EXP_LEVELS[0] = 0
 	for lvl in range(1, STATS_MAX_LEVEL):
 		STATS_EXP_LEVELS[lvl] = int(round(STATS_EXP_BASE * pow(STATS_EXP_GROWTH, lvl - 1)))
@@ -90,6 +98,16 @@ func _ready() -> void:
 	for lvl in range(2, STATS_MAX_LEVEL + 1):
 		acc += STATS_EXP_LEVELS[lvl - 1]
 		STATS_TOTAL_TO_LEVEL[lvl] = acc
+	
+	ACTIVITY_EXP_LEVELS[0] = 0
+	for lvl in range(1, ACTIVITY_MAX_LEVEL):
+		ACTIVITY_EXP_LEVELS[lvl] = int(round(ACTIVITY_EXP_BASE * pow(ACTIVITY_EXP_GROWTH, lvl - 1)))
+		
+	var acc_ = 0
+	for lvl in range(2, ACTIVITY_MAX_LEVEL + 1):
+		acc_ += ACTIVITY_EXP_LEVELS[lvl - 1]
+		ACTIVITY_TOTAL_TO_LEVEL[lvl] = acc_
+	# ======== same as server
 		
 	Styler.style_panel(character_stats, COL_PANEL_BG, COL_PANEL_BR)
 	
@@ -108,12 +126,12 @@ func _ready() -> void:
 		if n == "CharacterStats": tab_container.set_tab_title(i, "Character")
 		if n == "ProfessionsStats": tab_container.set_tab_title(i, "Professions")
 		if n == "Talents": tab_container.set_tab_title(i, "Passive Talents")
-		
-	
+
+
 func _update_character_data(value):
 	var stats = Account.to_dict()
 	set_stats(stats)
-	
+
 func set_stats(d: Dictionary) -> void:
 	_clear(steps_grid);
 	_clear(primary_grid);
@@ -134,7 +152,8 @@ func set_stats(d: Dictionary) -> void:
 	for entry in PRIMARY_KEYS:
 		var lvl = int(d.get(entry.k, 0))
 		var exp = int(d.get(entry.exp, 0))
-		var card = _make_mini_card_primary(entry.n, lvl, exp, COL_PRIMARY)
+		var bonus = int(d.get(entry.bonus, 0))
+		var card = _make_mini_card_primary(entry.n, lvl, exp, bonus, COL_PRIMARY)
 		primary_grid.add_child(card)
 
 	# Offense/Defense rows (compact)
@@ -147,12 +166,13 @@ func set_stats(d: Dictionary) -> void:
 	
 	# Profession grid
 	for entry in PROFESSIONS_KEYS:
-		var val = d.get(entry.k, 0)
-		var card = _make_mini_card(entry.n, _fmt(val), COL_PRIMARY)
+		var val = int(d.get(entry.k, 0))
+		var activity_exp = int(d.get(entry.exp, 0))
+		var card = _make_mini_card(entry.n, val, activity_exp, COL_PRIMARY)
 		professions_grid.add_child(card)
 
 # ---------- UI Builders ----------
-func _make_mini_card_primary(name: String, lvl: int, exp: int, accent: Color) -> Control:
+func _make_mini_card_primary(name: String, lvl: int, exp: int, bonus: int, accent: Color) -> Control:
 	# --- parse & split value into whole + fractional parts ---
 	
 	var lvl_current = exp - STATS_TOTAL_TO_LEVEL[lvl]
@@ -185,7 +205,7 @@ func _make_mini_card_primary(name: String, lvl: int, exp: int, accent: Color) ->
 	hb.add_child(n_lbl)
 
 	var v_lbl := Label.new()
-	v_lbl.text = str(whole)
+	v_lbl.text = str(whole) + " + " + str(bonus)
 	v_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	v_lbl.add_theme_font_size_override("font_size", 20)
 	v_lbl.add_theme_color_override("font_color", accent)
@@ -203,13 +223,17 @@ func _make_mini_card_primary(name: String, lvl: int, exp: int, accent: Color) ->
 
 	return panel
 	
-func _make_mini_card(name: String, value_in: String, accent: Color) -> Control:
+func _make_mini_card(name: String, lvl: int, activity_exp: int, accent: Color) -> Control:
 	# --- parse & split value into whole + fractional parts ---
-	var v: float = float(value_in)
+	var lvl_current = activity_exp - ACTIVITY_TOTAL_TO_LEVEL[lvl]
+	var lvl_progress = ACTIVITY_TOTAL_TO_LEVEL[lvl + 1] - ACTIVITY_TOTAL_TO_LEVEL[lvl]
 
-	var whole = int(floor(v))
-	var frac  = clamp(v - float(whole), 0.0, 1.0)       # 0.0 .. 1.0
-	var pct   = int(round(frac * 100.0))                # 0 .. 100
+	var whole = int(lvl)
+	var frac  = float(lvl_current) / float(lvl_progress)         # 0.0 .. 1.0
+	var pct   = int(round(frac * 100.0))   # 0 .. 100
+	
+	print(name, " ", lvl, " ", activity_exp)
+	print(lvl_current, " ", lvl_progress, " ", whole, " ", frac, " ", pct)
 	
 	# --- card container ---
 	var panel := PanelContainer.new()

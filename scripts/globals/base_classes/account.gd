@@ -20,6 +20,13 @@ var int_exp
 var spi_exp
 var luk_exp
 
+var bonus_str
+var bonus_agi
+var bonus_vit
+var bonus_int
+var bonus_spi
+var bonus_luk
+
 # primary_resources
 var hp
 var mp

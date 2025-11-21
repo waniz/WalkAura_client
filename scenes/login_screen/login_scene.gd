@@ -20,6 +20,7 @@ var status_login = false
 
 
 func _ready() -> void:
+	
 	Styler.style_name_label(client_version_label, Color.from_rgba8(255, 215, 128))
 	var project_version = ProjectSettings.get_setting("application/config/version", "")
 	client_version_label.text = " Client version: " + project_version

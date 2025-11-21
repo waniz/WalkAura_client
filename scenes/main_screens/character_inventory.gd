@@ -3,8 +3,6 @@ class_name InventoryGrid extends Control
 signal equipped_item(slot_name: String, item_id: String)
 signal unequipped_item(slot_name: String, item_id: String)
 
-@onready var request_inventory: Button = $PanelContainer/VBoxContainer/RequestInventory
-@onready var request_equipment: Button = $PanelContainer/VBoxContainer/RequestEquipment
 @onready var _grid: GridContainer = $TabContainer/Hero_Inventory/Margin/VBoxContainer/GridContainer
 @onready var equipment_vbox: VBoxContainer = $TabContainer/Hero_Equipment/Margin/equipment_vbox
 
@@ -17,7 +15,7 @@ signal unequipped_item(slot_name: String, item_id: String)
 @export var show_tooltips: bool = true
 
 @export var slot_size_eq: Vector2i = Vector2i(96, 96)
-@export var bottom_slot_size_eq: Vector2i = Vector2i(128, 128)
+@export var bottom_slot_size_eq: Vector2i = Vector2i(96, 96)
 @export var slot_padding_eq: int = 8
 
 @export var tooltip_long_press_ms = 350
@@ -61,6 +59,9 @@ const QUALITY_COLORS := {
 
 
 func _ready() -> void:
+	
+	AccountManager.signal_InventoryReceived.connect(_on_request_inventory)
+	
 	item_defs = ItemDB.ITEM_DEFS
 	item_icons = ItemDB.ITEM_ICONS
 	
@@ -89,13 +90,6 @@ func _unhandled_input(event: InputEvent) -> void:
 	# tap anywhere hides the tooltip (unless it's our long press)
 	if _tooltip_visible and event is InputEventScreenTouch and event.pressed:
 		_hide_tooltip()
-		
-func _normalize_code(code: String) -> String:
-	if code.begins_with("herb_"):
-		return code.substr(5)
-	if code.begins_with("alchemy_"):
-		return code.substr(8)
-	return code
 	
 # Public API -------------------------------------------------------------
 func set_card_box(card_box_callable: Callable) -> void:
@@ -587,15 +581,6 @@ func _make_slot_eq(slot_name: String, size: Vector2i, left: bool) -> Control:
 		btn.add_child(icon)
 		hb.add_child(lbl)
 		
-	## Click to unequip
-	#btn.pressed.connect(func():
-		#if _equipped.has(slot_name):
-			#var id = String(_equipped[slot_name]["id"])
-			#_equipped.erase(slot_name)
-			#_update_slot_eq(slot_name)
-			#emit_signal("unequipped_item", slot_name, id)
-	#)
-
 	_slot_nodes[slot_name] = {"panel": panel, "btn": btn, "icon": icon, "label": lbl}
 	_update_slot_eq(slot_name)
 	return panel
@@ -647,8 +632,8 @@ func _is_item_allowed_for_slot(slot_name: String, id: String) -> bool:
 		"Ring2": ["Ring","Finger"],
 		"Trinket1": ["Trinket"],
 		"Trinket2": ["Trinket"],
-		"MainHand": ["MainHand","OneHand","TwoHand"],
-		"OffHand": ["OffHand","Shield","Tome","OneHand"],
+		"mainHand": ["mainHand","oneHand","twoHand"],
+		"offHand": ["offHand","shield","tome","oneHand"],
 	}
 	if alt.has(slot_name) and alt[slot_name].has(item_slot):
 		return true
@@ -656,9 +641,7 @@ func _is_item_allowed_for_slot(slot_name: String, id: String) -> bool:
 	
 # Optional external API: programmatic equip/unequip
 func equip(slot_name: String, id: String) -> bool:
-	print(slot_name, id)
 	if not _is_item_allowed_for_slot(slot_name, id):
-		print("   <Not Allowed")
 		return false
 	_equipped[slot_name] = {"id": id, "qty": 1}
 	_update_slot_eq(slot_name)
@@ -673,21 +656,15 @@ func unequip(slot_name: String) -> void:
 		emit_signal("unequipped_item", slot_name, id)
 
 
-func _on_request_inventory_pressed() -> void:
-	SignalManager.signal_RequestInventory.emit("get")
-	var inventory_data = await AccountManager.signal_InventoryReceived
-
+func _on_request_inventory(server_json) -> void:
 	clear_inventory()
-		
-	if inventory_data.data.inventory:
-		for element in inventory_data.data.inventory:
-			add_item(_normalize_code(element["code"]), element["qty"])
-
-
-func _on_request_equipment_pressed() -> void:
-	equip("head", "default_head")
-	equip("neck", "default_neck")
-	equip("shoulder", "default_shoulder")
-	equip("cloak", "default_cloak")
-	equip("chest", "default_chest")
-	equip("wrist", "default_wrist")
+	
+	# handle inventory
+	if server_json.data.inventory:
+		for element in server_json.data.inventory:
+			add_item(element["code"], element["qty"])
+			
+	# handle equipment
+	if server_json.data.equipment:
+		for element in server_json.data.equipment:
+			equip(element["slot_type"], element["code"])

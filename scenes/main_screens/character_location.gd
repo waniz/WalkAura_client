@@ -19,6 +19,11 @@ extends Control
 @onready var alchemy_start_button: Button = $ProfPanel/TitleLabel/HBoxAlchemy/AlchemyStartButton
 @onready var alchemy_end_button: Button = $ProfPanel/TitleLabel/HBoxAlchemy/AlchemyEndButton
 
+@onready var hunting_label: Label = $ProfPanel/TitleLabel/HBoxHunting/HuntingLabel
+@onready var hunting_start_button: Button = $ProfPanel/TitleLabel/HBoxHunting/HuntingStartButton
+@onready var hunting_end_button: Button = $ProfPanel/TitleLabel/HBoxHunting/HuntingEndButton
+
+
 var COL_PANEL_BG = Color.from_rgba8(16, 18, 24, 220)
 var COL_PANEL_BR = Color.from_rgba8(255, 255, 255, 30)
 
@@ -35,11 +40,14 @@ func _ready() -> void:
 	
 	Styler.style_title(herbalism_label)
 	Styler.style_title(alchemy_label)
+	Styler.style_title(hunting_label)
 	
 	Styler.style_button(herbalism_start_button,  Color.from_rgba8(64,180,255))
 	Styler.style_button(herbalism_end_button,  Color.from_rgba8(64,180,255))
 	Styler.style_button(alchemy_start_button,  Color.from_rgba8(64,180,255))
 	Styler.style_button(alchemy_end_button,  Color.from_rgba8(64,180,255))
+	Styler.style_button(hunting_start_button,  Color.from_rgba8(64,180,255))
+	Styler.style_button(hunting_end_button,  Color.from_rgba8(64,180,255))
 
 	var account_location = int(Account.location)
 	var texture = load("res://assets/background/locations/location_{0}.png".format([account_location])) as Texture2D 
@@ -67,3 +75,11 @@ func _on_alchemy_start_button_pressed() -> void:
 
 func _on_alchemy_end_button_pressed() -> void:
 	SignalManager.signal_UserActivity.emit(2, 1, "stop")
+
+
+func _on_hunting_start_button_pressed() -> void:
+	SignalManager.signal_UserActivity.emit(3, 1, "start")
+
+
+func _on_hunting_end_button_pressed() -> void:
+	SignalManager.signal_UserActivity.emit(3, 1, "stop")
