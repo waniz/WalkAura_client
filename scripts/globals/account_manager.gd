@@ -52,6 +52,7 @@ func get_account_attrs(json_msg):
 	Account.user_uid = json_msg.data.user_uid
 	Account.userid = int(json_msg.data.userid)
 	Account.username = json_msg.data.username
+	
 	# primary parameters
 	Account.str = json_msg.data.primary_attributes.str
 	Account.agi = json_msg.data.primary_attributes.agi
@@ -66,6 +67,14 @@ func get_account_attrs(json_msg):
 	Account.int_exp = json_msg.data.primary_attributes.int_exp
 	Account.spi_exp = json_msg.data.primary_attributes.spi_exp
 	Account.luk_exp = json_msg.data.primary_attributes.luk_exp
+	
+	Account.bonus_str = json_msg.data.primary_attributes.bonus_str
+	Account.bonus_agi = json_msg.data.primary_attributes.bonus_agi
+	Account.bonus_vit = json_msg.data.primary_attributes.bonus_vit
+	Account.bonus_int = json_msg.data.primary_attributes.bonus_int
+	Account.bonus_spi = json_msg.data.primary_attributes.bonus_spi
+	Account.bonus_luk = json_msg.data.primary_attributes.bonus_luk
+	
 	# primary_resources
 	Account.hp = int(json_msg.data.primary_resources.hp)
 	Account.mp = int(json_msg.data.primary_resources.mp)
@@ -79,7 +88,9 @@ func get_account_attrs(json_msg):
 	Account.buffer_steps = int(json_msg.data.primary_resources.buffer_steps)
 	Account.buffer_steps_max = int(json_msg.data.primary_resources.buffer_steps_max)
 	Account.gold = int(json_msg.data.primary_resources.gold)
+	
 	# professions
+	print(json_msg.data.professions)
 	Account.herbalism_lvl = int(json_msg.data.professions.herbalism_lvl)
 	Account.mining_lvl = int(json_msg.data.professions.mining_lvl)
 	Account.woodcutting_lvl = int(json_msg.data.professions.woodcutting_lvl)

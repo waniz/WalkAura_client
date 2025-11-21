@@ -17,6 +17,7 @@ class_name CharacterHUD extends Control
 
 
 func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	AccountManager.signal_AccountDataReceived.connect(_update_character_hud)
 	
 	# Make bars look “splendid”: rounded, shadowed, colored
@@ -33,7 +34,7 @@ func _ready() -> void:
 	Styler.style_name_label(activity_label, Color.from_rgba8(255, 128, 128))
 	
 	_update_character_hud(true)
-
+	
 	
 func set_stats(hp_current: int, hp_max: int, mp_current: int, mp_max: int, shield_current: int, shield_max: int, xp_current: int, xp_max: int) -> void:
 	_set_bar(hp_bar, hp_label, hp_current, hp_max)

@@ -1,9 +1,6 @@
-[gd_scene load_steps=5 format=3 uid="uid://ddualuxj4wcyb"]
+[gd_scene load_steps=2 format=3 uid="uid://ddualuxj4wcyb"]
 
 [ext_resource type="Script" uid="uid://bs6rjcbtak5sm" path="res://scenes/main_screens/character_inventory.gd" id="1_xow2p"]
-[ext_resource type="PackedScene" uid="uid://btkqrwpy7ojlt" path="res://scenes/support_screens/character_hud.tscn" id="2_rv2a7"]
-[ext_resource type="PackedScene" uid="uid://caj4vm4x2p0am" path="res://scenes/support_screens/cheat_panel.tscn" id="3_isrg4"]
-[ext_resource type="PackedScene" uid="uid://cvndrn0efp2w5" path="res://scenes/support_screens/debug_console.tscn" id="4_ayc3o"]
 
 [node name="CharacterInventory" type="Control"]
 layout_mode = 3
@@ -13,17 +10,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_xow2p")
-
-[node name="CharacterHUD" parent="." instance=ExtResource("2_rv2a7")]
-layout_mode = 1
-
-[node name="CheatPanel" parent="." instance=ExtResource("3_isrg4")]
-layout_mode = 1
-
-[node name="DebugConsole" parent="." instance=ExtResource("4_ayc3o")]
-layout_mode = 1
-offset_top = 0.0
-offset_bottom = 0.0
 
 [node name="TabContainer" type="TabContainer" parent="."]
 layout_mode = 0
@@ -65,26 +51,3 @@ theme_override_constants/margin_bottom = 2
 
 [node name="equipment_vbox" type="VBoxContainer" parent="TabContainer/Hero_Equipment/Margin"]
 layout_mode = 2
-
-[node name="PanelContainer" type="PanelContainer" parent="."]
-layout_mode = 0
-offset_left = 406.0
-offset_top = 920.0
-offset_right = 570.0
-offset_bottom = 1018.0
-
-[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer"]
-layout_mode = 2
-
-[node name="RequestInventory" type="Button" parent="PanelContainer/VBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 0
-text = "Get Inventory"
-
-[node name="RequestEquipment" type="Button" parent="PanelContainer/VBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 0
-text = "Get Equipment"
-
-[connection signal="pressed" from="PanelContainer/VBoxContainer/RequestInventory" to="." method="_on_request_inventory_pressed"]
-[connection signal="pressed" from="PanelContainer/VBoxContainer/RequestEquipment" to="." method="_on_request_equipment_pressed"]

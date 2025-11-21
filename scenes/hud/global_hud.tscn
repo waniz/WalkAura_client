@@ -1,0 +1,17 @@
+[gd_scene load_steps=4 format=3 uid="uid://gmdl1jt3f2hv"]
+
+[ext_resource type="PackedScene" uid="uid://btkqrwpy7ojlt" path="res://scenes/support_screens/character_hud.tscn" id="1_eolem"]
+[ext_resource type="PackedScene" uid="uid://caj4vm4x2p0am" path="res://scenes/support_screens/cheat_panel.tscn" id="2_g1adc"]
+[ext_resource type="PackedScene" uid="uid://cvndrn0efp2w5" path="res://scenes/support_screens/debug_console.tscn" id="3_8dy8u"]
+
+[node name="GlobalHud" type="CanvasLayer"]
+layer = 100
+
+[node name="CharacterHUD" parent="." instance=ExtResource("1_eolem")]
+
+[node name="CheatPanel" parent="." instance=ExtResource("2_g1adc")]
+
+[node name="DebugConsole" parent="." instance=ExtResource("3_8dy8u")]
+offset_top = 0.0
+offset_bottom = 0.0
+size_flags_vertical = 8

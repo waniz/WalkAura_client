@@ -46,12 +46,6 @@ func _ready() -> void:
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	size_flags_vertical   = Control.SIZE_EXPAND_FILL
 	
-	# Fallback if instance exports got cleared in Inspector
-	if slots_left.is_empty() and slots_right.is_empty() and slots_bottom.is_empty():
-		slots_left  = ["Head","Neck","Shoulder","Back","Chest","Wrist"]
-		slots_right = ["Hands","Waist","Legs","Feet","Ring1","Ring2","Trinket1","Trinket2"]
-		slots_bottom = ["MainHand","OffHand"]
-	
 	_build_ui()
 	
 	if inventory_grid_path != NodePath(""):
@@ -218,7 +212,7 @@ func _update_slot(slot_name: String) -> void:
 		if sb is StyleBoxFlat:
 			(sb as StyleBoxFlat).border_color = Color(0.25,0.25,0.3)
 		panel.tooltip_text = ""
-		
+
 func _build_builtin_tooltip(def: Dictionary) -> String:
 	var lines = []
 	lines.append(String(def.get("name", "Item")))
@@ -226,26 +220,7 @@ func _build_builtin_tooltip(def: Dictionary) -> String:
 	if descr != "":
 		lines.append(descr)
 	return "\n".join(lines)
-	
-# --------------- DnD -----------------
-#func _can_drop_data(slot_name: String, data: Variant) -> bool:
-	#if typeof(data) != TYPE_DICTIONARY: return false
-	#if not data.has("id"): return false
-	#var id = String(data["id"])
-	#return _is_item_allowed_for_slot(slot_name, id)
-	#
-#func _on_drop_data(slot_name: String, data: Dictionary) -> void:
-	#if not _can_drop_data(slot_name, data): return
-	#var id = String(data["id"])
-	## Equip (consume 1 from inventory if possible)
-	#_equipped[slot_name] = {"id": id, "qty": 1}
-	#_update_slot(slot_name)
-	#emit_signal("equipped_item", slot_name, id)
-#
-	## Remove 1 from InventoryGrid source, if provided
-	#if _inv and _inv.has_method("remove_at") and data.has("from"):
-		#_inv.call("remove_at", int(data["from"]), 1)
-		
+
 func _is_item_allowed_for_slot(slot_name: String, id: String) -> bool:
 	var def = ItemDB.ITEM_DEFS.get(id, null)
 	if def == null: return false

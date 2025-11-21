@@ -12,7 +12,7 @@ var _android_plugin = null
 
 
 func _ready() -> void:
-	
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	AccountManager.signal_UserStepLastTSReceived.connect(_on_step_counter_android_update)
 	
 	Styler.style_panel(panel, Color.from_rgba8(16,18,24,220), Color.from_rgba8(255,255,255,30))

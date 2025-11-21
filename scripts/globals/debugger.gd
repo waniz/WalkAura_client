@@ -8,6 +8,7 @@ func _ready() -> void:
 	ServerConnector.server_connector_message_bus.connect(_on_message)
 	
 func _on_message(message):
+	#print(message)
 	if "ERROR" in message:
 		_log = "[color=red]" + message + "[/color]"
 	elif "Client" in message:

@@ -57,6 +57,7 @@ func apply_activity_progress(d: Dictionary) -> void:
 	var xp_to_next = d.get("xp_to_next", null)
 	var req_skill: int = int(d.get("req_skill", 1))
 	var loot_summary = d.get("loot", d.get("loot_summary", {}))
+	var loot_counts = d.get("loot", d.get("loot_counts", {}))
 	if typeof(loot_summary) == TYPE_DICTIONARY and loot_summary.has("summary"):
 		loot_summary = loot_summary["summary"]
 		
@@ -79,7 +80,7 @@ func apply_activity_progress(d: Dictionary) -> void:
 	loot_title.text = "Loot:"
 
 	# Loot
-	_render_loot(loot_summary)
+	_render_loot(loot_counts)
 		
 # ------------------ UI building ------------------
 func _build_ui() -> void:
@@ -148,15 +149,24 @@ func _render_loot(summary) -> void:
 	if summary == null:
 		return
 		
-	for id in summary[0].keys():
-		var qty = int(summary[0][id])
+	print(summary)
+		
+	for key in summary.keys():
+		var qty = int(summary[key])
 		var row := HBoxContainer.new()
 		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_theme_constant_override("separation", 8)
 
-		var name = id
-		if _item_name_resolver.is_valid():
-			name = str(_item_name_resolver.call(id))
+		var name = key
+		
+		var icon = TextureRect.new()
+		var tex: Texture2D = ItemDB.ITEM_ICONS.get(key, null)
+		icon.texture = tex
+		#icon.anchor_left = 0; icon.anchor_top = 0; icon.anchor_right = 1; icon.anchor_bottom = 1
+		#icon.offset_left = 2; icon.offset_top = 2; icon.offset_right = -2; icon.offset_bottom = -2
+		#icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		#icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.size = Vector2(50, 50)
 
 		var left := Label.new()
 		left.text = name
@@ -166,6 +176,7 @@ func _render_loot(summary) -> void:
 		right.text = "x%d" % qty
 		right.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
+		row.add_child(icon)
 		row.add_child(left)
 		row.add_child(right)
 		_loot_list.add_child(row)
