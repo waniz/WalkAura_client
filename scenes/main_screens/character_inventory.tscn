@@ -17,9 +17,10 @@ offset_left = 11.0
 offset_top = 177.0
 offset_right = 696.0
 offset_bottom = 898.0
-current_tab = 0
+current_tab = 1
 
 [node name="Hero_Inventory" type="PanelContainer" parent="TabContainer"]
+visible = false
 layout_mode = 2
 metadata/_tab_index = 0
 
@@ -38,16 +39,30 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [node name="Hero_Equipment" type="PanelContainer" parent="TabContainer"]
-visible = false
 layout_mode = 2
 metadata/_tab_index = 1
 
 [node name="Margin" type="MarginContainer" parent="TabContainer/Hero_Equipment"]
 layout_mode = 2
-theme_override_constants/margin_left = 2
-theme_override_constants/margin_top = 2
-theme_override_constants/margin_right = 2
-theme_override_constants/margin_bottom = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
 
 [node name="equipment_vbox" type="VBoxContainer" parent="TabContainer/Hero_Equipment/Margin"]
 layout_mode = 2
+
+[node name="top_container" type="HBoxContainer" parent="TabContainer/Hero_Equipment/Margin/equipment_vbox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="col_left" type="VBoxContainer" parent="TabContainer/Hero_Equipment/Margin/equipment_vbox/top_container"]
+layout_mode = 2
+size_flags_horizontal = 0
+
+[node name="pirat_texture" type="TextureRect" parent="TabContainer/Hero_Equipment/Margin/equipment_vbox/top_container"]
+layout_mode = 2
+
+[node name="col_right" type="VBoxContainer" parent="TabContainer/Hero_Equipment/Margin/equipment_vbox/top_container"]
+layout_mode = 2
+size_flags_horizontal = 10

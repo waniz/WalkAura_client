@@ -1,37 +1,30 @@
 class_name InventoryGrid extends Control
 
-signal equipped_item(slot_name: String, item_id: String)
-signal unequipped_item(slot_name: String, item_id: String)
-
 @onready var _grid: GridContainer = $TabContainer/Hero_Inventory/Margin/VBoxContainer/GridContainer
 @onready var equipment_vbox: VBoxContainer = $TabContainer/Hero_Equipment/Margin/equipment_vbox
+@onready var top_container: HBoxContainer = $TabContainer/Hero_Equipment/Margin/equipment_vbox/top_container
+@onready var col_right: VBoxContainer = $TabContainer/Hero_Equipment/Margin/equipment_vbox/top_container/col_right
+@onready var col_left: VBoxContainer = $TabContainer/Hero_Equipment/Margin/equipment_vbox/top_container/col_left
+@onready var pirat_texture: TextureRect = $TabContainer/Hero_Equipment/Margin/equipment_vbox/top_container/pirat_texture
+
 
 # --- Layout/config ---
 @export var columns: int = 10
 @export var rows: int = 10
-@export var slot_size: Vector2i = Vector2i(32, 48)
+@export var slot_size: Vector2i = Vector2i(64, 64)
 @export var slot_padding: int = 6
 @export var show_stack_count: bool = true
 @export var show_tooltips: bool = true
 
-@export var slot_size_eq: Vector2i = Vector2i(96, 96)
+@export var slot_size_eq: Vector2i = Vector2i(64, 64)
 @export var bottom_slot_size_eq: Vector2i = Vector2i(96, 96)
-@export var slot_padding_eq: int = 8
+@export var slot_padding_eq: int = 10
 
-@export var tooltip_long_press_ms = 350
-@export var tooltip_move_cancel_px = 8.0
-@export var tooltip_tap_to_dismiss = true
-
-@export var slots_left: Array[String]  = ["head","neck","shoulder","cloak","chest","wrist"]
-@export var slots_right: Array[String] = ["gloves","belt","legs","feet","ring1","ring2","trinket1","trinket2"]
-@export var slots_bottom: Array[String] = ["mainHand","offHand"]
+const TOOLTIP_MARGIN = 8.0
 
 # touch tracking
-var _touch_active = true
-var _touch_slot = -1
-var _press_time_ms = 0
-var _press_pos = Vector2.ZERO
 var _last_pointer_pos = Vector2.ZERO
+var hero_equipment_dict = {}
 var _equipped:   Dictionary = {}   # slot_name -> {id:String, qty:int}
 var _slot_nodes: Dictionary = {}   # slot_name -> {panel, btn, icon, label}
 
@@ -46,6 +39,7 @@ var _card_box_ref: Callable = Callable() # e.g. FuncRef(self, "_card_box")
 var _slots: Array = [] # [{"id_":String, "qty":int}] or null
 var _tooltip: WowTooltip
 var _tooltip_visible = false
+var _tooltip_slot: int = -1
 
 const QUALITY_COLORS := {
 	0: Color(0.62, 0.62, 0.62), # poor (gray)
@@ -61,8 +55,6 @@ const QUALITY_COLORS := {
 func _ready() -> void:
 	
 	AccountManager.signal_InventoryReceived.connect(_on_request_inventory)
-	
-	item_defs = ItemDB.ITEM_DEFS
 	item_icons = ItemDB.ITEM_ICONS
 	
 	anchor_left = 0; anchor_top = 0; anchor_right = 1; anchor_bottom = 1
@@ -73,28 +65,25 @@ func _ready() -> void:
 	set_process_unhandled_input(true)
 	
 	_build_grid()
-	
 	_build_ui_eq()
 	
-func _process(_dt: float) -> void:
-	# follow finger/mouse
+	var pirat_tex = load("res://assets/background/pirat.png") as Texture2D
+	pirat_texture.texture = pirat_tex
+	
+func _process(_dt: float) -> void:	
 	if _tooltip_visible:
 		_update_tooltip_position_to_point(_last_pointer_pos)
-	# long-press detection
-	if _touch_active and not _tooltip_visible:
-		if Time.get_ticks_msec() - _press_time_ms >= tooltip_long_press_ms:
-			_show_tooltip_for(_touch_slot)
-			_update_tooltip_position_to_point(_press_pos)
 
 func _unhandled_input(event: InputEvent) -> void:
-	# tap anywhere hides the tooltip (unless it's our long press)
-	if _tooltip_visible and event is InputEventScreenTouch and event.pressed:
-		_hide_tooltip()
+	if _tooltip_visible:
+		if event is InputEventScreenTouch:
+			_hide_tooltip()
+		elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+			_hide_tooltip()
 	
 # Public API -------------------------------------------------------------
 func set_card_box(card_box_callable: Callable) -> void:
 	_card_box_ref = card_box_callable
-	# refresh slot visuals
 	_rebuild_grid()
 
 func resize_grid(new_cols:int, new_rows:int) -> void:
@@ -112,7 +101,6 @@ func clear_inventory() -> void:
 	_hide_tooltip()
 
 func get_inventory() -> Array:
-	# deep-copy snapshot
 	var out := []
 	for s in _slots:
 		if s == null:
@@ -131,11 +119,11 @@ func set_inventory(arr: Array) -> void:
 			_slots[i] = {"id": String(v["id"]), "qty": int(v["qty"])}
 	_refresh_all()
 
-func add_item(id_:String, qty:int) -> int:
+func add_item(code:String, qty:int, def: Dictionary) -> int:
 	# Returns leftover qty that didn't fit
 	if qty <= 0:
 		return 0
-	var def = item_defs.get(id_, null)
+
 	var stackable = def and def.get("stackable", true)
 	var max_stack := int(def.get("max_stack", 99)) if def else 99
 
@@ -147,7 +135,7 @@ func add_item(id_:String, qty:int) -> int:
 			if remaining <= 0: break
 			var s = _slots[i]
 			if s == null: continue
-			if s["id_"] == id_:
+			if s["code"] == code:
 				var space := max_stack - int(s["qty"])
 				if space > 0:
 					var push = min(space, remaining)
@@ -159,7 +147,7 @@ func add_item(id_:String, qty:int) -> int:
 			if remaining <= 0: break
 			if _slots[i] == null:
 				var push = min(max_stack, remaining)
-				_slots[i] = {"id_": id_, "qty": push}
+				_slots[i] = {"code": code, "qty": push}
 				remaining -= push
 				_refresh_slot(i)
 	else:
@@ -167,12 +155,12 @@ func add_item(id_:String, qty:int) -> int:
 		for i in _slots.size():
 			if remaining <= 0: break
 			if _slots[i] == null:
-				_slots[i] = {"id_": id_, "qty": 1}
+				_slots[i] = {"code": code, "qty": 1}
 				remaining -= 1
 				_refresh_slot(i)
 	return remaining
 
-func remove_at(index:int, qty:int=2147483647) -> Dictionary:
+func remove_at(index:int, qty:int) -> Dictionary:
 	# Removes up to qty from slot index. Returns {removed_id, removed_qty} or {} if none.
 	if index < 0 or index >= _slots.size():
 		return {}
@@ -189,8 +177,6 @@ func remove_at(index:int, qty:int=2147483647) -> Dictionary:
 	
 # Internal UI ------------------------------------------------------------
 func _build_grid() -> void:
-	#if is_instance_valid(_grid):
-		#_grid.queue_free()
 	for c in _grid.get_children():
 		c.queue_free()
 		
@@ -237,7 +223,7 @@ func _make_slot(index:int) -> Control:
 	btn.focus_mode = Control.FOCUS_ALL
 	btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	btn.gui_input.connect(func(e): _on_slot_gui_input_touch(index, e))
+	btn.gui_input.connect(func(e): _on_slot_gui_input_touch(btn, index, e))
 	panel.add_child(btn)
 	
 	var icon = TextureRect.new()
@@ -268,19 +254,6 @@ func _make_slot(index:int) -> Control:
 	count.offset_bottom = -2
 	btn.add_child(count)
 	
-	## Drag & drop
-	#btn.gui_input.connect(func(e): _on_slot_gui_input(index, e))
-	#panel.get_drag_data = func(at_position: Vector2) -> Variant:
-		#return _slot_drag_data(index)
-	#panel.can_drop_data = func(at_position: Vector2, data: Variant) -> bool:
-		#return _slot_can_drop(index, data)
-	#panel.drop_data = func(at_position: Vector2, data: Variant) -> void:
-		#_slot_drop(index, data)
-
-	# Tooltip
-	if show_tooltips:
-		panel.mouse_entered.connect(func(): _show_tooltip_for(index))
-		panel.mouse_exited.connect(func(): _hide_tooltip())
 	return panel
 	
 func _refresh_slot(index:int) -> void:
@@ -299,65 +272,68 @@ func _refresh_slot(index:int) -> void:
 		slot.tooltip_text = ""
 		return
 
-	var id_ = String(s["id_"])
+	var code = String(s["code"])
 	var qty = int(s["qty"])
-	icon.texture = item_icons.get(id_, null)
+	icon.texture = item_icons.get(code, null)
 	btn.disabled = false
 	count.text = str(qty) if (show_stack_count and qty > 1) else ""
 
 	if show_tooltips:
-		var def = item_defs.get(id_, {})
-		var nm = String(def.get("name", id_))
+		var def = item_defs.get(code, {})
+		var nm = String(def.get("name", code))
 		var ds = String(def.get("descr", ""))
 		slot.tooltip_text = nm + ("\n" + ds if ds != "" else "")
 		
-func _update_tooltip(index:int, panel:Control) -> void:
-	# Refresh tooltip when mouse enters (in case defs changed)
-	_refresh_slot(index)
-	
 func _ensure_tooltip() -> void:
-	if _tooltip == null:
-		_tooltip = WowTooltip.new()
-		_tooltip.visible = false
-		_tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		add_child(_tooltip)
+	if _tooltip:
+		return
+		
+	_tooltip = WowTooltip.new()
+	_tooltip.visible = false
+	_tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_tooltip)
+	
+	SignalManager.signal_UseItem.connect(_on_tooltip_use_pressed)
+	#_tooltip.equip_pressed.connect(_on_tooltip_equip_pressed)
 		
 func _show_tooltip_for(index:int) -> void:
 	_ensure_tooltip()
-	var s = _slots[index]
-	if s == null:
+	
+	if index < 0 or index >= _slots.size():
 		return
-	var id_ = String(s["id_"])
-	var def = item_defs[id_]
-	# Accept both flat attrs or nested; adapt as you store them
-	if not def.has("attrs") and def.has("attributes"):
-		def["attrs"] = def["attributes"]
-	_tooltip.set_data(def, int(s.get("qty", 1)))
+	
+	var stack = _slots[index]
+	if stack == null:
+		return
+
+	var def = item_defs[stack["code"]]
+	if def.is_empty():
+		return
+		
+	_tooltip.set_data(def, stack.get("quantity", 1))
+	_update_tooltip_position()
 	_tooltip.visible = true
 	_tooltip_visible = true
-	_update_tooltip_position()
+	_tooltip_slot = index
 	
-func _on_slot_gui_input_touch(index:int, e: InputEvent) -> void:
-	if e is InputEventScreenTouch:
-		_last_pointer_pos = e.position
-		if e.pressed:
-			_touch_active = true
-			_touch_slot = index
-			_press_time_ms = Time.get_ticks_msec()
-			_press_pos = e.position
-		else:
-			# finger lifted
-			if _tooltip_visible and tooltip_tap_to_dismiss:
+func _on_slot_gui_input_touch(btn: Button, index:int, event: InputEvent) -> void:
+	if event is InputEventScreenTouch:
+		if event.pressed:
+			_last_pointer_pos = btn.get_global_rect().position + event.position
+			if _tooltip_visible:
 				_hide_tooltip()
-			_touch_active = false
-			_touch_slot = -1
-	elif e is InputEventScreenDrag:
-		_last_pointer_pos = e.position
+				return
+				
+			_show_tooltip_for(index)
+			_tooltip_visible = true
+			_tooltip_slot = index
+			_update_tooltip_position_to_point(event.position)
+		return
+	
+	if event is InputEventScreenDrag:
+		_last_pointer_pos = btn.get_global_rect().position + event.position
 		if _tooltip_visible:
-			_update_tooltip_position_to_point(_last_pointer_pos)
-		# cancel long-press if user starts moving (likely a drag)
-		if _touch_active and e.position.distance_to(_press_pos) > tooltip_move_cancel_px:
-			_touch_active = false
+			_update_tooltip_position_to_point(event.position)
 
 func _hide_tooltip() -> void:
 	if _tooltip:
@@ -367,110 +343,42 @@ func _hide_tooltip() -> void:
 func _update_tooltip_position() -> void:
 	if _tooltip == null or not _tooltip.visible:
 		return
-	var m = get_viewport().get_mouse_position()
-	var ofs = Vector2(18, 12)
-	var pos = m + ofs
-	var vp = get_viewport_rect().size
-	var min_size = _tooltip.get_combined_minimum_size()
-	pos.x = min(pos.x, vp.x - min_size.x - 6)
-	pos.y = min(pos.y, vp.y - min_size.y - 6)
-	_tooltip.position = pos
+		
+	_tooltip.position = _last_pointer_pos
 	
-func _update_tooltip_position_to_point(p: Vector2) -> void:
+func _update_tooltip_position_to_point(global_point: Vector2) -> void:
 	if _tooltip == null or not _tooltip.visible:
 		return
-	var ofs := Vector2(18, 12)
-	var pos := p + ofs
-	var vp := get_viewport_rect().size
-	var min_size := _tooltip.get_combined_minimum_size()
-	pos.x = min(pos.x, vp.x - min_size.x - 6)
-	pos.y = min(pos.y, vp.y - min_size.y - 6)
-	_tooltip.position = pos
-	
-# Drag & Drop ------------------------------------------------------------
-func _on_slot_gui_input(index:int, e:InputEvent) -> void:
-	if e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT and e.pressed:
-		# start drag if slot has item
-		if _slots[index] != null:
-			panel_get(index).set_drag_preview(_make_drag_preview(index))
-			panel_get(index).drag_started()
-			
-func panel_get(index:int) -> PanelContainer:
-	return _grid.get_child(index)
-	
-func _make_drag_preview(index:int) -> Control:
-	var p := PanelContainer.new()
-	p.custom_minimum_size = Vector2(slot_size)
-	var tr = TextureRect.new()
-	tr.texture = item_icons.get(String(_slots[index]["id"]), null)
-	tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	tr.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
-	p.add_child(tr)
-	return p
-	
-func _slot_drag_data(idx: int) -> Variant:
-	var s = _slots[idx]
-	if s == null:
-		return null
-	var data := {
-		"from": idx,
-		"id": String(s["id"]),
-		"qty": int(s["qty"])
-	}
-	set_drag_preview(_make_drag_preview(idx))
-	return data
-	
-func _slot_can_drop(idx: int, data: Variant) -> bool:
-	if typeof(data) != TYPE_DICTIONARY or not data.has("from"):
-		return false
-	if data["from"] == idx:
-		return false
-	return true
-	
-func _slot_drop(idx: int, data: Dictionary) -> void:
-	#if not _can_drop_data(idx, data):
-		#return
-	var from := int(data["from"])
-	var src = _slots[from]
-	var dst = _slots[idx]
-	if src == null:
-		return
 
-	var id := String(src["id"])
-	var moved_qty := int(src["qty"])
-
-	var def = item_defs.get(id, null)
-	var stackable = def and def.get("stackable", true)
-	var max_stack := int(def.get("max_stack", 99)) if def else 99
-
-	if dst == null:
-		# move entire stack
-		_slots[idx] = src
-		_slots[from] = null
-	elif dst["id"] == id and stackable:
-	# merge
-		var space := max_stack - int(dst["qty"])
-		if space > 0:
-			var push = min(space, moved_qty)
-			dst["qty"] += push
-			src["qty"] -= push
-			if src["qty"] <= 0:
-				_slots[from] = null
-		else:
-			# no space, swap
-			var tmp = _slots[idx]
-			_slots[idx] = _slots[from]
-			_slots[from] = tmp
+	var vp_rect = get_viewport().get_visible_rect()
+	var vp_size: Vector2 = vp_rect.size
+	
+	var tooltip_size: Vector2 = _tooltip.get_combined_minimum_size()
+	if tooltip_size == Vector2.ZERO:
+		_tooltip.size = Vector2.ZERO
+		_tooltip.reset_size()
+		tooltip_size = _tooltip.get_combined_minimum_size()
+	
+	var pos = global_point
+	
+	var space_right = vp_size.x - global_point.x
+	if space_right >= tooltip_size.x + TOOLTIP_MARGIN:
+		pos.x += TOOLTIP_MARGIN
 	else:
-		# different items, swap
-		var tmp2 = _slots[idx]
-		_slots[idx] = _slots[from]
-		_slots[from] = tmp2
-
-	_refresh_slot(idx)
-	_refresh_slot(from)
+		pos.x -= tooltip_size.x + TOOLTIP_MARGIN
+		
+	var space_bottom = vp_size.y - global_point.y
+	if space_bottom >= tooltip_size.y + TOOLTIP_MARGIN:
+		pos.y += TOOLTIP_MARGIN
+	else:
+		pos.y -= tooltip_size.y + TOOLTIP_MARGIN
+		
+	pos.x = clampf(pos.x, 0.0, max(0.0, vp_size.x - tooltip_size.x))
+	pos.y = clampf(pos.y, 0.0, max(0.0, vp_size.y - tooltip_size.y))
 	
-# Helpers ----------------------------------------------------------------
+	_tooltip.global_position = pos
+	
+# Helpers ----------------------------------------------------------------------
 func find_first(id:String) -> int:
 	for i in _slots.size():
 		var s = _slots[i]
@@ -485,49 +393,31 @@ func count_total(id:String) -> int:
 			total += int(s["qty"])
 	return total
 
-# Equipment ====================================
+# Equipment ====================================================================
 func _build_ui_eq() -> void:
 
 	equipment_vbox.name = "Root"
 	equipment_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	equipment_vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	equipment_vbox.add_theme_constant_override("separation", slot_padding * 2)
+	equipment_vbox.add_theme_constant_override("h_separation", slot_padding)
+	equipment_vbox.add_theme_constant_override("v_separation", slot_padding)
 
 	# --- TOP: two vertical columns (WoW armory)
-	var top = HBoxContainer.new()
-	top.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	top.size_flags_vertical   = Control.SIZE_EXPAND_FILL
-	top.add_theme_constant_override("separation", slot_padding * 12) # wide gap between columns
-	equipment_vbox.add_child(top)
-	
-	var col_left = VBoxContainer.new()
-	col_left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	col_left.add_theme_constant_override("separation", slot_padding)
-	top.add_child(col_left)
-	
-	var col_right = VBoxContainer.new()
-	col_right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	col_right.add_theme_constant_override("separation", slot_padding)
-	top.add_child(col_right)
+	top_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top_container.size_flags_vertical   = Control.SIZE_EXPAND_FILL
+	top_container.add_theme_constant_override("separation", slot_padding_eq)
+
+	#col_left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col_left.add_theme_constant_override("separation", slot_padding_eq)
+
+	#col_right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col_right.add_theme_constant_override("separation", slot_padding_eq)
 
 	# Build slots
-	for s in slots_left:
-		col_left.add_child(_make_slot_eq(s, slot_size, true))
-	for s in slots_right:
-		col_right.add_child(_make_slot_eq(s, slot_size, false))
-		
-	# --- BOTTOM: centered weapon row
-	var bottom = HBoxContainer.new()
-	bottom.alignment = BoxContainer.ALIGNMENT_CENTER
-	bottom.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bottom.add_theme_constant_override("separation", slot_padding * 2)
-	equipment_vbox.add_child(bottom)
-
-	for s in slots_bottom:
-		if s == "MainHand":
-			bottom.add_child(_make_slot_eq(s, bottom_slot_size_eq, true))
-		else:
-			bottom.add_child(_make_slot_eq(s, bottom_slot_size_eq, false))
+	for s in ItemDB.slots_left:
+		col_left.add_child(_make_slot_eq(s, slot_size_eq, true))
+	for s in ItemDB.slots_right:
+		col_right.add_child(_make_slot_eq(s, slot_size_eq, false))
 
 func _make_slot_eq(slot_name: String, size: Vector2i, left: bool) -> Control:
 	var panel = PanelContainer.new()
@@ -554,15 +444,12 @@ func _make_slot_eq(slot_name: String, size: Vector2i, left: bool) -> Control:
 	hb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hb.add_theme_constant_override("separation", 8)
 	panel.add_child(hb)
-
-	var lbl = Label.new()
-	lbl.text = slot_name
-	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	
 	var btn = Button.new()
 	btn.flat = true
 	btn.focus_mode = Control.FOCUS_ALL
 	btn.custom_minimum_size = Vector2(size)
+	btn.gui_input.connect(func(e): _on_eq_slot_gui_input(btn, slot_name, e))
 	
 	var icon = TextureRect.new()
 	icon.name = "Icon"
@@ -573,41 +460,79 @@ func _make_slot_eq(slot_name: String, size: Vector2i, left: bool) -> Control:
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
 	if left:
-		hb.add_child(lbl)
 		hb.add_child(btn)
 		btn.add_child(icon)
 	else:
 		hb.add_child(btn)
 		btn.add_child(icon)
-		hb.add_child(lbl)
 		
-	_slot_nodes[slot_name] = {"panel": panel, "btn": btn, "icon": icon, "label": lbl}
+	_slot_nodes[slot_name] = {"panel": panel, "btn": btn, "icon": icon}
 	_update_slot_eq(slot_name)
 	return panel
+	
+func _on_eq_slot_gui_input(btn: Button, slot_name: String, event: InputEvent) -> void:
+	if event is InputEventScreenTouch:
+		if event.pressed:
+			_last_pointer_pos = btn.get_global_rect().position + event.position
+			if _tooltip_visible:
+				_hide_tooltip()
+				return
+
+		# Call the new equipment tooltip function
+		_show_tooltip_for_eq(slot_name)
+		_tooltip_visible = true
+		# We set the inventory slot to -1 so "Use" logic doesn't get confused
+		_tooltip_slot = -1 
+		_update_tooltip_position_to_point(event.position)
+	return
+
+	if event is InputEventScreenDrag:
+		_last_pointer_pos = btn.get_global_rect().position + event.position
+		if _tooltip_visible:
+			_update_tooltip_position_to_point(event.position)
+
+func _show_tooltip_for_eq(slot_name: String) -> void:
+	_ensure_tooltip()
+
+	# Check if we actually have something equipped in this slot
+	if not _equipped.has(slot_name):
+		return
+
+	var item_data = _equipped[slot_name]
+	var id = item_data["code"]
+
+	# Get the full definition (name, stats, description)
+	var def = hero_equipment_dict.get(id, {})
+	if def.is_empty():
+		# Fallback if def is missing but we have an ID
+		def = {"code": id, "descr": "Unknown Item"}
+
+	# Set data to tooltip. 
+	# quantity is usually 1 for equipment, but we check just in case.
+	_tooltip.set_data(def, item_data.get("qty", 1))
+
+	_update_tooltip_position()
+	_tooltip.visible = true
+	_tooltip_visible = true
 
 func _update_slot_eq(slot_name: String) -> void:
 	var nodes: Dictionary = _slot_nodes.get(slot_name, {})
 	if nodes.is_empty(): return
 	var panel: PanelContainer = nodes["panel"]
 	var icon: TextureRect = nodes["icon"]
-	var lbl: Label = nodes["label"]
 
 	var sb: StyleBox = panel.get_theme_stylebox("panel")
 	if _equipped.has(slot_name):
-		var id = String(_equipped[slot_name]["id"])
-		var def = item_defs.get(id, {"name": id, "quality": 1})
+		var id = String(_equipped[slot_name]["code"])
+		var def = item_defs.get(id, {"code": id, "quality": 1})
 		var tex: Texture2D = item_icons.get(id, null)
 		icon.texture = tex
-		lbl.text = String(def.get("name", slot_name))
 		# quality border
 		var q = int(def.get("quality", 1))
 		if sb is StyleBoxFlat:
 			(sb as StyleBoxFlat).border_color = QUALITY_COLORS.get(q, QUALITY_COLORS[1])
-		# tooltips
-		#panel.tooltip_text = _build_builtin_tooltip(def)		
 	else:
 		icon.texture = null
-		lbl.text = slot_name
 		if sb is StyleBoxFlat:
 			(sb as StyleBoxFlat).border_color = Color(0.25,0.25,0.3)
 		panel.tooltip_text = ""
@@ -621,30 +546,11 @@ func set_equipment(d: Dictionary) -> void:
 func get_equipment() -> Dictionary:
 	return _equipped.duplicate(true)
 	
-func _is_item_allowed_for_slot(slot_name: String, id: String) -> bool:
-	var def = item_defs.get(id, null)
-	if def == null: return false
-	var item_slot = String(def.get("slot", ""))
-	if item_slot == slot_name: return true
-	# accommodate generic types (Ring/Trinket/Hand) to numbered slots
-	var alt := {
-		"Ring1": ["Ring","Finger"],
-		"Ring2": ["Ring","Finger"],
-		"Trinket1": ["Trinket"],
-		"Trinket2": ["Trinket"],
-		"mainHand": ["mainHand","oneHand","twoHand"],
-		"offHand": ["offHand","shield","tome","oneHand"],
-	}
-	if alt.has(slot_name) and alt[slot_name].has(item_slot):
-		return true
-	return false
-	
 # Optional external API: programmatic equip/unequip
 func equip(slot_name: String, id: String) -> bool:
-	if not _is_item_allowed_for_slot(slot_name, id):
-		return false
-	_equipped[slot_name] = {"id": id, "qty": 1}
+	_equipped[slot_name] = {"code": id, "qty": 1}
 	_update_slot_eq(slot_name)
+	
 	emit_signal("equipped_item", slot_name, id)
 	return true
 
@@ -655,16 +561,30 @@ func unequip(slot_name: String) -> void:
 		_update_slot_eq(slot_name)
 		emit_signal("unequipped_item", slot_name, id)
 
-
 func _on_request_inventory(server_json) -> void:
 	clear_inventory()
 	
 	# handle inventory
 	if server_json.data.inventory:
 		for element in server_json.data.inventory:
-			add_item(element["code"], element["qty"])
+			add_item(element["code"], element["qty"], element)
+			item_defs[element["code"]] = element
 			
-	# handle equipment
+	# handle equipment		
 	if server_json.data.equipment:
 		for element in server_json.data.equipment:
-			equip(element["slot_type"], element["code"])
+			hero_equipment_dict[element["code"]] = element
+			equip(element["slot"], element["code"])
+
+func _on_tooltip_use_pressed(def: Dictionary) -> void:
+	if _tooltip_slot < 0 or _tooltip_slot >= _slots.size():
+		return
+		
+	var stack = _slots[_tooltip_slot]
+	if stack.is_empty():
+		return
+
+	_hide_tooltip()
+	
+func _on_tooltip_equip_pressed(def: Dictionary) -> void:
+	pass

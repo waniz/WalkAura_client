@@ -1,8 +1,6 @@
 extends Control
 class_name AppScenesHandler
 
-signal page_changed(index: int)
-
 @export var swipe_slop_px := 12.0
 @export var snap_threshold_px := 80.0
 @export var fling_velocity_px_s := 600.0
@@ -31,6 +29,7 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	AccountManager.signal_ActivityProgressReceived.connect(_show_progress_hud)
+	SignalManager.signal_PageChanged.connect(_on_page_change)
 
 	clip_contents = true
 	mouse_filter = Control.MOUSE_FILTER_PASS
@@ -178,7 +177,7 @@ func _end_swipe(end_x: float) -> void:
 func _go_to(index: int) -> void:
 	if index != _page:
 		_page = index
-		emit_signal("page_changed", _page)
+		SignalManager.signal_PageChanged.emit(_page)
 	_snap_to(_page, anim_time)
 	_swiping = false
 
@@ -186,3 +185,8 @@ func _snap_to(index: int, duration: float) -> void:
 	var target := -index * size.x
 	var tw := create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	tw.tween_property(_track, "position:x", target, duration)
+	
+func _on_page_change(index) -> void:
+	_page = index
+	_snap_to(index, anim_time)
+	_swiping = false

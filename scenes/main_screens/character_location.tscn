@@ -51,14 +51,17 @@ text = "Description"
 
 [node name="ActivitiesPanel" type="Panel" parent="."]
 layout_mode = 1
-anchors_preset = 4
+anchors_preset = -1
+anchor_left = 0.0013888889
 anchor_top = 0.5
+anchor_right = 0.0013888889
 anchor_bottom = 0.5
-offset_left = 11.0
-offset_top = -5.0
-offset_right = 687.0
-offset_bottom = 122.0
+offset_left = 12.0
+offset_top = -3.0
+offset_right = 688.0
+offset_bottom = 124.0
 grow_vertical = 2
+metadata/_edit_use_anchors_ = true
 
 [node name="HBoxContainer" type="HBoxContainer" parent="ActivitiesPanel"]
 layout_mode = 0
@@ -82,11 +85,15 @@ offset_bottom = 30.0
 text = "Activities:"
 
 [node name="ProfPanel" type="Panel" parent="."]
-layout_mode = 0
-offset_left = 13.0
-offset_top = 767.0
-offset_right = 378.0
-offset_bottom = 1029.0
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = -514.0
+offset_right = 377.0
+offset_bottom = -252.0
+grow_vertical = 0
 
 [node name="TitleLabel" type="Label" parent="ProfPanel"]
 layout_mode = 0

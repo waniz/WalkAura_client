@@ -66,6 +66,22 @@ var alchemy_xp
 var cooking_xp
 var enchanting_xp
 
+# passives
+var thick_skin_lvl
+var thick_skin_xp
+var brutal_finish_lvl
+var brutal_finish_xp
+var magic_ward_lvl
+var magic_ward_xp
+var guardian_shell_lvl
+var guardian_shell_xp
+var evasion_training_lvl
+var evasion_training_xp
+var mana_flow_lvl
+var mana_flow_xp
+var regenerative_steps_lvl
+var regenerative_steps_xp
+
 # secondary parameters
 var atk
 var m_atk

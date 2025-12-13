@@ -1,0 +1,68 @@
+[gd_scene load_steps=5 format=3 uid="uid://c4op53aa1ck2j"]
+
+[ext_resource type="Script" uid="uid://c8fshamurem7o" path="res://scenes/support_screens/bottom_hud.gd" id="1_6uxbh"]
+[ext_resource type="Texture2D" uid="uid://cl423gh3aexc0" path="res://assets/general_icons/hud/buttom_hud_inventory.png" id="1_gafp4"]
+[ext_resource type="Texture2D" uid="uid://cshohfwa2gp32" path="res://assets/general_icons/hud/buttom_hud_character_without_face.png" id="1_o6cqb"]
+[ext_resource type="Texture2D" uid="uid://blo3qubxqag0o" path="res://assets/general_icons/hud/buttom_hud_location.png" id="2_6ib3j"]
+
+[node name="BottomHUD" type="CanvasLayer"]
+script = ExtResource("1_6uxbh")
+
+[node name="ButtonPanel" type="PanelContainer" parent="."]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -347.0
+offset_top = -97.0
+offset_right = 347.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="ButtonPanel"]
+layout_mode = 2
+
+[node name="HBox" type="HBoxContainer" parent="ButtonPanel/MarginContainer"]
+layout_mode = 2
+
+[node name="BtnProfile" type="TextureButton" parent="ButtonPanel/MarginContainer/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+texture_normal = ExtResource("1_o6cqb")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="BtnLocation" type="TextureButton" parent="ButtonPanel/MarginContainer/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+texture_normal = ExtResource("2_6ib3j")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="BtnInventory" type="TextureButton" parent="ButtonPanel/MarginContainer/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+texture_normal = ExtResource("1_gafp4")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="BtnNotUsed1" type="TextureButton" parent="ButtonPanel/MarginContainer/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="BtnNotUsed2" type="TextureButton" parent="ButtonPanel/MarginContainer/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+ignore_texture_size = true
+stretch_mode = 5
+
+[connection signal="pressed" from="ButtonPanel/MarginContainer/HBox/BtnProfile" to="." method="_on_btn_profile_pressed"]
+[connection signal="pressed" from="ButtonPanel/MarginContainer/HBox/BtnLocation" to="." method="_on_btn_location_pressed"]
+[connection signal="pressed" from="ButtonPanel/MarginContainer/HBox/BtnInventory" to="." method="_on_btn_inventory_pressed"]

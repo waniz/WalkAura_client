@@ -12,11 +12,16 @@ func _ready() -> void:
 	
 	SignalManager.signal_CreateUser.connect(_on_user_creating)
 	SignalManager.signal_LoginUser.connect(_on_user_login)
+	
 	SignalManager.signal_UserActivity.connect(_on_user_activity)
+	
 	SignalManager.signal_StepsUpdatesCheats.connect(_on_step_counter_cheat_update)
 	SignalManager.signal_StepsUpdatesAndroid.connect(_on_step_counter_android_update)
 	SignalManager.signal_StepsRequestLastTimestamp.connect(_on_step_counter_android_request_last_ts)
+	
 	SignalManager.signal_RequestInventory.connect(_on_inventory_request)
+	SignalManager.signal_UseItem.connect(_on_useitem_request)
+	SignalManager.signal_EquipItem.connect(_on_equip_request)
 
 
 func connect_to_server() -> void:
@@ -26,7 +31,7 @@ func connect_to_server() -> void:
 		set_process(false)
 	else:
 		await get_tree().create_timer(1).timeout
-		server_connector_message_bus.emit("[Client] Connecting to server ... OK")
+		server_connector_message_bus.emit("[Client] Connected to server ... ")
 		
 func _process(_delta: float) -> void:
 	socket.poll()
@@ -37,7 +42,7 @@ func _process(_delta: float) -> void:
 
 # ################################
 # """Signal compilator section"""
-func _on_user_creating(user, password):
+func _on_user_creating(user, password) -> void:
 	var payload := {
 		"cmd": "create_user",
 		"payload": {
@@ -49,7 +54,7 @@ func _on_user_creating(user, password):
 	socket.send_text(server_request)
 	server_connector_message_bus.emit("[Client] Requesting user creating...")
 
-func _on_user_login(user, password):
+func _on_user_login(user, password) -> void:
 	var payload := {
 		"cmd": "login_user",
 		"payload": {
@@ -59,9 +64,9 @@ func _on_user_login(user, password):
 	}	
 	var server_request = JSON.stringify(payload)
 	socket.send_text(server_request)
-	server_connector_message_bus.emit("[Client] Requesting user login...")
+	server_connector_message_bus.emit("[Client] Requesting login...")
 	
-func _on_user_activity(activity, activity_site, action):
+func _on_user_activity(activity, activity_site, action) -> void:
 	var payload := {
 		"cmd": "activity",
 		"payload": {
@@ -74,7 +79,7 @@ func _on_user_activity(activity, activity_site, action):
 	socket.send_text(server_request)
 	server_connector_message_bus.emit("[Client] Requesting activity: {0}, action: {1}".format([activity, action]))
 
-func _on_step_counter_cheat_update(amount):
+func _on_step_counter_cheat_update(amount) -> void:
 	var payload := {
 		"cmd": "steps_update_cheat",
 		"payload": {
@@ -85,7 +90,7 @@ func _on_step_counter_cheat_update(amount):
 	socket.send_text(server_request)
 	server_connector_message_bus.emit("[Client] Sending cheat steps: {0}".format([amount]))
 
-func _on_step_counter_android_request_last_ts(is_requested):
+func _on_step_counter_android_request_last_ts(is_requested) -> void:
 	if not is_requested:
 		return
 	
@@ -99,7 +104,7 @@ func _on_step_counter_android_request_last_ts(is_requested):
 	socket.send_text(server_request)
 	server_connector_message_bus.emit("[Client] Sending android steps request last ts")
 		
-func _on_step_counter_android_update(data):
+func _on_step_counter_android_update(data) -> void:
 	var payload := {
 		"cmd": "steps_update_android",
 		"payload": {
@@ -110,7 +115,7 @@ func _on_step_counter_android_update(data):
 	socket.send_text(server_request)
 	server_connector_message_bus.emit("[Client] Sending android steps to server")
 
-func _on_inventory_request(action):
+func _on_inventory_request(action) -> void:
 	var payload := {
 		"cmd": "inventory",
 		"payload": {
@@ -120,3 +125,28 @@ func _on_inventory_request(action):
 	var server_request = JSON.stringify(payload)
 	socket.send_text(server_request)
 	server_connector_message_bus.emit("[Client] Request Inventory: {0}".format([action]))
+	
+func _on_useitem_request(item_to_use) -> void:
+	var payload := {
+		"cmd": "inventory",
+		"payload": {
+			"action": "use_item",
+			"item": item_to_use,
+		}
+	}
+	var server_request = JSON.stringify(payload)
+	socket.send_text(server_request)
+	server_connector_message_bus.emit("[Client] Request to Use item: {0}".format([item_to_use]))
+
+func _on_equip_request(item_to_equip) -> void:
+	var payload := {
+		"cmd": "inventory",
+		"payload": {
+			"action": "equip",
+			"item": item_to_equip,
+		}
+	}
+	var server_request = JSON.stringify(payload)
+	socket.send_text(server_request)
+	server_connector_message_bus.emit("[Client] Request to Equip item: {0}".format([item_to_equip]))
+	

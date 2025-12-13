@@ -6,8 +6,8 @@ var _android_plugin = null
 @onready var panel: Panel = $Panel
 @onready var cheat_100_button: Button = $Panel/VBoxContainer/Cheat_100_button
 @onready var cheat_500_button: Button = $Panel/VBoxContainer/Cheat_500_button
-@onready var cheat_1000_button: Button = $Panel/VBoxContainer/Cheat_1000_button
-@onready var cheat_10000_button: Button = $Panel/VBoxContainer/Cheat_10000_button
+@onready var cheat_1000_button: Button = $Panel/VBoxContainer2/Cheat_1000_button
+@onready var cheat_10000_button: Button = $Panel/VBoxContainer2/Cheat_10000_button
 @onready var pedometer_plugin_button: Button = $Panel/PedometerPluginButton
 
 

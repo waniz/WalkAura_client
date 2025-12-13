@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="WalkAura"
-config/version="0.1.6.91"
+config/version="0.1.7.106"
 run/main_scene="uid://dlfywtlps2ee4"
 config/features=PackedStringArray("4.5", "Mobile")
 boot_splash/bg_color=Color(0.14117648, 0.14117648, 0.14117648, 0.18039216)
@@ -32,14 +32,17 @@ Debugger="*res://scripts/globals/debugger.gd"
 GameTextEn="*res://scripts/globals/dictionaries/game_texts_en.gd"
 ItemDB="*res://scripts/globals/itemDB.gd"
 Styler="*res://scripts/globals/styler.gd"
+ServerParams="*res://scripts/globals/base_classes/server_params.gd"
 
 [display]
 
 window/size/viewport_width=720
 window/size/viewport_height=1280
 window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
 window/handheld/orientation=1
 window/ios/allow_high_refresh_rate=false
+window/version="0.1.7.108"
 
 [editor_plugins]
 
@@ -55,10 +58,6 @@ folder_colors={
 "res://scripts/": "green",
 "res://shaders/": "pink"
 }
-
-[gui]
-
-theme/default_theme_scale=1.3
 
 [input_devices]
 

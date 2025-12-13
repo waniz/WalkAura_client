@@ -1,7 +1,6 @@
 class_name WowTooltip extends PanelContainer
 
-# Style
-@export var bg_color = Color(0.06, 0.06, 0.08, 0.92)  # dark, 92% opacity
+@export var bg_color = Color(0.06, 0.06, 0.08, 0.88)  # dark, 88% opacity
 @export var border_width = 2
 @export var corner_radius = 8
 
@@ -18,6 +17,14 @@ const QUALITY_COLORS := {
 
 var _title: Label
 var _lines: VBoxContainer
+
+var _def: Dictionary = {}
+var _qty: int = 0
+
+var _footer: HBoxContainer
+var _buttons: VBoxContainer
+var _btn_use: Button
+var _btn_equip: Button
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE   # ignore pointer, don't steal input
@@ -51,8 +58,34 @@ func _ready() -> void:
 	_lines = VBoxContainer.new()
 	_lines.add_theme_constant_override("separation", 2)
 	root.add_child(_lines)
+	
+	_buttons = VBoxContainer.new()
+	root.add_child(_buttons)
+	
+	#_footer = HBoxContainer.new()
+	##_footer.alignment = BoxContainer.ALIGNMENT_BOTTOM
+	#add_child(_footer)
+
+	_btn_use = Button.new()
+	Styler.style_button(_btn_use,  Color.from_rgba8(64,180,255))
+	_btn_use.text = "Use"
+	_btn_use.visible = false
+	_btn_use.focus_mode = Control.FOCUS_NONE
+	_btn_use.pressed.connect(_on_use_pressed)
+	_buttons.add_child(_btn_use)
+
+	_btn_equip = Button.new()
+	Styler.style_button(_btn_equip,  Color.from_rgba8(64,180,255))
+	_btn_equip.text = "Equip"
+	_btn_equip.visible = false
+	_btn_equip.focus_mode = Control.FOCUS_NONE
+	_btn_equip.pressed.connect(_on_equip_pressed)
+	_buttons.add_child(_btn_equip)
 
 func set_data(item_def: Dictionary, qty: int=1) -> void:
+	_def = item_def
+	_qty = qty
+	
 	# item_def expected keys: name, descr, quality:int, attrs:Dictionary
 	var q = int(item_def.get("quality", 1))
 	var color = QUALITY_COLORS.get(q, QUALITY_COLORS[1])
@@ -100,3 +133,38 @@ func set_data(item_def: Dictionary, qty: int=1) -> void:
 		st.text = "Stack: %d" % qty
 		st.modulate = Color(0.9, 0.9, 0.9, 0.9)
 		_lines.add_child(st)
+		
+	_btn_use.visible = _can_use(_def)
+	_btn_equip.visible = _can_equip(_def)
+
+func _can_use(def: Dictionary) -> bool:
+	var item_class := str(def.get("itemClass", "")).to_lower()
+	var sub_class := str(def.get("itemSubClass", "")).to_lower()
+	if item_class == "consumable":
+		return true
+	if "potion" in sub_class or "food" in sub_class:
+		return true
+
+	var attrs = def.get("attrs", {})
+	if typeof(attrs) == TYPE_DICTIONARY:
+		if attrs.has("HP") or attrs.has("MP"):
+			return true
+
+	return false
+
+
+func _can_equip(def: Dictionary) -> bool:
+	if def.has("slot"):
+		var slot := str(def["slot_type"])
+		return slot != ""
+	return false
+	
+func _on_use_pressed() -> void:
+	if _def.is_empty():
+		return
+	SignalManager.signal_UseItem.emit(_def["name"])
+
+func _on_equip_pressed() -> void:
+	if _def.is_empty():
+		return
+	SignalManager.signal_EquipItem.emit(_def["name"])

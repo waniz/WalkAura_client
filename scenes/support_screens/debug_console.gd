@@ -1,4 +1,4 @@
-extends Control
+extends CanvasLayer
 
 @onready var panel: Panel = $Panel
 @onready var log: RichTextLabel = $Panel/VBox/Log

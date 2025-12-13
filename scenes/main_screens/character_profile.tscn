@@ -85,9 +85,14 @@ layout_mode = 2
 [node name="ProfessionsCard" type="PanelContainer" parent="TabContainer/ProfessionsStats/Margin/VBox"]
 layout_mode = 2
 
-[node name="ProfessionsGrid" type="GridContainer" parent="TabContainer/ProfessionsStats/Margin/VBox/ProfessionsCard"]
+[node name="HBoxContainer" type="HBoxContainer" parent="TabContainer/ProfessionsStats/Margin/VBox/ProfessionsCard"]
 layout_mode = 2
-columns = 3
+
+[node name="ProfessionsGrid_Level1" type="GridContainer" parent="TabContainer/ProfessionsStats/Margin/VBox/ProfessionsCard/HBoxContainer"]
+layout_mode = 2
+
+[node name="ProfessionsGrid_Level2" type="GridContainer" parent="TabContainer/ProfessionsStats/Margin/VBox/ProfessionsCard/HBoxContainer"]
+layout_mode = 2
 
 [node name="Talents" type="PanelContainer" parent="TabContainer"]
 visible = false

@@ -184,9 +184,7 @@ func _make_slot(slot_name: String, size: Vector2i, left: bool) -> Control:
 	return panel
 	
 func _update_slot(slot_name: String) -> void:
-	print("INSIDE _update_slot")
 	var nodes: Dictionary = _slot_nodes.get(slot_name, {})
-	print(nodes)
 	if nodes.is_empty(): return
 	var panel: PanelContainer = nodes["panel"]
 	var icon: TextureRect = nodes["icon"]
