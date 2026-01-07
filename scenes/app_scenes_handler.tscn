@@ -1,12 +1,11 @@
-[gd_scene load_steps=8 format=3 uid="uid://diqbff883fl7m"]
+[gd_scene load_steps=7 format=3 uid="uid://diqbff883fl7m"]
 
 [ext_resource type="Script" uid="uid://ca34220c45cd4" path="res://scenes/app_scenes_handler.gd" id="1_s38g1"]
 [ext_resource type="PackedScene" uid="uid://gmdl1jt3f2hv" path="res://scenes/hud/global_hud.tscn" id="2_rx6t5"]
-[ext_resource type="PackedScene" uid="uid://dctyw8m614xg5" path="res://scenes/main_screens/character_profile.tscn" id="2_wo266"]
-[ext_resource type="PackedScene" uid="uid://c4op53aa1ck2j" path="res://scenes/support_screens/bottom_hud.tscn" id="3_g2q3n"]
-[ext_resource type="PackedScene" uid="uid://bikmbnxgn4uqm" path="res://scenes/main_screens/character_location.tscn" id="3_xja7j"]
-[ext_resource type="PackedScene" uid="uid://ddualuxj4wcyb" path="res://scenes/main_screens/character_inventory.tscn" id="4_rh1fe"]
+[ext_resource type="PackedScene" uid="uid://d3b3g8rafrbl2" path="res://scenes/main_screens/character_profile_v2.tscn" id="3_g2q3n"]
 [ext_resource type="PackedScene" uid="uid://bjvtquos2r8cj" path="res://scenes/support_screens/progress_update.tscn" id="4_yr4qo"]
+[ext_resource type="PackedScene" uid="uid://dqgl4evjrtp64" path="res://scenes/main_screens/character_inventory_v2.tscn" id="5_ebot2"]
+[ext_resource type="PackedScene" uid="uid://dyrjw7qne5af5" path="res://scenes/main_screens/character_location_v2.tscn" id="5_g2q3n"]
 
 [node name="AppScenesHandler" type="Control"]
 layout_mode = 3
@@ -21,17 +20,17 @@ script = ExtResource("1_s38g1")
 
 [node name="GlobalHud" parent="." instance=ExtResource("2_rx6t5")]
 
-[node name="BottomHUD" parent="." instance=ExtResource("3_g2q3n")]
-
-[node name="CharacterStats" parent="." instance=ExtResource("2_wo266")]
+[node name="CharacterProfile_V2" parent="." instance=ExtResource("3_g2q3n")]
 layout_mode = 0
-offset_left = 2.0
-offset_right = 2.0
 
-[node name="Activities" parent="." instance=ExtResource("3_xja7j")]
+[node name="Character_Location_V2" parent="." instance=ExtResource("5_g2q3n")]
 layout_mode = 1
+offset_left = -1.0
+offset_top = -3.0
+offset_right = -1.0
+offset_bottom = -3.0
 
-[node name="CharacterInventory" parent="." instance=ExtResource("4_rh1fe")]
+[node name="CharacterInventory_V2" parent="." instance=ExtResource("5_ebot2")]
 layout_mode = 1
 
 [node name="ProgressUpdate" parent="." instance=ExtResource("4_yr4qo")]

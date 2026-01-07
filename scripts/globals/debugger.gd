@@ -5,9 +5,10 @@ signal signalLogUpdated(log: String)
 var _log = ""
 
 func _ready() -> void:
-	ServerConnector.server_connector_message_bus.connect(_on_message)
+	#ServerConnector.server_connector_message_bus.connect(_on_message_log)
+	ServerConnector.server_connector_message_bus.connect(_on_message_print)
 	
-func _on_message(message):
+func _on_message_log(message):
 	#print(message)
 	if "ERROR" in message:
 		_log = "[color=red]" + message + "[/color]"
@@ -27,3 +28,24 @@ func _on_message(message):
 		_log = message
 	#_log = "\n" + "-----------------"
 	signalLogUpdated.emit(_log)
+	
+
+func _on_message_print(message):
+	#print(message)
+	if "ERROR" in message:
+		_log = "[ERROR]" + message
+	elif "Client" in message:
+		_log = message
+	elif "SERVER" in message:
+		message = message.substr(9)
+		var json = JSON.new()
+		var error = json.parse(message)
+		if error == OK:
+			pass
+		else:
+			printerr("JSON Parse Error: ", json.get_error_message(), " in ", message, " at line ", json.get_error_line())
+
+		_log = "[SERVER] OK: {0} CMD: {1}".format([json.data.ok, json.data.cmd])
+	else:
+		_log = message
+	print(_log)

@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://bikmbnxgn4uqm"]
 
-[ext_resource type="Script" uid="uid://wcb1l8b0dhup" path="res://scenes/main_screens/character_location.gd" id="1_3xprj"]
+[ext_resource type="Script" uid="uid://wcb1l8b0dhup" path="res://scenes/main_screens/previous_versions/character_location.gd" id="1_3xprj"]
 [ext_resource type="Texture2D" uid="uid://c45svqin8nasu" path="res://assets/professions/herbalist.png" id="4_eg6yx"]
 [ext_resource type="Texture2D" uid="uid://5sfb8p5aidcv" path="res://assets/background/locations/location_1.png" id="5_fl8aw"]
 

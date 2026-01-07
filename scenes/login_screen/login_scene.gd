@@ -22,8 +22,11 @@ var status_login = false
 func _ready() -> void:
 	
 	Styler.style_name_label(client_version_label, Color.from_rgba8(255, 215, 128))
+	
+	await AccountManager.signal_LoginParamsReceived
+	
 	var project_version = ProjectSettings.get_setting("application/config/version", "")
-	client_version_label.text = " Client version: " + project_version
+	client_version_label.text = " Client version: " + project_version + " SERVER: " + ServerParams.SERVER_VERSION
 	
 	Styler.style_button(button_login,  Color.from_rgba8(64,180,255))   # cyan (primary)
 	Styler.style_button(button_createuser, Color.from_rgba8(255,200,66)) # gold (secondary)

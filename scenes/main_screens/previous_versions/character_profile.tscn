@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://dctyw8m614xg5"]
 
-[ext_resource type="Script" uid="uid://dpmbd35ov7qv5" path="res://scenes/main_screens/character_profile.gd" id="1_nb0eq"]
+[ext_resource type="Script" uid="uid://dpmbd35ov7qv5" path="res://scenes/main_screens/previous_versions/character_profile.gd" id="1_nb0eq"]
 
 [node name="CharacterProfile" type="Control"]
 layout_mode = 3

@@ -31,7 +31,7 @@ var _slot_nodes: Dictionary = {}   # slot_name -> {panel, btn, icon, label}
 # Optional: provide your style box for slots
 var _card_box_ref: Callable = Callable() # e.g. FuncRef(self, "_card_box")
 
-# Item data hooks (assign from your game)
+# Item data hooks
 @export var item_defs: Dictionary = {} # id -> {name, descr, stackable:bool, max_stack:int}
 @export var item_icons: Dictionary = {} # id -> Texture2D
 
@@ -551,7 +551,6 @@ func equip(slot_name: String, id: String) -> bool:
 	_equipped[slot_name] = {"code": id, "qty": 1}
 	_update_slot_eq(slot_name)
 	
-	emit_signal("equipped_item", slot_name, id)
 	return true
 
 func unequip(slot_name: String) -> void:

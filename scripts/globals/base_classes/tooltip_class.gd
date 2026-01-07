@@ -4,17 +4,6 @@ class_name WowTooltip extends PanelContainer
 @export var border_width = 2
 @export var corner_radius = 8
 
-# WoW-ish quality colors
-const QUALITY_COLORS := {
-	0: Color(0.62, 0.62, 0.62), # poor (gray)
-	1: Color(1, 1, 1),          # common (white)
-	2: Color(0.12, 1, 0),       # uncommon (green)
-	3: Color(0, 0.44, 0.87),    # rare (blue)
-	4: Color(0.64, 0.21, 0.93), # epic (purple)
-	5: Color(1, 0.5, 0),        # legendary (orange)
-	6: Color(0.9, 0.8, 0.2)     # artifact (gold-ish)
-}
-
 var _title: Label
 var _lines: VBoxContainer
 
@@ -39,7 +28,7 @@ func _ready() -> void:
 	sb.border_width_left = border_width
 	sb.border_width_right = border_width
 	sb.border_width_top = border_width
-	sb.border_color = QUALITY_COLORS[1]
+	sb.border_color = Styler.QUALITY_COLORS[1]
 	add_theme_stylebox_override("panel", sb)
 
 	# Layout
@@ -88,7 +77,7 @@ func set_data(item_def: Dictionary, qty: int=1) -> void:
 	
 	# item_def expected keys: name, descr, quality:int, attrs:Dictionary
 	var q = int(item_def.get("quality", 1))
-	var color = QUALITY_COLORS.get(q, QUALITY_COLORS[1])
+	var color = Styler.QUALITY_COLORS.get(q, Styler.QUALITY_COLORS[1])
 
 	# Title colored by quality
 	_title.text = String(item_def.get("name", "Unknown"))

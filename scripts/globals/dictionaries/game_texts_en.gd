@@ -13,4 +13,7 @@ var activities_texts = {
 	1: "Herbalism",
 	2: "Alchemy",
 	3: "Hunting",
+	4: "Mining",
+	5: "Woodcutting",
+	6: "Fishing",
 }

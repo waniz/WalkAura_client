@@ -1,0 +1,104 @@
+[gd_scene load_steps=5 format=3 uid="uid://duiqfqme733ph"]
+
+[ext_resource type="Script" uid="uid://nfbe430ip532" path="res://scenes/support_screens/map_hud.gd" id="1_235de"]
+[ext_resource type="Texture2D" uid="uid://bkj538chw6wh2" path="res://assets/character_faces/pirat.png" id="2_o0jm1"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_o0jm1"]
+bg_color = Color(0.38740894, 0.62563473, 0.82066566, 1)
+draw_center = false
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ltn6w"]
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+anti_aliasing_size = 2.0
+
+[node name="MapHUD" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_235de")
+
+[node name="MiniMapFrame" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -199.0
+offset_top = 15.0
+offset_right = -19.0
+offset_bottom = 182.0
+grow_horizontal = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_o0jm1")
+
+[node name="Mask" type="Panel" parent="MiniMapFrame"]
+clip_children = 1
+clip_contents = true
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_ltn6w")
+
+[node name="MapTexture" type="TextureRect" parent="MiniMapFrame/Mask"]
+clip_contents = true
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="PlayerMarker" type="TextureRect" parent="MiniMapFrame/Mask"]
+layout_mode = 0
+offset_left = 74.0
+offset_top = 47.0
+offset_right = 114.0
+offset_bottom = 87.0
+texture = ExtResource("2_o0jm1")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Button" type="Button" parent="MiniMapFrame"]
+layout_mode = 2
+
+[node name="FullMapOverlay" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="FullMapOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BigMapTexture" type="TextureRect" parent="FullMapOverlay/ScrollContainer"]
+layout_mode = 2
+
+[node name="BigPlayerMarker" type="TextureRect" parent="FullMapOverlay/ScrollContainer/BigMapTexture"]
+custom_minimum_size = Vector2(96, 96)
+layout_mode = 0
+offset_right = 96.0
+offset_bottom = 96.0
+texture = ExtResource("2_o0jm1")
+expand_mode = 1
+
+[node name="CloseButton" type="Button" parent="FullMapOverlay"]
+layout_mode = 0
+offset_left = 515.0
+offset_top = 1193.0
+offset_right = 661.0
+offset_bottom = 1233.0
+text = "Close"

@@ -1,0 +1,133 @@
+[gd_scene load_steps=2 format=3 uid="uid://d3b3g8rafrbl2"]
+
+[ext_resource type="Script" uid="uid://dmby8fhkmpq7m" path="res://scenes/main_screens/character_profile_v2.gd" id="1_ub8o2"]
+
+[node name="CharacterProfile_V2" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_ub8o2")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_top = 216.0
+offset_right = 719.0
+offset_bottom = 1083.0
+
+[node name="body_panel" type="PanelContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Attributes" type="PanelContainer" parent="VBoxContainer/body_panel"]
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="VBoxContainer/body_panel/Attributes"]
+layout_mode = 2
+theme_override_constants/margin_left = 2
+theme_override_constants/margin_top = 2
+theme_override_constants/margin_right = 2
+theme_override_constants/margin_bottom = 2
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/body_panel/Attributes/Margin"]
+layout_mode = 2
+
+[node name="PrimaryCard" type="PanelContainer" parent="VBoxContainer/body_panel/Attributes/Margin/VBox"]
+layout_mode = 2
+
+[node name="PrimaryGrid" type="GridContainer" parent="VBoxContainer/body_panel/Attributes/Margin/VBox/PrimaryCard"]
+layout_mode = 2
+columns = 3
+
+[node name="OFFBox" type="HBoxContainer" parent="VBoxContainer/body_panel/Attributes/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="OffCard" type="PanelContainer" parent="VBoxContainer/body_panel/Attributes/Margin/VBox/OFFBox"]
+layout_mode = 2
+
+[node name="OffGrid" type="GridContainer" parent="VBoxContainer/body_panel/Attributes/Margin/VBox/OFFBox/OffCard"]
+layout_mode = 2
+columns = 2
+
+[node name="DEFBox" type="HBoxContainer" parent="VBoxContainer/body_panel/Attributes/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="DefCard" type="PanelContainer" parent="VBoxContainer/body_panel/Attributes/Margin/VBox/DEFBox"]
+layout_mode = 2
+
+[node name="DeffGrid" type="GridContainer" parent="VBoxContainer/body_panel/Attributes/Margin/VBox/DEFBox/DefCard"]
+layout_mode = 2
+columns = 2
+
+[node name="StepCard" type="PanelContainer" parent="VBoxContainer/body_panel/Attributes/Margin/VBox"]
+layout_mode = 2
+
+[node name="StepsGrid" type="GridContainer" parent="VBoxContainer/body_panel/Attributes/Margin/VBox/StepCard"]
+layout_mode = 2
+columns = 2
+
+[node name="Professions" type="PanelContainer" parent="VBoxContainer/body_panel"]
+visible = false
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="VBoxContainer/body_panel/Professions"]
+layout_mode = 2
+theme_override_constants/margin_left = 2
+theme_override_constants/margin_top = 2
+theme_override_constants/margin_right = 2
+theme_override_constants/margin_bottom = 2
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/body_panel/Professions/Margin"]
+layout_mode = 2
+
+[node name="ProfessionsCard" type="PanelContainer" parent="VBoxContainer/body_panel/Professions/Margin/VBox"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/body_panel/Professions/Margin/VBox/ProfessionsCard"]
+layout_mode = 2
+
+[node name="ProfessionsGrid_Level1" type="GridContainer" parent="VBoxContainer/body_panel/Professions/Margin/VBox/ProfessionsCard/HBoxContainer"]
+layout_mode = 2
+
+[node name="ProfessionsGrid_Level2" type="GridContainer" parent="VBoxContainer/body_panel/Professions/Margin/VBox/ProfessionsCard/HBoxContainer"]
+layout_mode = 2
+
+[node name="Archivements" type="PanelContainer" parent="VBoxContainer/body_panel"]
+visible = false
+layout_mode = 2
+
+[node name="Reputations" type="PanelContainer" parent="VBoxContainer/body_panel"]
+visible = false
+layout_mode = 2
+
+[node name="Buttons_Container" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 50
+alignment = 1
+
+[node name="Btn_attributes" type="Button" parent="VBoxContainer/Buttons_Container"]
+custom_minimum_size = Vector2(128, 0)
+layout_mode = 2
+text = "Attributes"
+
+[node name="Btn_professions" type="Button" parent="VBoxContainer/Buttons_Container"]
+custom_minimum_size = Vector2(128, 0)
+layout_mode = 2
+text = "Professions"
+
+[node name="Btn_archivements" type="Button" parent="VBoxContainer/Buttons_Container"]
+custom_minimum_size = Vector2(128, 0)
+layout_mode = 2
+text = "Archivements"
+
+[node name="Btn_reputations" type="Button" parent="VBoxContainer/Buttons_Container"]
+custom_minimum_size = Vector2(128, 0)
+layout_mode = 2
+text = "Reputations"
+
+[connection signal="pressed" from="VBoxContainer/Buttons_Container/Btn_attributes" to="." method="_on_btn_attributes_pressed"]
+[connection signal="pressed" from="VBoxContainer/Buttons_Container/Btn_professions" to="." method="_on_btn_professions_pressed"]
+[connection signal="pressed" from="VBoxContainer/Buttons_Container/Btn_archivements" to="." method="_on_btn_archivements_pressed"]
+[connection signal="pressed" from="VBoxContainer/Buttons_Container/Btn_reputations" to="." method="_on_btn_reputations_pressed"]

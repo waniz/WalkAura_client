@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c45svqin8nasu"
-path="res://.godot/imported/herbalist.png-9f01ed5a55a05bace0607fa812eb4da0.ctex"
+uid="uid://b4nsc3t3qfwe5"
+path="res://.godot/imported/guardian_shell.png-268750a9a2f387023121d3b5db5653ff.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/professions/herbalist.png"
-dest_files=["res://.godot/imported/herbalist.png-9f01ed5a55a05bace0607fa812eb4da0.ctex"]
+source_file="res://assets/general_icons/passive_talents/guardian_shell.png"
+dest_files=["res://.godot/imported/guardian_shell.png-268750a9a2f387023121d3b5db5653ff.ctex"]
 
 [params]
 

@@ -1,40 +1,5 @@
 extends Node
 
-#var ITEM_DEFS = {
-	## Equipment codes
-	#"noob_head":      {"name":"default_head",      "descr":"Default Head",     "category": "equipment", "slot_type": "head",     "quality": 1, "stackable":false, "max_stack":1, "attrs": {"STR": "+1"}},
-	#"noob_neck":      {"name":"default_neck",      "descr":"Default Neck",     "category": "equipment", "slot_type": "neck",     "quality": 2, "stackable":false, "max_stack":1, "attrs": {"VIT": "+1"}},
-	#"noob_shoulder":  {"name":"default_shoulder",  "descr":"Default Shoulder", "category": "equipment", "slot_type": "shoulder", "quality": 3, "stackable":false, "max_stack":1, "attrs": {"VIT": "+1"}},
-	#"noob_cloak":     {"name":"default_cloak",     "descr":"Default Cloak",    "category": "equipment", "slot_type": "cloak",    "quality": 4, "stackable":false, "max_stack":1, "attrs": {"INT": "+1"}},
-	#"noob_chest":     {"name":"default_chest",     "descr":"Default Chest",    "category": "equipment", "slot_type": "chest",    "quality": 5, "stackable":false, "max_stack":1, "attrs": {"VIT": "+1"}},
-	#"noob_wrist":     {"name":"default_wrist",     "descr":"Default Wrist",    "category": "equipment", "slot_type": "wrist",    "quality": 6, "stackable":false, "max_stack":1, "attrs": {"AGI": "+1"}},
-	#"test_ring":      {"name":"noob_ring_left",    "descr":"Default Ring 1",   "category": "equipment", "slot_type": "ring_left","quality": 3, "stackable":false, "max_stack":1, "attrs": {}},
-	#"test_trinket":   {"name":"noob_trinket_left", "descr":"Default Trinket 1","category": "equipment", "slot_type": "trinket_left","quality": 4, "stackable":false, "max_stack":1, "attrs": {}},
-	#"test_staff":     {"name":"noob_staff",        "descr":"Default Staff",    "category": "equipment", "slot_type": "main_hand","quality": 5, "stackable":false, "max_stack":1, "attrs": {}},
-	#"test_gloves":    {"name":"noob_gloves",        "descr":"Default Gloves",   "category": "equipment", "slot_type": "gloves",       "quality": 6, "stackable":false, "max_stack":1, "attrs": {}},
-	#"test_belt":      {"name":"noob_belt",          "descr":"Default Belt",     "category": "equipment", "slot_type": "belt",         "quality": 5, "stackable":false, "max_stack":1, "attrs": {}},
-	#"test_legs":      {"name":"noob_legs",          "descr":"Default Legs",     "category": "equipment", "slot_type": "legs",         "quality": 4, "stackable":false, "max_stack":1, "attrs": {}},
-	#"test_feet":      {"name":"noob_feet",          "descr":"Default Feet",     "category": "equipment", "slot_type": "feet",         "quality": 3, "stackable":false, "max_stack":1, "attrs": {}},
-	#"test_shield":    {"name":"noob_shield",        "descr":"Default Shield",   "category": "equipment", "slot_type": "off_hand",     "quality": 0, "stackable":false, "max_stack":1, "attrs": {}},
-#
-	## Herbalism codes
-	#"dill":           {"name":"Dill",         "descr":"Fresh Dill",       "category": "material", "slot_type": null, "quality": 0, "stackable":true, "max_stack":1000, "attrs": {}},
-	#"rucola":         {"name":"Rucola",       "descr":"Fresh Rucola",     "category": "material", "slot_type": null, "quality": 0, "stackable":true, "max_stack":1000, "attrs": {}},
-	#"basilicum":      {"name":"Basilicum",    "descr":"Fresh Basilicum",  "category": "material", "slot_type": null, "quality": 1, "stackable":true, "max_stack":1000, "attrs": {}},
-	#"manaflower":     {"name":"Manaflower",   "descr":"Fresh Manaflower", "category": "material", "slot_type": null, "quality": 2, "stackable":true, "max_stack":1000, "attrs": {}},
-	#
-	## Alchemy codes
-	#"mana_pot":       {"name":"mana_pot",   "descr":"Mana Recovery Pot",   "category": "material", "slot_type": null, "quality": 1,  "stackable":true, "max_stack":1000, "attrs": {"MP": 10}},
-	#"health_pot":     {"name":"health_pot", "descr":"Health Recovery Pot", "category": "material", "slot_type": null, "quality": 1,  "stackable":true, "max_stack":1000, "attrs": {"HP": 20}},
-	#
-	## Hunting codes
-	#"trash":          {"name":"trash",      "descr":"Trash",                     "category": "material", "slot_type": null, "quality": 1,  "stackable":true, "max_stack":1000, "attrs": {}},
-	#"mice_fur":       {"name":"mice_fur",   "descr":"Small piece of mice fur",   "category": "material", "slot_type": null, "quality": 1,  "stackable":true, "max_stack":1000, "attrs": {}},
-	#"rabbit_fur":     {"name":"rabbit_fur", "descr":"Small piece of rabbit fur", "category": "material", "slot_type": null, "quality": 1,  "stackable":true, "max_stack":1000, "attrs": {}},
-	#"snake_head":     {"name":"snake_head", "descr":"The head from snake",       "category": "material", "slot_type": null, "quality": 1,  "stackable":true, "max_stack":1000, "attrs": {}},
-#}
-
-
 var ITEM_ICONS = {
 	# Equipment
 	"test_head":         load("res://assets/equipment/heads/default_helm.png") as Texture2D,
@@ -64,6 +29,14 @@ var ITEM_ICONS = {
 	"mice_fur":          load("res://assets/professions/hunting/hunting_mice_fur.png") as Texture2D,
 	"rabbit_fur":        load("res://assets/professions/hunting/hunting_rabbit_fur.png") as Texture2D,
 	"snake_head":        load("res://assets/professions/hunting/hunting_snake_head.png") as Texture2D,
+	# Mining
+	"common_copper_ore": load("res://assets/professions/mining/common_copper_ore.png") as Texture2D,
+	"common_tin_ore":    load("res://assets/professions/mining/common_tin_ore.png") as Texture2D,
+	# Woodcutting
+	"common_birch_log":  load("res://assets/professions/woodcutting/common_birch_log.png") as Texture2D,
+	# Fishing
+	"fish_0":            load("res://assets/professions/fishing/fish_0.png") as Texture2D,
+	"fish_1":            load("res://assets/professions/fishing/fish_1.png") as Texture2D,
 }
 
 var ICONS = {
@@ -97,6 +70,13 @@ var ICONS = {
 	"hunting":              load("res://assets/general_icons/professions/hunting.png") as Texture2D,
 	"mining":               load("res://assets/general_icons/professions/mining.png") as Texture2D,
 	"woodcutting":          load("res://assets/general_icons/professions/woodcutting.png") as Texture2D,
+	"fishing":              load("res://assets/general_icons/professions/fishing.png") as Texture2D,
+	
+	# talents
+	"thick_skin":           load("res://assets/general_icons/passive_talents/thick_skin.png") as Texture2D,
+	"brutal_strike":        load("res://assets/general_icons/passive_talents/brutal_strike.png") as Texture2D,
+	"guardian_shell":       load("res://assets/general_icons/passive_talents/guardian_shell.png") as Texture2D,
+	"evasion_training":     load("res://assets/general_icons/passive_talents/evasion_training.png") as Texture2D,
 }
 
 # Equipment rows
