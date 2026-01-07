@@ -2,6 +2,8 @@ extends Node
 
 signal signal_LoginResult(result)
 signal signal_AccountDataReceived(result)
+
+signal signal_LoginParamsReceived(data)
 signal signal_UserStepLastTSReceived(data)
 signal signal_ActivityProgressReceived(data)
 signal signal_InventoryReceived(data)
@@ -30,6 +32,8 @@ func parse_message(message):
 	# router
 	if json.data.cmd == "login_user":
 		check_login_result(json.data)
+	if json.data.cmd == "login_params":
+		get_login_params(json.data)
 	elif json.data.cmd == "account_attributes":
 		get_account_attrs(json.data)
 	elif json.data.cmd == "_handle_user_steps_last_ts":
@@ -47,6 +51,9 @@ func check_login_result(json_msg):
 	else:
 		signal_LoginResult.emit(false)
 		signal_AccountDataReceived.emit(true)
+		
+func get_login_params(data):
+	signal_LoginParamsReceived.emit(data)
 		
 func get_account_attrs(json_msg):
 	Account.user_uid = json_msg.data.user_uid
@@ -90,7 +97,6 @@ func get_account_attrs(json_msg):
 	Account.gold = int(json_msg.data.primary_resources.gold)
 	
 	# professions
-	print(json_msg.data.professions)
 	Account.herbalism_lvl = int(json_msg.data.professions.herbalism_lvl)
 	Account.mining_lvl = int(json_msg.data.professions.mining_lvl)
 	Account.woodcutting_lvl = int(json_msg.data.professions.woodcutting_lvl)
@@ -114,6 +120,22 @@ func get_account_attrs(json_msg):
 	Account.alchemy_xp = int(json_msg.data.professions.alchemy_xp)
 	Account.cooking_xp = int(json_msg.data.professions.cooking_xp)
 	Account.enchanting_xp = int(json_msg.data.professions.enchanting_xp)
+	
+	# passives
+	Account.thick_skin_lvl = int(json_msg.data.passives.thick_skin_lvl)
+	Account.thick_skin_xp = int(json_msg.data.passives.thick_skin_xp)
+	Account.brutal_finish_lvl = int(json_msg.data.passives.brutal_finish_lvl)
+	Account.brutal_finish_xp = int(json_msg.data.passives.brutal_finish_xp)
+	Account.magic_ward_lvl = int(json_msg.data.passives.magic_ward_lvl)
+	Account.magic_ward_xp = int(json_msg.data.passives.magic_ward_xp)
+	Account.guardian_shell_lvl = int(json_msg.data.passives.guardian_shell_lvl)
+	Account.guardian_shell_xp = int(json_msg.data.passives.guardian_shell_xp)
+	Account.evasion_training_lvl = int(json_msg.data.passives.evasion_training_lvl)
+	Account.evasion_training_xp = int(json_msg.data.passives.evasion_training_xp)
+	Account.mana_flow_lvl = int(json_msg.data.passives.mana_flow_lvl)
+	Account.mana_flow_xp = int(json_msg.data.passives.mana_flow_xp)
+	Account.regenerative_steps_lvl = int(json_msg.data.passives.regenerative_steps_lvl)
+	Account.regenerative_steps_xp = int(json_msg.data.passives.regenerative_steps_xp)
 	
 	# secondary parameters
 	Account.atk = json_msg.data.offensive.atk

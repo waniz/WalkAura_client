@@ -149,8 +149,6 @@ func _render_loot(summary) -> void:
 	if summary == null:
 		return
 		
-	print(summary)
-		
 	for key in summary.keys():
 		var qty = int(summary[key])
 		var row := HBoxContainer.new()

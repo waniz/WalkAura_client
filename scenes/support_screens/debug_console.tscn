@@ -2,23 +2,22 @@
 
 [ext_resource type="Script" uid="uid://frlcp1otpq4r" path="res://scenes/support_screens/debug_console.gd" id="1_iijov"]
 
-[node name="DebugConsole" type="Control"]
-layout_mode = 3
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_top = -1278.0
-offset_bottom = -1278.0
-grow_vertical = 0
-size_flags_vertical = 0
+[node name="DebugConsole" type="CanvasLayer"]
 script = ExtResource("1_iijov")
 
 [node name="Panel" type="Panel" parent="."]
-layout_mode = 0
-offset_left = 3.0
-offset_top = -248.0
-offset_right = 573.0
-offset_bottom = -5.0
+modulate = Color(1, 0.60784316, 1, 1)
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -350.0
+offset_top = -323.0
+offset_right = 220.0
+offset_bottom = -201.0
+grow_horizontal = 2
+grow_vertical = 0
 
 [node name="VBox" type="VBoxContainer" parent="Panel"]
 layout_mode = 1

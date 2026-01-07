@@ -4,64 +4,40 @@
 
 [node name="CheatPanel" type="Control"]
 layout_mode = 3
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -719.0
-offset_top = -1284.0
-offset_right = -719.0
-offset_bottom = -1284.0
-grow_horizontal = 0
-grow_vertical = 0
+anchors_preset = 0
+size_flags_horizontal = 4
+size_flags_vertical = 4
 script = ExtResource("1_fmce2")
 
-[node name="Panel" type="Panel" parent="."]
+[node name="PanelContainer" type="PanelContainer" parent="."]
 layout_mode = 1
-anchors_preset = -1
-offset_left = 610.0
-offset_top = 986.0
-offset_right = 708.0
-offset_bottom = 1276.0
+offset_right = 199.0
+offset_bottom = 31.0
+mouse_default_cursor_shape = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
-layout_mode = 0
-offset_left = 6.0
-offset_top = 5.0
-offset_right = 87.0
-offset_bottom = 229.0
-
-[node name="Cheat_100_button" type="Button" parent="Panel/VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="PanelContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 32
+
+[node name="Cheat_100_button" type="Button" parent="PanelContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
 text = "+100"
 
-[node name="Cheat_500_button" type="Button" parent="Panel/VBoxContainer"]
+[node name="Cheat_1000_button" type="Button" parent="PanelContainer/HBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 32
-text = "+500"
-
-[node name="Cheat_1000_button" type="Button" parent="Panel/VBoxContainer"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 16
 text = "+1k"
 
-[node name="Cheat_10000_button" type="Button" parent="Panel/VBoxContainer"]
+[node name="Cheat_10000_button" type="Button" parent="PanelContainer/HBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 16
 text = "+10k"
 
-[node name="PedometerPluginButton" type="Button" parent="Panel"]
-layout_mode = 0
-offset_left = 2.0
-offset_top = 233.0
-offset_right = 89.0
-offset_bottom = 285.0
+[node name="PedometerPluginButton" type="Button" parent="PanelContainer/HBoxContainer"]
+layout_mode = 2
 text = "Mobile"
 
-[connection signal="button_down" from="Panel/VBoxContainer/Cheat_100_button" to="." method="_on_cheat_100_button_button_down"]
-[connection signal="button_down" from="Panel/VBoxContainer/Cheat_500_button" to="." method="_on_cheat_500_button_button_down"]
-[connection signal="button_down" from="Panel/VBoxContainer/Cheat_1000_button" to="." method="_on_cheat_1000_button_button_down"]
-[connection signal="button_down" from="Panel/VBoxContainer/Cheat_10000_button" to="." method="_on_cheat_10000_button_button_down"]
-[connection signal="button_down" from="Panel/PedometerPluginButton" to="." method="_on_pedometer_plugin_button_button_down"]
+[connection signal="button_down" from="PanelContainer/HBoxContainer/Cheat_100_button" to="." method="_on_cheat_100_button_button_down"]
+[connection signal="button_down" from="PanelContainer/HBoxContainer/Cheat_1000_button" to="." method="_on_cheat_1000_button_button_down"]
+[connection signal="button_down" from="PanelContainer/HBoxContainer/Cheat_10000_button" to="." method="_on_cheat_10000_button_button_down"]
+[connection signal="button_down" from="PanelContainer/HBoxContainer/PedometerPluginButton" to="." method="_on_pedometer_plugin_button_button_down"]

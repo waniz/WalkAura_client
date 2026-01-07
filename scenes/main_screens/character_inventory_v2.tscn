@@ -1,0 +1,173 @@
+[gd_scene load_steps=2 format=3 uid="uid://dqgl4evjrtp64"]
+
+[ext_resource type="Script" uid="uid://cfb1ud7mgma5u" path="res://scenes/main_screens/character_inventory_v2.gd" id="1_dfx74"]
+
+[node name="CharacterInventory_V2" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_dfx74")
+rows = 5
+slot_size = Vector2i(52, 52)
+slot_size_eq = Vector2i(52, 52)
+slot_padding_eq = 6
+
+[node name="VBox_Root" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 3.0
+offset_top = 207.0
+offset_right = 703.0
+offset_bottom = 1105.0
+
+[node name="Body" type="PanelContainer" parent="VBox_Root"]
+layout_mode = 2
+
+[node name="Gear_Panel" type="PanelContainer" parent="VBox_Root/Body"]
+visible = false
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Equipment_Panel" type="PanelContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 400)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 6
+
+[node name="equipment_vbox" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer/equipment_vbox"]
+layout_mode = 2
+
+[node name="col_left" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer/equipment_vbox/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+
+[node name="character_model" type="TextureRect" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer/equipment_vbox/HBoxContainer"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+stretch_mode = 3
+
+[node name="col_right" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer/equipment_vbox/HBoxContainer"]
+layout_mode = 2
+
+[node name="Inventory_Panel" type="PanelContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 300)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Btn_ALL" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+text = "ALL"
+
+[node name="Btn_GearOnly" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+text = "Gear"
+
+[node name="Btn_ConsumableOnly" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+text = "Consumable"
+
+[node name="Btn_LootOnly" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+text = "Loot"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 6
+
+[node name="Space_Label" type="Label" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Space 0 / 42"
+
+[node name="Gold_Label" type="Label" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Gold: 0"
+
+[node name="Diamond_Label" type="Label" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Diamond: 0"
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 10
+
+[node name="Btn_Sort" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/HBoxContainer2"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+text = "Sort"
+
+[node name="Grid" type="GridContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Skill_Panel" type="PanelContainer" parent="VBox_Root/Body"]
+visible = false
+custom_minimum_size = Vector2(0, 500)
+layout_mode = 2
+
+[node name="Talents_Panel" type="PanelContainer" parent="VBox_Root/Body"]
+custom_minimum_size = Vector2(0, 500)
+layout_mode = 2
+
+[node name="Talent_Panel" type="PanelContainer" parent="VBox_Root/Body/Talents_Panel"]
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="VBox_Root/Body/Talents_Panel/Talent_Panel"]
+layout_mode = 2
+
+[node name="TalentGrid" type="GridContainer" parent="VBox_Root/Body/Talents_Panel/Talent_Panel/Margin"]
+layout_mode = 2
+columns = 2
+
+[node name="Buttons_Container" type="HBoxContainer" parent="VBox_Root"]
+layout_mode = 2
+theme_override_constants/separation = 50
+alignment = 1
+
+[node name="Btn_Gear" type="Button" parent="VBox_Root/Buttons_Container"]
+layout_mode = 2
+text = "Gear"
+
+[node name="Btn_Skills" type="Button" parent="VBox_Root/Buttons_Container"]
+custom_minimum_size = Vector2(128, 0)
+layout_mode = 2
+text = "Skills"
+
+[node name="Btn_Talents" type="Button" parent="VBox_Root/Buttons_Container"]
+custom_minimum_size = Vector2(128, 0)
+layout_mode = 2
+text = "Talents"
+
+[connection signal="pressed" from="VBox_Root/Buttons_Container/Btn_Gear" to="." method="_on_btn_gear_pressed"]
+[connection signal="pressed" from="VBox_Root/Buttons_Container/Btn_Skills" to="." method="_on_btn_skills_pressed"]
+[connection signal="pressed" from="VBox_Root/Buttons_Container/Btn_Talents" to="." method="_on_btn_talents_pressed"]

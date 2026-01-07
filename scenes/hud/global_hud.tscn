@@ -1,8 +1,10 @@
-[gd_scene load_steps=4 format=3 uid="uid://gmdl1jt3f2hv"]
+[gd_scene load_steps=6 format=3 uid="uid://gmdl1jt3f2hv"]
 
 [ext_resource type="PackedScene" uid="uid://btkqrwpy7ojlt" path="res://scenes/support_screens/character_hud.tscn" id="1_eolem"]
 [ext_resource type="PackedScene" uid="uid://caj4vm4x2p0am" path="res://scenes/support_screens/cheat_panel.tscn" id="2_g1adc"]
 [ext_resource type="PackedScene" uid="uid://cvndrn0efp2w5" path="res://scenes/support_screens/debug_console.tscn" id="3_8dy8u"]
+[ext_resource type="PackedScene" uid="uid://c4op53aa1ck2j" path="res://scenes/support_screens/bottom_hud.tscn" id="4_8dy8u"]
+[ext_resource type="PackedScene" uid="uid://duiqfqme733ph" path="res://scenes/support_screens/map_hud.tscn" id="5_6fgtd"]
 
 [node name="GlobalHud" type="CanvasLayer"]
 layer = 100
@@ -10,8 +12,22 @@ layer = 100
 [node name="CharacterHUD" parent="." instance=ExtResource("1_eolem")]
 
 [node name="CheatPanel" parent="." instance=ExtResource("2_g1adc")]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -224.0
+offset_top = -49.0
+offset_right = -224.0
+offset_bottom = -49.0
+grow_horizontal = 0
+grow_vertical = 0
+size_flags_vertical = 0
 
 [node name="DebugConsole" parent="." instance=ExtResource("3_8dy8u")]
-offset_top = 0.0
-offset_bottom = 0.0
-size_flags_vertical = 8
+visible = false
+
+[node name="BottomHUD" parent="." instance=ExtResource("4_8dy8u")]
+
+[node name="MapHUD" parent="." instance=ExtResource("5_6fgtd")]
