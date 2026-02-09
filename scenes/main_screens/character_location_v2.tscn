@@ -1,8 +1,9 @@
-[gd_scene load_steps=9 format=3 uid="uid://dyrjw7qne5af5"]
+[gd_scene load_steps=10 format=3 uid="uid://dyrjw7qne5af5"]
 
 [ext_resource type="Script" uid="uid://cna5fks56fogn" path="res://scenes/main_screens/character_location_v2.gd" id="1_23ukg"]
 [ext_resource type="Texture2D" uid="uid://5sfb8p5aidcv" path="res://assets/background/locations/location_1.png" id="2_aaoyo"]
 [ext_resource type="Texture2D" uid="uid://bj2oh833g5qxf" path="res://assets/general_icons/professions/herbalism.png" id="3_mkis3"]
+[ext_resource type="FontFile" uid="uid://ckc03u8qer62y" path="res://assets/fonts/quadrat_regular.ttf" id="3_ud2jj"]
 [ext_resource type="Texture2D" uid="uid://dgclwujnxgslo" path="res://assets/general_icons/professions/mining.png" id="4_ud2jj"]
 [ext_resource type="Texture2D" uid="uid://wu2svlk6kkub" path="res://assets/general_icons/professions/woodcutting.png" id="5_6cteu"]
 [ext_resource type="Texture2D" uid="uid://b2mstjs0jmpf8" path="res://assets/general_icons/professions/alchemy.png" id="6_ea5ol"]
@@ -62,10 +63,12 @@ theme_override_constants/separation = 20
 
 [node name="Label" type="Label" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/HBoxContainer"]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("3_ud2jj")
 text = "Location Activities:"
 
 [node name="Btn_Stop" type="Button" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/HBoxContainer"]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("3_ud2jj")
 text = "STOP"
 
 [node name="gathering_panel" type="PanelContainer" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer"]
@@ -80,6 +83,7 @@ theme_override_constants/separation = 10
 
 [node name="Label" type="Label" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/gathering_panel/PanelContainer/HBoxContainer"]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("3_ud2jj")
 text = "Gathering:"
 
 [node name="Gathering_Btb_Herb" type="TextureButton" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/gathering_panel/PanelContainer/HBoxContainer"]
@@ -126,6 +130,7 @@ theme_override_constants/separation = 10
 
 [node name="Label" type="Label" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/crafting_panel/PanelContainer/HBoxContainer"]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("3_ud2jj")
 text = "Crafting:     "
 
 [node name="Craft_Btn_Alchemy" type="TextureButton" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/crafting_panel/PanelContainer/HBoxContainer"]
@@ -148,6 +153,7 @@ theme_override_constants/separation = 10
 
 [node name="Label" type="Label" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/battle_panel/PanelContainer/HBoxContainer"]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("3_ud2jj")
 text = "Battle:         "
 
 [node name="Battle_Btn_Hunting" type="TextureButton" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/battle_panel/PanelContainer/HBoxContainer"]

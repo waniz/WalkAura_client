@@ -8,6 +8,8 @@ var ACTIVITIES_SITES
 var GATHERING_ACTIVITIES
 var CRAFTING_ACTIVITIES
 var BATTLE_ACTIVITIES
+var LINEAR_CONSTANT
+var DIMINISHING_CONSTANT
 var SERVER_VERSION = ""
 
 func _ready() -> void:
@@ -24,5 +26,8 @@ func on_login_params_received(data):
 	GATHERING_ACTIVITIES = data["data"]["gathering_activities"]
 	CRAFTING_ACTIVITIES = data["data"]["crafting_activities"]
 	BATTLE_ACTIVITIES = data["data"]["battle_activities"]
+	
+	LINEAR_CONSTANT = data["data"]["item_generation_constants"]["linear"]
+	DIMINISHING_CONSTANT = data["data"]["item_generation_constants"]["diminishing"]
 	
 	SERVER_VERSION = data["data"]["server_version"]

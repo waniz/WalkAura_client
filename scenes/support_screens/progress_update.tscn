@@ -45,24 +45,28 @@ size_flags_horizontal = 3
 size_flags_vertical = 0
 text = "Title"
 
-[node name="GridContainer" type="GridContainer" parent="PanelContainer/VBoxContainer"]
+[node name="ContentScroll" type="ScrollContainer" parent="PanelContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="GridContainer" type="GridContainer" parent="PanelContainer/VBoxContainer/ContentScroll"]
 layout_mode = 2
 
-[node name="stepsLabel" type="Label" parent="PanelContainer/VBoxContainer/GridContainer"]
+[node name="stepsLabel" type="Label" parent="PanelContainer/VBoxContainer/ContentScroll/GridContainer"]
 layout_mode = 2
 
-[node name="xpLabel" type="Label" parent="PanelContainer/VBoxContainer/GridContainer"]
+[node name="xpLabel" type="Label" parent="PanelContainer/VBoxContainer/ContentScroll/GridContainer"]
 layout_mode = 2
 
-[node name="ProgressBar" type="ProgressBar" parent="PanelContainer/VBoxContainer/GridContainer"]
+[node name="ProgressBar" type="ProgressBar" parent="PanelContainer/VBoxContainer/ContentScroll/GridContainer"]
 layout_mode = 2
 
-[node name="LootTitle" type="Label" parent="PanelContainer/VBoxContainer/GridContainer"]
+[node name="LootTitle" type="Label" parent="PanelContainer/VBoxContainer/ContentScroll/GridContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
 
-[node name="LootList" type="VBoxContainer" parent="PanelContainer/VBoxContainer/GridContainer"]
+[node name="LootList" type="VBoxContainer" parent="PanelContainer/VBoxContainer/ContentScroll/GridContainer"]
 layout_mode = 2
 size_flags_vertical = 3
 

@@ -14,7 +14,7 @@ func _ready() -> void:
 	
 	Styler.style_panel(panel, Color.from_rgba8(16,18,24,220), Color.from_rgba8(255,255,255,30))
 
-	var font: FontFile = load("res://assets/_fonts/JetBrainsMono-Regular.ttf")
+	var font: FontFile = load("res://assets/fonts/JetBrainsMono-Regular.ttf")
 	# Font & size for all normal text
 	log.add_theme_font_override("normal_font", font)
 	log.add_theme_font_size_override("normal_font_size", 14)
