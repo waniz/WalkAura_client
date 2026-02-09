@@ -86,24 +86,29 @@ var regenerative_steps_xp
 var atk
 var m_atk
 var hit_rating
+var crit_chance_rating
+var crit_damage_rating
+var haste_rating
+var armor_pen_rating
+var magic_pen_rating
+var p_def_rating
+var m_def_rating
+var block_chance_rating
+var dodge_rating
+var dmg_reduction_rating
+var versatility_rating
+var hit
 var crit_chance
 var crit_damage
 var haste
 var armor_pen
 var magic_pen
-
 var p_def
 var m_def
 var block_chance
-var evasion
+var dodge
 var dmg_reduction
-
-var res_fire
-var res_frost
-var res_lightning
-var res_poison
-var res_death
-var res_holy
+var versatility
 
 var location
 var activity

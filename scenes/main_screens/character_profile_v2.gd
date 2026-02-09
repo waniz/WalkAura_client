@@ -42,22 +42,23 @@ const PRIMARY_KEYS = [
 ]
 
 const OFFENSE_KEYS = [
-	{"k":"atk", "n":"Physical ATK"},
-	{"k":"crit_chance","n":"Crit Chance"},
-	{"k":"m_atk","n":"Magic ATK"},
-	{"k":"crit_damage","n":"Crit Damage"},
-	{"k":"hit_rating","n":"Hit Rating"},
-	{"k":"armor_pen","n":"Armor Penetration"},
-	{"k":"haste","n":"Haste Rating"},
-	{"k":"magic_pen","n":"Magic Penetration"},
+	{"k":"atk",                "n":"Physical ATK",       "p": 0},
+	{"k":"m_atk",              "n":"Magic ATK",          "p": 0},
+	{"k":"crit_chance_rating", "n":"Crit Chance Rating", "p": "crit_chance"},
+	{"k":"crit_damage_rating", "n":"Crit Damage Rating", "p": "crit_damage"},
+	{"k":"hit_rating",         "n":"Hit Rating",         "p": "hit"},
+	{"k":"armor_pen_rating",   "n":"Armor Penetration Rating", "p": "armor_pen"},
+	{"k":"haste_rating",       "n":"Haste Rating",       "p": "haste"},
+	{"k":"magic_pen_rating",   "n":"Magic Penetration Rating", "p": "magic_pen"},
+	{"k":"versatility_rating", "n":"Versatility Rating", "p": "versatility"},
 ]
 
 const DEFENSE_KEYS = [
-	{"k":"p_def","n":"Physical DEF"},
-	{"k":"block_chance","n":"Block Chance"},
-	{"k":"m_def","n":"Magic DEF"},
-	{"k":"evasion","n":"Evasion"},
-	{"k":"dmg_reduction","n":"Damage Reduction"},
+	{"k":"p_def_rating",          "n":"Physical DEF Rating",     "p": "p_def"},
+	{"k":"block_chance_rating",   "n":"Block Chance Rating",     "p": "block_chance"},
+	{"k":"m_def_rating",          "n":"Magic DEF Rating",        "p": "m_def"},
+	{"k":"dodge_rating",          "n":"Dodge Rating",            "p": "dodge"},
+	{"k":"dmg_reduction_rating",  "n":"Damage Reduction Rating", "p": "dmg_reduction"},
 ]
 
 const PROFESSIONS_KEYS1 = [
@@ -87,11 +88,11 @@ func _ready() -> void:
 	STATS_TOTAL_TO_LEVEL = ServerParams.STATS_PROGRESSION_LEVELS
 	ACTIVITY_TOTAL_TO_LEVEL = ServerParams.ACTIVITY_PROGRESSION_LEVELS
 	
-	Styler.style_panel(body_panel, Styler.COL_PANEL_GRAY, Styler.COL_PANEL_BR)
-	Styler.style_panel(panel_attributes, Styler.COL_PANEL_BG, Styler.COL_PANEL_BR)
-	Styler.style_panel(panel_professions, Styler.COL_PANEL_BG, Styler.COL_PANEL_BR)
-	Styler.style_panel(panel_archivements, Styler.COL_PANEL_BG, Styler.COL_PANEL_BR)
-	Styler.style_panel(panel_reputations, Styler.COL_PANEL_BG, Styler.COL_PANEL_BR)
+	Styler._apply_parchment_style(body_panel)
+	Styler._apply_parchment_style(panel_attributes)
+	Styler._apply_parchment_style(panel_professions)
+	Styler._apply_parchment_style(panel_archivements)
+	Styler._apply_parchment_style(panel_reputations)
 	
 	Styler.style_button(btn_attributes, Color.from_rgba8(64,180,255))
 	Styler.style_button(btn_professions, Color.from_rgba8(64,180,255))
@@ -112,6 +113,7 @@ func _update_character_data(value):
 	set_stats(stats)
 
 func set_stats(d: Dictionary) -> void:
+	
 	_clear(steps_grid);
 	_clear(primary_grid);
 	_clear(off_grid);
@@ -138,9 +140,9 @@ func set_stats(d: Dictionary) -> void:
 
 	# Offense/Defense rows (compact)
 	for entry in OFFENSE_KEYS:
-		off_grid.add_child(_make_row(entry.n, _fmt(d.get(entry.k, 0)), Styler.COL_OFFENSE))
+		off_grid.add_child(_make_row(entry.n, _fmt(d.get(entry.k, 0)), _fmt(d.get(entry.p, 0)), Styler.COL_OFFENSE))
 	for entry in DEFENSE_KEYS:
-		deff_grid.add_child(_make_row(entry.n, _fmt(d.get(entry.k, 0)), Styler.COL_DEFENSE))
+		deff_grid.add_child(_make_row(entry.n, _fmt(d.get(entry.k, 0)), _fmt(d.get(entry.p, 0)), Styler.COL_DEFENSE))
 		
 	_equalize_off_def_size(380.0)  # tweak width (e.g., 360–420)
 	
@@ -185,7 +187,7 @@ func _make_mini_card_primary(name: String, lvl: int, exp: int, bonus: int, accen
 	main_hbox.add_child(icon_box)
 	
 	var icon = TextureRect.new()
-	icon.custom_minimum_size = Vector2(48, 48)
+	icon.custom_minimum_size = Vector2(42, 42)
 	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	icon.name = "Icon"
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -218,14 +220,16 @@ func _make_mini_card_primary(name: String, lvl: int, exp: int, bonus: int, accen
 	var n_lbl := Label.new()
 	n_lbl.text = name
 	n_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	n_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	n_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 0.85))
 	hb.add_child(n_lbl)
 
 	var v_lbl := Label.new()
 	v_lbl.text = str(whole) + " + " + str(bonus)
 	v_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	v_lbl.add_theme_font_size_override("font_size", 20)
+	v_lbl.add_theme_font_size_override("font_size", 18)
 	v_lbl.add_theme_color_override("font_color", accent)
+	v_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	hb.add_child(v_lbl)
 #
 	## --- second line: fractional progress bar (0..100) ---
@@ -300,6 +304,7 @@ func _make_mini_card(name: String, lvl: int, activity_exp: int, accent: Color) -
 	n_lbl.text = name
 	n_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	n_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 0.85))
+	n_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	hb.add_child(n_lbl)
 
 	var v_lbl := Label.new()
@@ -307,6 +312,7 @@ func _make_mini_card(name: String, lvl: int, activity_exp: int, accent: Color) -
 	v_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	v_lbl.add_theme_font_size_override("font_size", 20)
 	v_lbl.add_theme_color_override("font_color", accent)
+	v_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	hb.add_child(v_lbl)
 
 	# --- second line: fractional progress bar (0..100) ---
@@ -344,13 +350,15 @@ func _make_steps_card(name: String, value_in: String, accent: Color) -> Control:
 	n_lbl.text = name
 	n_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	n_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 0.85))
+	n_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	hb.add_child(n_lbl)
 
 	var v_lbl := Label.new()
 	v_lbl.text = str(v)
 	v_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	v_lbl.add_theme_font_size_override("font_size", 20)
+	v_lbl.add_theme_font_size_override("font_size", 16)
 	v_lbl.add_theme_color_override("font_color", accent)
+	v_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	hb.add_child(v_lbl)
 
 	return panel
@@ -388,6 +396,7 @@ func _make_steps_card_with_icon(name: String, value_in: String, accent: Color) -
 	n_lbl.text = name
 	n_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	n_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 0.85))
+	n_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	hb.add_child(n_lbl)
 		
 	var v_lbl := Label.new()
@@ -395,17 +404,18 @@ func _make_steps_card_with_icon(name: String, value_in: String, accent: Color) -
 	v_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	v_lbl.add_theme_font_size_override("font_size", 20)
 	v_lbl.add_theme_color_override("font_color", accent)
+	v_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	hb.add_child(v_lbl)
 
 	return panel
 
-func _make_row(name: String, value: String, accent: Color) -> Control:
+func _make_row(name: String, value: String, percent_: String, accent: Color) -> Control:
 	var hb := HBoxContainer.new()
 	hb.custom_minimum_size = Vector2(36, 36)
 	hb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	
 	var icon = TextureRect.new()
-	icon.custom_minimum_size = Vector2(48, 48)
+	icon.custom_minimum_size = Vector2(36, 36)
 	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER	
 	icon.name = "Icon"
 	icon.anchor_left = 0
@@ -421,20 +431,21 @@ func _make_row(name: String, value: String, accent: Color) -> Control:
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	
 	var icon_key = {
-		"Physical DEF": "physical_defence",
+		"Physical DEF Rating": "physical_defence",
 		"Magical DEF": "magical_defence",
-		"Damage Reduction": "damage_reduction",
-		"Block Chance": "block_chance",
-		"Evasion": "evasion",
+		"Damage Reduction Rating": "damage_reduction",
+		"Block Chance Rating": "block_chance",
+		"Dodge Rating": "dodge",
 		"Physical ATK": "physical_attack",
-		"Crit Chance": "critical_chance",
+		"Crit Chance Rating": "critical_chance",
 		"Magic ATK": "magical_attack",
-		"Crit Damage": "critical_damage",
+		"Crit Damage Rating": "critical_damage",
 		"Hit Rating": "hit_rating",
-		"Armor Penetration": "armor_penetration",
+		"Armor Penetration Rating": "armor_penetration",
 		"Haste Rating": "haste",
-		"Magic Penetration": "magical_penetration",
-		"Magic DEF": "magical_defence",		
+		"Magic Penetration Rating": "magical_penetration",
+		"Magic DEF Rating": "magical_defence",
+		"Versatility Rating": "versatility",
 	}
 
 	icon.texture = ItemDB.ICONS.get(icon_key.get(name))
@@ -442,13 +453,19 @@ func _make_row(name: String, value: String, accent: Color) -> Control:
 
 	var name_lbl := Label.new()
 	name_lbl.text = name
+	name_lbl.add_theme_font_size_override("font_size", 14)
+	name_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	var val_lbl := Label.new()
-	val_lbl.text = value
+	if percent_ and name not in ["Physical ATK", "Magic ATK"]:
+		val_lbl.text = value + " ({0}%)".format([float(percent_) * 100])
+	else:
+		val_lbl.text = value
 	val_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	val_lbl.add_theme_color_override("font_color", accent)
-	val_lbl.add_theme_font_size_override("font_size", 20)
+	val_lbl.add_theme_font_size_override("font_size", 14)
+	val_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	val_lbl.size_flags_horizontal = Control.SIZE_SHRINK_END
 
 	hb.add_child(name_lbl)
@@ -466,6 +483,7 @@ func _style_section_card(card: PanelContainer, title: String, accent: Color) -> 
 		hdr.text = title
 		hdr.add_theme_color_override("font_color", accent)
 		hdr.add_theme_font_size_override("font_size", 20)
+		hdr.add_theme_font_override("font", Styler.JANDA_FONT)
 		vb.add_child(hdr)
 		vb.add_child(grid)
 		
@@ -480,7 +498,7 @@ func _fmt(v) -> String:
 		if is_whole:
 			return str(int(v))
 		else:
-			return "%0.2f" % v
+			return "%0.4f" % v
 	return str(v)
 
 func _equalize_off_def_size(make_wider_px = 300.0) -> void:

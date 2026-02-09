@@ -1,8 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://btkqrwpy7ojlt"]
+[gd_scene load_steps=7 format=3 uid="uid://btkqrwpy7ojlt"]
 
 [ext_resource type="Shader" uid="uid://bnw7hvx23mw6m" path="res://shaders/avatar_shader.gdshader" id="1_acak7"]
 [ext_resource type="Script" uid="uid://b4xf2tlt68irp" path="res://scenes/support_screens/character_hud.gd" id="1_rye7s"]
 [ext_resource type="Texture2D" uid="uid://bkj538chw6wh2" path="res://assets/character_faces/pirat.png" id="1_v2ojc"]
+[ext_resource type="FontFile" uid="uid://gcygusgobosn" path="res://assets/fonts/janda.ttf" id="4_xi8vd"]
+[ext_resource type="FontFile" uid="uid://ckc03u8qer62y" path="res://assets/fonts/quadrat_regular.ttf" id="5_rptoq"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_acak7"]
 shader = ExtResource("1_acak7")
@@ -46,6 +48,7 @@ metadata/_edit_use_anchors_ = true
 clip_contents = false
 custom_minimum_size = Vector2(0, 25)
 layout_mode = 2
+theme_override_fonts/normal_font = ExtResource("4_xi8vd")
 theme_override_font_sizes/normal_font_size = 16
 bbcode_enabled = true
 
@@ -68,6 +71,7 @@ offset_right = 20.0
 offset_bottom = 11.5
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_fonts/font = ExtResource("5_rptoq")
 
 [node name="MPBar" type="ProgressBar" parent="Avatar/MainBars"]
 custom_minimum_size = Vector2(0, 18)
@@ -88,6 +92,7 @@ offset_right = 20.0
 offset_bottom = 11.5
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_fonts/font = ExtResource("5_rptoq")
 
 [node name="ShieldBar" type="ProgressBar" parent="Avatar/MainBars"]
 custom_minimum_size = Vector2(0, 16)
@@ -108,6 +113,7 @@ offset_right = 20.0
 offset_bottom = 11.5
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_fonts/font = ExtResource("5_rptoq")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="Avatar/MainBars"]
 layout_mode = 2
@@ -123,6 +129,7 @@ stretch_mode = 5
 
 [node name="ActivityLabel" type="Label" parent="Avatar/MainBars/HBoxContainer"]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("5_rptoq")
 theme_override_font_sizes/font_size = 12
 text = "LVL 1"
 vertical_alignment = 1

@@ -1,0 +1,241 @@
+[gd_scene load_steps=3 format=3 uid="uid://dbtuwwbbtspgn"]
+
+[ext_resource type="Script" uid="uid://8vr1b46x5k8q" path="res://scenes/main_screens/character_inventory_v3.gd" id="1_20dno"]
+[ext_resource type="FontFile" uid="uid://ckc03u8qer62y" path="res://assets/fonts/quadrat_regular.ttf" id="2_u7w1k"]
+
+[node name="CharacterInventory_V3" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_20dno")
+
+[node name="VBox_Root" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 3.0
+offset_top = 207.0
+offset_right = 703.0
+offset_bottom = 1105.0
+
+[node name="Body" type="PanelContainer" parent="VBox_Root"]
+layout_mode = 2
+
+[node name="Gear_Panel" type="PanelContainer" parent="VBox_Root/Body"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Equipment_Panel" type="PanelContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 400)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 6
+
+[node name="equipment_vbox" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer/equipment_vbox"]
+layout_mode = 2
+
+[node name="col_left" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer/equipment_vbox/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+
+[node name="character_model" type="TextureRect" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer/equipment_vbox/HBoxContainer"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+stretch_mode = 3
+
+[node name="col_right" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer/equipment_vbox/HBoxContainer"]
+layout_mode = 2
+
+[node name="ILVL_Label" type="Label" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer/equipment_vbox"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_u7w1k")
+text = "Average Gear Level: 0"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="VBox_Root/Body/Gear_Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Inventory_Panel" type="PanelContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 300)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Btn_Split_Items" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_u7w1k")
+text = "Items"
+
+[node name="Btn_Split_Currency" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_u7w1k")
+text = "Currency"
+
+[node name="Label_Separator" type="Label" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_u7w1k")
+text = "               "
+
+[node name="Btn_ALL" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_u7w1k")
+text = "ALL"
+
+[node name="Btn_GearOnly" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_u7w1k")
+text = "Gear"
+
+[node name="Btn_ConsumableOnly" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_u7w1k")
+text = "Consumable"
+
+[node name="Btn_LootOnly" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_u7w1k")
+text = "Loot"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 6
+
+[node name="Space_Label" type="Label" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_u7w1k")
+text = "Space 0 / 42"
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 10
+
+[node name="Btn_Sort" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/HBoxContainer2"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_u7w1k")
+text = "Sort"
+
+[node name="ItemContainer" type="PanelContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Grid" type="GridContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/ItemContainer"]
+layout_mode = 2
+
+[node name="CurrencyContainer" type="PanelContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer"]
+visible = false
+custom_minimum_size = Vector2(0, 180)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/CurrencyContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 6
+
+[node name="Vbox" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/CurrencyContainer/MarginContainer"]
+layout_mode = 2
+
+[node name="HBox" type="HBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/CurrencyContainer/MarginContainer/Vbox"]
+layout_mode = 2
+
+[node name="Gold_Texture" type="TextureRect" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/CurrencyContainer/MarginContainer/Vbox/HBox"]
+layout_mode = 2
+
+[node name="Gold_label" type="Label" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/CurrencyContainer/MarginContainer/Vbox/HBox"]
+layout_mode = 2
+
+[node name="Skill_Panel" type="PanelContainer" parent="VBox_Root/Body"]
+visible = false
+custom_minimum_size = Vector2(0, 500)
+layout_mode = 2
+
+[node name="Skill_Margin" type="MarginContainer" parent="VBox_Root/Body/Skill_Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="Talents_Panel" type="PanelContainer" parent="VBox_Root/Body"]
+visible = false
+custom_minimum_size = Vector2(0, 500)
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="VBox_Root/Body/Talents_Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBox_Root/Body/Talents_Panel/Margin"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="VBox_Root/Body/Talents_Panel/Margin/VBoxContainer"]
+layout_mode = 2
+text = "Passive Skills"
+
+[node name="TalentGrid" type="GridContainer" parent="VBox_Root/Body/Talents_Panel/Margin/VBoxContainer"]
+layout_mode = 2
+columns = 2
+
+[node name="Buttons_Container" type="HBoxContainer" parent="VBox_Root"]
+layout_mode = 2
+theme_override_constants/separation = 50
+alignment = 1
+
+[node name="Btn_Gear" type="Button" parent="VBox_Root/Buttons_Container"]
+custom_minimum_size = Vector2(128, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_u7w1k")
+text = "Gear"
+
+[node name="Btn_Skills" type="Button" parent="VBox_Root/Buttons_Container"]
+custom_minimum_size = Vector2(128, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_u7w1k")
+text = "Skills"
+
+[node name="Btn_Talents" type="Button" parent="VBox_Root/Buttons_Container"]
+custom_minimum_size = Vector2(128, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_u7w1k")
+text = "Talents"
+
+[connection signal="pressed" from="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/Btn_Split_Items" to="." method="_on_btn_split_items_pressed"]
+[connection signal="pressed" from="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/Btn_Split_Currency" to="." method="_on_btn_split_currency_pressed"]
+[connection signal="pressed" from="VBox_Root/Buttons_Container/Btn_Gear" to="." method="_on_btn_gear_pressed"]
+[connection signal="pressed" from="VBox_Root/Buttons_Container/Btn_Skills" to="." method="_on_btn_skills_pressed"]
+[connection signal="pressed" from="VBox_Root/Buttons_Container/Btn_Talents" to="." method="_on_btn_talents_pressed"]

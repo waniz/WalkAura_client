@@ -7,7 +7,10 @@ var cryptoUtil = UserCrypto.new()
 
 @export var websocket_url = "ws://91.98.164.230:8888/ws"
 
+var _is_connected = false
+
 func _ready() -> void:
+	
 	connect_to_server()
 	
 	SignalManager.signal_CreateUser.connect(_on_user_creating)
@@ -22,9 +25,16 @@ func _ready() -> void:
 	SignalManager.signal_RequestInventory.connect(_on_inventory_request)
 	SignalManager.signal_UseItem.connect(_on_useitem_request)
 	SignalManager.signal_EquipItem.connect(_on_equip_request)
+	SignalManager.signal_UnequipItem.connect(_on_unequip_request)
+	SignalManager.signal_SellItem.connect(_on_sell_item_request)
 
 
 func connect_to_server() -> void:
+	# --- FIX: Increase Buffer Size ---
+	# Default is often 64KB (65536). Let's set it to 10MB to be safe.
+	socket.inbound_buffer_size = 1 * 1024 * 1024 
+	# ---------------------------------
+	
 	var err = socket.connect_to_url(websocket_url)
 	if err != OK:
 		server_connector_message_bus.emit("[Client] ERROR: Cannot connect to server")
@@ -35,10 +45,21 @@ func connect_to_server() -> void:
 		
 func _process(_delta: float) -> void:
 	socket.poll()
+	
+	var state = socket.get_ready_state()
 
-	if socket.get_ready_state() == WebSocketPeer.STATE_OPEN:
+	if state == WebSocketPeer.STATE_OPEN:
+		_is_connected = true
 		while socket.get_available_packet_count():
 			server_connector_message_bus.emit(socket.get_packet().get_string_from_ascii())
+			
+	elif state == WebSocketPeer.STATE_CLOSED:
+		if _is_connected:
+			_is_connected = false
+			print("Disconnected. Code: %d, Reason: %s" % [socket.get_close_code(), socket.get_close_reason()])
+
+			await get_tree().create_timer(3.0).timeout
+			connect_to_server()
 
 # ################################
 # """Signal compilator section"""
@@ -131,22 +152,46 @@ func _on_useitem_request(item_to_use) -> void:
 		"cmd": "inventory",
 		"payload": {
 			"action": "use_item",
-			"item": item_to_use,
+			"item_uid": item_to_use,
 		}
 	}
 	var server_request = JSON.stringify(payload)
 	socket.send_text(server_request)
 	server_connector_message_bus.emit("[Client] Request to Use item: {0}".format([item_to_use]))
 
-func _on_equip_request(item_to_equip) -> void:
+func _on_equip_request(item_to_equip, slot_type) -> void:
 	var payload := {
 		"cmd": "inventory",
 		"payload": {
 			"action": "equip",
-			"item": item_to_equip,
+			"item_uid": item_to_equip,
+			"slot": slot_type,
 		}
 	}
 	var server_request = JSON.stringify(payload)
 	socket.send_text(server_request)
-	server_connector_message_bus.emit("[Client] Request to Equip item: {0}".format([item_to_equip]))
+	server_connector_message_bus.emit("[Client] Request to Equip item: {0} for slot: {1}".format([item_to_equip, slot_type]))
+
+func _on_unequip_request(_slot_name) -> void:
+	var payload := {
+		"cmd": "inventory",
+		"payload": {
+			"action": "unequip",
+			"slot": _slot_name,
+		}
+	}
+	var server_request = JSON.stringify(payload)
+	socket.send_text(server_request)
+	server_connector_message_bus.emit("[Client] Request to Unequip item from slot: {1}".format([_slot_name]))
 	
+func _on_sell_item_request(item_to_sell) -> void:
+	var payload := {
+		"cmd": "inventory",
+		"payload": {
+			"action": "sell",
+			"item_uid": item_to_sell,
+		}
+	}
+	var server_request = JSON.stringify(payload)
+	socket.send_text(server_request)
+	server_connector_message_bus.emit("[Client] Request to Sell item {0}".format([item_to_sell]))

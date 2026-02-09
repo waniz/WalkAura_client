@@ -4,8 +4,8 @@
 [ext_resource type="PackedScene" uid="uid://gmdl1jt3f2hv" path="res://scenes/hud/global_hud.tscn" id="2_rx6t5"]
 [ext_resource type="PackedScene" uid="uid://d3b3g8rafrbl2" path="res://scenes/main_screens/character_profile_v2.tscn" id="3_g2q3n"]
 [ext_resource type="PackedScene" uid="uid://bjvtquos2r8cj" path="res://scenes/support_screens/progress_update.tscn" id="4_yr4qo"]
-[ext_resource type="PackedScene" uid="uid://dqgl4evjrtp64" path="res://scenes/main_screens/character_inventory_v2.tscn" id="5_ebot2"]
 [ext_resource type="PackedScene" uid="uid://dyrjw7qne5af5" path="res://scenes/main_screens/character_location_v2.tscn" id="5_g2q3n"]
+[ext_resource type="PackedScene" uid="uid://dbtuwwbbtspgn" path="res://scenes/main_screens/character_inventory_v3.tscn" id="5_rx6t5"]
 
 [node name="AppScenesHandler" type="Control"]
 layout_mode = 3
@@ -30,7 +30,7 @@ offset_top = -3.0
 offset_right = -1.0
 offset_bottom = -3.0
 
-[node name="CharacterInventory_V2" parent="." instance=ExtResource("5_ebot2")]
+[node name="CharacterInventory_V3" parent="." instance=ExtResource("5_rx6t5")]
 layout_mode = 1
 
 [node name="ProgressUpdate" parent="." instance=ExtResource("4_yr4qo")]

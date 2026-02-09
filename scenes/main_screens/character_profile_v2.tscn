@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://d3b3g8rafrbl2"]
+[gd_scene load_steps=3 format=3 uid="uid://d3b3g8rafrbl2"]
 
 [ext_resource type="Script" uid="uid://dmby8fhkmpq7m" path="res://scenes/main_screens/character_profile_v2.gd" id="1_ub8o2"]
+[ext_resource type="FontFile" uid="uid://ckc03u8qer62y" path="res://assets/fonts/quadrat_regular.ttf" id="2_ets3d"]
 
 [node name="CharacterProfile_V2" type="Control"]
 layout_mode = 3
@@ -37,6 +38,13 @@ layout_mode = 2
 layout_mode = 2
 columns = 3
 
+[node name="StepCard" type="PanelContainer" parent="VBoxContainer/body_panel/Attributes/Margin/VBox"]
+layout_mode = 2
+
+[node name="StepsGrid" type="GridContainer" parent="VBoxContainer/body_panel/Attributes/Margin/VBox/StepCard"]
+layout_mode = 2
+columns = 2
+
 [node name="OFFBox" type="HBoxContainer" parent="VBoxContainer/body_panel/Attributes/Margin/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
@@ -58,13 +66,6 @@ theme_override_constants/separation = 16
 layout_mode = 2
 
 [node name="DeffGrid" type="GridContainer" parent="VBoxContainer/body_panel/Attributes/Margin/VBox/DEFBox/DefCard"]
-layout_mode = 2
-columns = 2
-
-[node name="StepCard" type="PanelContainer" parent="VBoxContainer/body_panel/Attributes/Margin/VBox"]
-layout_mode = 2
-
-[node name="StepsGrid" type="GridContainer" parent="VBoxContainer/body_panel/Attributes/Margin/VBox/StepCard"]
 layout_mode = 2
 columns = 2
 
@@ -110,21 +111,25 @@ alignment = 1
 [node name="Btn_attributes" type="Button" parent="VBoxContainer/Buttons_Container"]
 custom_minimum_size = Vector2(128, 0)
 layout_mode = 2
+theme_override_fonts/font = ExtResource("2_ets3d")
 text = "Attributes"
 
 [node name="Btn_professions" type="Button" parent="VBoxContainer/Buttons_Container"]
 custom_minimum_size = Vector2(128, 0)
 layout_mode = 2
+theme_override_fonts/font = ExtResource("2_ets3d")
 text = "Professions"
 
 [node name="Btn_archivements" type="Button" parent="VBoxContainer/Buttons_Container"]
 custom_minimum_size = Vector2(128, 0)
 layout_mode = 2
+theme_override_fonts/font = ExtResource("2_ets3d")
 text = "Archivements"
 
 [node name="Btn_reputations" type="Button" parent="VBoxContainer/Buttons_Container"]
 custom_minimum_size = Vector2(128, 0)
 layout_mode = 2
+theme_override_fonts/font = ExtResource("2_ets3d")
 text = "Reputations"
 
 [connection signal="pressed" from="VBoxContainer/Buttons_Container/Btn_attributes" to="." method="_on_btn_attributes_pressed"]

@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://d1bmiemb8yjfl"]
+[gd_scene load_steps=3 format=3 uid="uid://d1bmiemb8yjfl"]
 
 [ext_resource type="Script" uid="uid://bl74x3r4f613w" path="res://scenes/login_screen/create_user_ui.gd" id="1_pjd7g"]
+[ext_resource type="FontFile" uid="uid://ckc03u8qer62y" path="res://assets/fonts/quadrat_regular.ttf" id="2_umuyf"]
 
 [node name="CreateUserUI" type="Control"]
 layout_mode = 3
@@ -43,6 +44,7 @@ size_flags_vertical = 2
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("2_umuyf")
 text = "Username"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -52,6 +54,7 @@ custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 2.0
+theme_override_fonts/font = ExtResource("2_umuyf")
 theme_override_font_sizes/font_size = 32
 text = "test_user"
 
@@ -63,6 +66,7 @@ size_flags_vertical = 2
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("2_umuyf")
 text = "Password"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -72,6 +76,7 @@ custom_minimum_size = Vector2(0, 16)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 2.0
+theme_override_fonts/font = ExtResource("2_umuyf")
 theme_override_font_sizes/font_size = 32
 text = "pass"
 secret = true
@@ -89,6 +94,7 @@ offset_right = 130.0
 offset_bottom = -20.0
 grow_horizontal = 2
 grow_vertical = 0
+theme_override_fonts/font = ExtResource("2_umuyf")
 theme_override_font_sizes/font_size = 32
 text = "Create new user
 "
@@ -99,6 +105,7 @@ offset_left = 545.0
 offset_top = 5.0
 offset_right = 600.0
 offset_bottom = 57.0
+theme_override_fonts/font = ExtResource("2_umuyf")
 text = "X"
 
 [node name="RichTextLabel" type="Label" parent="Panel_create_user"]

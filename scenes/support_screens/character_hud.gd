@@ -53,7 +53,7 @@ func _update_character_hud(value):
 		Account.buffer_steps,
 		Account.buffer_steps_max,
 	)
-	name_level.text = "[color=green]{0}[/color]  Lv [color=orange]{1}[/color]".format([Account.username, Account.level])
+	name_level.text = "[color=orange]{0}[/color]  Lv [color=orange]{1}[/color]".format([Account.username, Account.level])
 	var current_activity_name = GameTextEn.activities_texts[Account.activity]
 
 	if current_activity_name.to_lower() == "no":

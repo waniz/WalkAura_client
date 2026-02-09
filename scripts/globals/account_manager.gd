@@ -138,27 +138,33 @@ func get_account_attrs(json_msg):
 	Account.regenerative_steps_xp = int(json_msg.data.passives.regenerative_steps_xp)
 	
 	# secondary parameters
-	Account.atk = json_msg.data.offensive.atk
-	Account.m_atk = json_msg.data.offensive.m_atk
-	Account.hit_rating = json_msg.data.offensive.hit_rating
-	Account.crit_chance = json_msg.data.offensive.crit_chance
-	Account.crit_damage = json_msg.data.offensive.crit_damage
-	Account.haste = json_msg.data.offensive.haste
-	Account.armor_pen = json_msg.data.offensive.armor_pen
-	Account.magic_pen = json_msg.data.offensive.magic_pen
+	Account.atk = json_msg.data.secondary_attributes.atk
+	Account.m_atk = json_msg.data.secondary_attributes.m_atk
+	Account.hit_rating = json_msg.data.secondary_attributes.hit_rating
+	Account.crit_chance_rating = json_msg.data.secondary_attributes.crit_chance_rating
+	Account.crit_damage_rating = json_msg.data.secondary_attributes.crit_damage_rating
+	Account.haste_rating = json_msg.data.secondary_attributes.haste_rating
+	Account.armor_pen_rating = json_msg.data.secondary_attributes.armor_pen_rating
+	Account.magic_pen_rating = json_msg.data.secondary_attributes.magic_pen_rating
+	Account.versatility_rating = json_msg.data.secondary_attributes.versatility_rating
+	Account.p_def_rating = json_msg.data.secondary_attributes.p_def_rating
+	Account.m_def_rating = json_msg.data.secondary_attributes.m_def_rating
+	Account.block_chance_rating = json_msg.data.secondary_attributes.block_chance_rating
+	Account.dodge_rating = json_msg.data.secondary_attributes.dodge_rating
+	Account.dmg_reduction_rating = json_msg.data.secondary_attributes.dmg_reduction_rating
 	
-	Account.p_def = json_msg.data.defensive.p_def
-	Account.m_def = json_msg.data.defensive.m_def
-	Account.block_chance = json_msg.data.defensive.block_chance
-	Account.evasion = json_msg.data.defensive.evasion
-	Account.dmg_reduction = json_msg.data.defensive.dmg_reduction
-	
-	Account.res_fire = json_msg.data.resistances.res_fire
-	Account.res_frost = json_msg.data.resistances.res_frost
-	Account.res_lightning = json_msg.data.resistances.res_lightning
-	Account.res_poison = json_msg.data.resistances.res_poison
-	Account.res_death = json_msg.data.resistances.res_death
-	Account.res_holy = json_msg.data.resistances.res_holy
+	Account.hit = json_msg.data.secondary_attributes.hit
+	Account.crit_chance = json_msg.data.secondary_attributes.crit_chance
+	Account.crit_damage = json_msg.data.secondary_attributes.crit_damage
+	Account.haste = json_msg.data.secondary_attributes.haste
+	Account.armor_pen = json_msg.data.secondary_attributes.armor_pen
+	Account.magic_pen = json_msg.data.secondary_attributes.magic_pen
+	Account.versatility = json_msg.data.secondary_attributes.versatility
+	Account.p_def = json_msg.data.secondary_attributes.p_def
+	Account.m_def = json_msg.data.secondary_attributes.m_def
+	Account.block_chance = json_msg.data.secondary_attributes.block_chance
+	Account.dodge = json_msg.data.secondary_attributes.dodge
+	Account.dmg_reduction = json_msg.data.secondary_attributes.dmg_reduction
 	
 	# statuses
 	Account.location = int(json_msg.data.statuses.location)
@@ -184,9 +190,6 @@ func update_client_visuals():
 	Account.atk = str("{0} - {1}".format([min_atk, max_atk]))
 	Account.m_atk = str("{0} - {1}".format([min_m_atk, max_m_atk]))
 	
-	Account.crit_chance *= 100
-	Account.crit_damage *= 100
-
 func update_account_steps(data):
 	signal_UserStepLastTSReceived.emit(data)
 	

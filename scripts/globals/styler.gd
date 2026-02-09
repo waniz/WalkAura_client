@@ -8,7 +8,7 @@ const QUALITY_COLORS := {
 	3: Color(0, 0.44, 0.87),    # Rare
 	4: Color(0.64, 0.21, 0.93), # Epic
 	5: Color(1, 0.5, 0),        # Legendary
-	6: Color(0.9, 0.8, 0.2)     # Artifact
+	6: Color(0.9, 0.8, 0.2)     # Mythic
 }
 
 var COL_PRIMARY  = Color.from_rgba8(255, 200, 66)
@@ -17,6 +17,23 @@ var COL_DEFENSE  = Color.from_rgba8(64, 180, 255)
 var COL_PANEL_BG = Color.from_rgba8(16, 18, 24, 220)
 var COL_PANEL_BR = Color.from_rgba8(255, 255, 255, 30)
 var COL_PANEL_GRAY = Color.from_rgba8(110, 96, 96, 255)
+
+const COLOR_PARCHMENT   = Color(0.95, 0.92, 0.84, 1.0) # Beige background
+const COLOR_TEXT_DARK   = Color(0.1, 0.1, 0.1, 1.0)    # Dark text
+var   COLOR_PANEL_DARK  = Color.from_rgba8(28,30,40,255)
+const COLOR_BORDER      = Color(0.2, 0.2, 0.2, 1.0)
+const COLOR_GOLD        = Color(0.8, 0.6, 0.0, 1.0)
+const COLOR_SLOT_BG     = Color(0.0, 0.0, 0.0, 0.15)   # Dark slot bg
+const COLOR_ACCENT      = Color(0.2, 0.2, 0.2, 1.0)
+const COLOR_CARD_BG     = Color(0.0, 0.0, 0.0, 0.05) # Faint inset for cards
+const COLOR_CARD_BORDER = Color(0.0, 0.0, 0.0, 0.15)
+
+var GOLD_COLOR = Color.from_rgba8(255,200,66)
+
+var MORPHEUS_FONT = load("res://assets/fonts/morpheus.ttf")
+var GROBOLT_FONT  = load("res://assets/fonts/grobolt.ttf")
+var JANDA_FONT    = load("res://assets/fonts/janda.ttf")
+var QUADRAT_FONT  = load("res://assets/fonts/quadrat_regular.ttf")
 
 
 # ------------------- Styling helpers -------------------
@@ -274,10 +291,10 @@ func style_mini_progress(bar: ProgressBar, accent: Color) -> void:
 	bar.add_theme_stylebox_override("background", bg)
 	bar.add_theme_stylebox_override("fill", fill)
 
-func card_box() -> StyleBoxFlat:
-	
+func card_box() -> StyleBoxFlat:	
 	var box := StyleBoxFlat.new()
-	box.bg_color = Color.from_rgba8(28,30,40,255)
+	#box.bg_color = COLOR_PANEL_DARK
+	box.bg_color = COLOR_ACCENT
 	box.border_color = Styler.COL_PANEL_BR
 	box.border_width_left = 2
 	box.border_width_right = 2
@@ -292,3 +309,37 @@ func card_box() -> StyleBoxFlat:
 	box.content_margin_left = 10; box.content_margin_right = 10
 	box.content_margin_top = 12;   box.content_margin_bottom = 10
 	return box
+
+func _apply_parchment_style(panel: PanelContainer) -> void:
+	if not panel: return
+	var sb = StyleBoxFlat.new()
+	sb.bg_color = COLOR_PARCHMENT
+	sb.set_corner_radius_all(4)
+	sb.border_width_left = 3
+	sb.border_width_right = 3
+	sb.border_width_top = 3
+	sb.border_width_bottom = 3
+	sb.border_color = COLOR_BORDER
+	# Add a shadow for depth
+	sb.shadow_size = 4
+	sb.shadow_color = Color(0,0,0,0.3)
+	
+	panel.add_theme_stylebox_override("panel", sb)
+
+func _get_slot_stylebox(is_hover: bool = false) -> StyleBoxFlat:
+	var sb = StyleBoxFlat.new()
+	# Slots are darker to make icons pop
+	sb.bg_color = COLOR_SLOT_BG 
+	sb.set_corner_radius_all(4)
+	sb.border_width_left = 1
+	sb.border_width_right = 1
+	sb.border_width_top = 1
+	sb.border_width_bottom = 1
+	
+	if is_hover:
+		sb.border_color = Color(0.8, 0.6, 0.0, 1.0) # Gold glow on hover
+		sb.bg_color = Color(0.0, 0.0, 0.0, 0.05)
+	else:
+		sb.border_color = Color(0.4, 0.4, 0.4, 0.5) # Grey border default
+		
+	return sb
