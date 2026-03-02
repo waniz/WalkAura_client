@@ -21,6 +21,8 @@ signal signal_StepsUpdatesAndroid(data)
 signal signal_StepsRequestLastTimestamp(is_requested)
 @warning_ignore("unused_signal")
 signal signal_StepsUpdatesCheats(amount)
+@warning_ignore("unused_signal")
+signal signal_StepsReceivedFromServer(amount)
 
 # Inventory and equipment signals
 @warning_ignore("unused_signal")
@@ -33,3 +35,15 @@ signal signal_UnequipItem(slot_name: String)
 signal signal_UseItem(item_uid: String)
 @warning_ignore("unused_signal")
 signal signal_SellItem(item_uid: String)
+
+# Skills control
+@warning_ignore("unused_signal")
+signal signal_EquipSkill(slot: int, skill_id: String)
+@warning_ignore("unused_signal")
+signal signal_UnEquipSkill(slot: int)
+
+# Rift signals
+@warning_ignore("unused_signal")
+signal signal_ShowRift
+@warning_ignore("unused_signal")
+signal signal_RequestRiftFights(rift_instance_id: String)

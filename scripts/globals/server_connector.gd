@@ -28,6 +28,11 @@ func _ready() -> void:
 	SignalManager.signal_UnequipItem.connect(_on_unequip_request)
 	SignalManager.signal_SellItem.connect(_on_sell_item_request)
 
+	SignalManager.signal_EquipSkill.connect(_on_equip_skill_request)
+	SignalManager.signal_UnEquipSkill.connect(_on_unequip_skill_request)
+
+	SignalManager.signal_RequestRiftFights.connect(_on_request_rift_fights)
+
 
 func connect_to_server() -> void:
 	# --- FIX: Increase Buffer Size ---
@@ -182,7 +187,7 @@ func _on_unequip_request(_slot_name) -> void:
 	}
 	var server_request = JSON.stringify(payload)
 	socket.send_text(server_request)
-	server_connector_message_bus.emit("[Client] Request to Unequip item from slot: {1}".format([_slot_name]))
+	server_connector_message_bus.emit("[Client] Request to Unequip item from slot: {0}".format([_slot_name]))
 	
 func _on_sell_item_request(item_to_sell) -> void:
 	var payload := {
@@ -195,3 +200,39 @@ func _on_sell_item_request(item_to_sell) -> void:
 	var server_request = JSON.stringify(payload)
 	socket.send_text(server_request)
 	server_connector_message_bus.emit("[Client] Request to Sell item {0}".format([item_to_sell]))
+	
+func _on_equip_skill_request(idx, skill_id):
+	var payload := {
+		"cmd": "skills",
+		"payload": {
+			"action": "equip",
+			"slot": idx,
+			"skill_id": skill_id,
+		}
+	}
+	var server_request = JSON.stringify(payload)
+	socket.send_text(server_request)
+	server_connector_message_bus.emit("[Client] Request to Equip skill {0}".format([skill_id]))
+	
+func _on_unequip_skill_request(idx):
+	var payload := {
+		"cmd": "skills",
+		"payload": {
+			"action": "unequip",
+			"slot": idx,
+		}
+	}
+	var server_request = JSON.stringify(payload)
+	socket.send_text(server_request)
+	server_connector_message_bus.emit("[Client] Request to Unequip skill from {0}".format([idx]))
+
+func _on_request_rift_fights(rift_instance_id: String) -> void:
+	var payload := {
+		"cmd": "rift_fights",
+		"payload": {
+			"rift_instance_id": rift_instance_id,
+		}
+	}
+	var server_request = JSON.stringify(payload)
+	socket.send_text(server_request)
+	server_connector_message_bus.emit("[Client] Requesting rift fights for: {0}".format([rift_instance_id]))

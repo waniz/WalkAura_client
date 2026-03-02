@@ -1,0 +1,43 @@
+[gd_scene format=3 uid="uid://ca84pi2vjniht"]
+
+[ext_resource type="Script" uid="uid://d3b7ldykd4qjb" path="res://scenes/support_screens/progress_steps.gd" id="1_0a66f"]
+[ext_resource type="FontFile" uid="uid://cop1h7muallq2" path="res://assets/fonts/grobolt.ttf" id="2_dxy3l"]
+
+[node name="ProgressSteps" type="Control" unique_id=1749772217]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_0a66f")
+
+[node name="PanelContainer" type="PanelContainer" parent="." unique_id=1250460706]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -271.0
+offset_top = -247.0
+offset_right = -32.0
+offset_bottom = -157.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer" unique_id=111222333]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 12
+
+[node name="StepsLabel" type="Label" parent="PanelContainer/MarginContainer" unique_id=139187170]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_dxy3l")
+theme_override_font_sizes/font_size = 22
+text = "+0 steps received"

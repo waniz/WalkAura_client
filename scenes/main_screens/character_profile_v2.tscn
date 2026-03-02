@@ -1,7 +1,9 @@
-[gd_scene load_steps=3 format=3 uid="uid://d3b3g8rafrbl2"]
+[gd_scene load_steps=4 format=3 uid="uid://d3b3g8rafrbl2"]
 
 [ext_resource type="Script" uid="uid://dmby8fhkmpq7m" path="res://scenes/main_screens/character_profile_v2.gd" id="1_ub8o2"]
 [ext_resource type="FontFile" uid="uid://ckc03u8qer62y" path="res://assets/fonts/quadrat_regular.ttf" id="2_ets3d"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_ets3d"]
 
 [node name="CharacterProfile_V2" type="Control"]
 layout_mode = 3
@@ -33,6 +35,7 @@ layout_mode = 2
 
 [node name="PrimaryCard" type="PanelContainer" parent="VBoxContainer/body_panel/Attributes/Margin/VBox"]
 layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_ets3d")
 
 [node name="PrimaryGrid" type="GridContainer" parent="VBoxContainer/body_panel/Attributes/Margin/VBox/PrimaryCard"]
 layout_mode = 2

@@ -2,15 +2,14 @@ extends Node
 
 var _plugin_name = "GodotAndroidPlugin"
 var _android_plugin = null
-var text_logs = null
-
-
-#func get_steps_from_android() -> void:
-	#if _android_plugin:
-		#_android_plugin.getSteps(25000)
 
 func _ready() -> void:
-	pass
+	connect_to_mobile()
+	var timer := Timer.new()
+	timer.wait_time = 30.0
+	timer.autostart = true
+	timer.timeout.connect(func(): SignalManager.signal_StepsRequestLastTimestamp.emit(true))
+	add_child(timer)
 	
 func connect_to_mobile():
 	if Engine.has_singleton(_plugin_name):
@@ -27,11 +26,13 @@ func connect_to_mobile():
 func _total_steps_retrieved(json_text: String) -> void:
 	var data = JSON.parse_string(json_text)
 		
-	var lines := PackedStringArray()
+	#var lines := PackedStringArray()
+	var server_steps_returned: int = 0
 	for i in data.size():
 		var e: Dictionary = data[i]
-		lines.append(
-			"Entry #%d Start: %s End: %s STEPS: %s"
-			% [i, str(e.get("start")), str(e.get("end")), str(e.get("steps"))]
-		)
-	text_logs = "\n".join(lines)
+		server_steps_returned += int(e.get("steps"))
+		#lines.append(
+			#"Entry #%d Start: %s End: %s STEPS: %s"
+			#% [i, str(e.get("start")), str(e.get("end")), str(e.get("steps"))]
+		#)
+	SignalManager.signal_StepsReceivedFromServer.emit(server_steps_returned)

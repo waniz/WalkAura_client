@@ -161,12 +161,23 @@ var ICONS = {
 	"woodcutting":          load("res://assets/general_icons/professions/woodcutting.png") as Texture2D,
 	"fishing":              load("res://assets/general_icons/professions/fishing.png") as Texture2D,
 	"blacksmith":           load("res://assets/general_icons/professions/blacksmith.png") as Texture2D,
+	"rift":                 load("res://assets/general_icons/professions/rift.png") as Texture2D,
 	
 	# talents
 	"thick_skin":           load("res://assets/general_icons/passive_talents/thick_skin.png") as Texture2D,
 	"brutal_strike":        load("res://assets/general_icons/passive_talents/brutal_strike.png") as Texture2D,
 	"guardian_shell":       load("res://assets/general_icons/passive_talents/guardian_shell.png") as Texture2D,
 	"evasion_training":     load("res://assets/general_icons/passive_talents/evasion_training.png") as Texture2D,
+	
+	# skills
+	"buff_attack_up":       load("res://assets/skills/buff_attack_up.png") as Texture2D,
+	"buff_hp_up":           load("res://assets/skills/buff_hp_up.png") as Texture2D,
+	"mage_fireball":        load("res://assets/skills/mage_fireball.png") as Texture2D,
+	"mage_frostshield":     load("res://assets/skills/mage_frostshield.png") as Texture2D,
+	"mage_frostbolt":       load("res://assets/skills/mage_frostbolt.png") as Texture2D,
+	"mage_pyroblast":       load("res://assets/skills/mage_pyroblast.png") as Texture2D,
+	"paladin_minorheal":    load("res://assets/skills/paladin_minorheal.png") as Texture2D,
+	"paladin_regeneration": load("res://assets/skills/paladin_regeneration.png") as Texture2D,
 }
 
 # Equipment rows

@@ -8,6 +8,11 @@ signal signal_UserStepLastTSReceived(data)
 signal signal_ActivityProgressReceived(data)
 signal signal_InventoryReceived(data)
 
+signal signal_AllSkillsReceived(data)
+signal signal_AccountSkillsReceived(data)
+
+signal signal_RiftFightsReceived(data)
+
 
 func _ready() -> void:
 	ServerConnector.server_connector_message_bus.connect(parse_message)
@@ -42,6 +47,12 @@ func parse_message(message):
 		show_activity_progress(json.data)
 	elif json.data.cmd == "inventory":
 		update_inventory(json.data)
+	elif json.data.cmd == "all_skills_list":
+		update_game_skills(json.data)
+	elif json.data.cmd == "skills_update":
+		update_skills(json.data)
+	elif json.data.cmd == "rift_fights":
+		update_rift_fights(json.data)
 		
 
 # router handlers
@@ -120,7 +131,9 @@ func get_account_attrs(json_msg):
 	Account.alchemy_xp = int(json_msg.data.professions.alchemy_xp)
 	Account.cooking_xp = int(json_msg.data.professions.cooking_xp)
 	Account.enchanting_xp = int(json_msg.data.professions.enchanting_xp)
-	
+	Account.rift_lvl = int(json_msg.data.professions.get("rift_lvl", 1))
+	Account.rift_xp = int(json_msg.data.professions.get("rift_xp", 0))
+
 	# passives
 	Account.thick_skin_lvl = int(json_msg.data.passives.thick_skin_lvl)
 	Account.thick_skin_xp = int(json_msg.data.passives.thick_skin_xp)
@@ -170,8 +183,14 @@ func get_account_attrs(json_msg):
 	Account.location = int(json_msg.data.statuses.location)
 	Account.activity = int(json_msg.data.statuses.activity)
 	Account.activity_site = int(json_msg.data.statuses.activity_site)
-	Account.account_step_carry = int(json_msg.data.statuses.account_step_carry)
-	
+
+	Account.rift_id = int(json_msg.data.statuses.get("rift_id", 0))
+	Account.rift_steps = int(json_msg.data.statuses.get("rift_steps", 0))
+	Account.rift_steps_max = int(json_msg.data.statuses.get("rift_steps_max", 0))
+	Account.rift_milestone_index = int(json_msg.data.statuses.get("rift_milestone_index", 0))
+	Account.rift_total_milestones = int(json_msg.data.statuses.get("rift_total_milestones", 0))
+	Account.rift_instance_id = str(json_msg.data.statuses.get("rift_instance_id", ""))
+
 	Account.variance = json_msg.data.internal.variance
 	Account.vit_crit_soften = json_msg.data.internal.vit_crit_soften
 	Account.spirit_healing_mult = json_msg.data.internal.spirit_healing_mult
@@ -198,3 +217,14 @@ func show_activity_progress(data):
 
 func update_inventory(data):
 	signal_InventoryReceived.emit(data)
+	
+func update_game_skills(data):
+	Account.raw_structures.all_server_skills = data
+	signal_AllSkillsReceived.emit(data)
+	
+func update_skills(data):
+	Account.raw_structures.account_skills = data
+	signal_AccountSkillsReceived.emit(data)
+
+func update_rift_fights(data):
+	signal_RiftFightsReceived.emit(data)

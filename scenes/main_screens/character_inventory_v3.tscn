@@ -1,9 +1,13 @@
-[gd_scene load_steps=3 format=3 uid="uid://dbtuwwbbtspgn"]
+[gd_scene format=3 uid="uid://dbtuwwbbtspgn"]
 
 [ext_resource type="Script" uid="uid://8vr1b46x5k8q" path="res://scenes/main_screens/character_inventory_v3.gd" id="1_20dno"]
 [ext_resource type="FontFile" uid="uid://ckc03u8qer62y" path="res://assets/fonts/quadrat_regular.ttf" id="2_u7w1k"]
 
-[node name="CharacterInventory_V3" type="Control"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_20dno"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_u7w1k"]
+
+[node name="CharacterInventory_V3" type="Control" unique_id=413197890]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,231 +15,312 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_20dno")
+slot_size = Vector2i(50, 50)
+slot_padding = 4
 
-[node name="VBox_Root" type="VBoxContainer" parent="."]
+[node name="VBox_Root" type="VBoxContainer" parent="." unique_id=509841734]
 layout_mode = 0
 offset_left = 3.0
 offset_top = 207.0
 offset_right = 703.0
 offset_bottom = 1105.0
 
-[node name="Body" type="PanelContainer" parent="VBox_Root"]
+[node name="Body" type="PanelContainer" parent="VBox_Root" unique_id=558080218]
 layout_mode = 2
 
-[node name="Gear_Panel" type="PanelContainer" parent="VBox_Root/Body"]
+[node name="Gear_Panel" type="PanelContainer" parent="VBox_Root/Body" unique_id=267432820]
 layout_mode = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel"]
+[node name="VBoxContainer" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel" unique_id=588080939]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Equipment_Panel" type="PanelContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer"]
+[node name="Equipment_Panel" type="PanelContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer" unique_id=1808041064]
 custom_minimum_size = Vector2(0, 400)
 layout_mode = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel"]
+[node name="MarginContainer" type="MarginContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel" unique_id=1896465776]
 layout_mode = 2
 theme_override_constants/margin_left = 6
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 6
 theme_override_constants/margin_bottom = 6
 
-[node name="equipment_vbox" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer"]
+[node name="equipment_vbox" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer" unique_id=448104839]
 layout_mode = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer/equipment_vbox"]
+[node name="HBoxContainer" type="HBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer/equipment_vbox" unique_id=695248875]
 layout_mode = 2
 
-[node name="col_left" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer/equipment_vbox/HBoxContainer"]
+[node name="col_left" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer/equipment_vbox/HBoxContainer" unique_id=1993815828]
 layout_mode = 2
 size_flags_horizontal = 0
 
-[node name="character_model" type="TextureRect" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer/equipment_vbox/HBoxContainer"]
+[node name="character_model" type="TextureRect" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer/equipment_vbox/HBoxContainer" unique_id=1692573957]
 custom_minimum_size = Vector2(500, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 stretch_mode = 3
 
-[node name="col_right" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer/equipment_vbox/HBoxContainer"]
+[node name="col_right" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer/equipment_vbox/HBoxContainer" unique_id=2090183713]
 layout_mode = 2
 
-[node name="ILVL_Label" type="Label" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer/equipment_vbox"]
+[node name="ILVL_Label" type="Label" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer/equipment_vbox" unique_id=1401017680]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_u7w1k")
 text = "Average Gear Level: 0"
 horizontal_alignment = 1
 
-[node name="HSeparator" type="HSeparator" parent="VBox_Root/Body/Gear_Panel/VBoxContainer"]
+[node name="HSeparator" type="HSeparator" parent="VBox_Root/Body/Gear_Panel/VBoxContainer" unique_id=1875685236]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Inventory_Panel" type="PanelContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer"]
+[node name="Inventory_Panel" type="PanelContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer" unique_id=2084679990]
 custom_minimum_size = Vector2(0, 300)
 layout_mode = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel"]
+[node name="MarginContainer" type="MarginContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel" unique_id=2050444499]
 layout_mode = 2
 theme_override_constants/margin_left = 4
 theme_override_constants/margin_top = 4
 theme_override_constants/margin_right = 4
 theme_override_constants/margin_bottom = 4
 
-[node name="VBoxContainer" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer"]
-layout_mode = 2
-size_flags_vertical = 0
-
-[node name="HBoxContainer" type="HBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer" unique_id=262974154]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Btn_Split_Items" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer" unique_id=2113083317]
+layout_mode = 2
+
+[node name="Btn_Split_Items" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer" unique_id=150048461]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_u7w1k")
 text = "Items"
 
-[node name="Btn_Split_Currency" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+[node name="Btn_Split_Currency" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer" unique_id=297491067]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_u7w1k")
 text = "Currency"
 
-[node name="Label_Separator" type="Label" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+[node name="Label_Separator" type="Label" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer" unique_id=421401732]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_u7w1k")
 text = "               "
 
-[node name="Btn_ALL" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+[node name="Btn_ALL" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer" unique_id=1033951410]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_u7w1k")
 text = "ALL"
 
-[node name="Btn_GearOnly" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+[node name="Btn_GearOnly" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer" unique_id=1167030245]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_u7w1k")
 text = "Gear"
 
-[node name="Btn_ConsumableOnly" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+[node name="Btn_ConsumableOnly" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer" unique_id=1243470710]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_u7w1k")
 text = "Consumable"
 
-[node name="Btn_LootOnly" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+[node name="Btn_LootOnly" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer" unique_id=1597777817]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_u7w1k")
 text = "Loot"
 
-[node name="HBoxContainer" type="HBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer" unique_id=1072828091]
 layout_mode = 2
 size_flags_horizontal = 6
 
-[node name="Space_Label" type="Label" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/HBoxContainer"]
+[node name="Space_Label" type="Label" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/HBoxContainer" unique_id=384953363]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_u7w1k")
 text = "Space 0 / 42"
 
-[node name="HBoxContainer2" type="HBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+[node name="HBoxContainer2" type="HBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer" unique_id=681279065]
 layout_mode = 2
 size_flags_horizontal = 10
 
-[node name="Btn_Sort" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/HBoxContainer2"]
+[node name="Btn_Sort" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/HBoxContainer2" unique_id=1381877699]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_u7w1k")
 text = "Sort"
 
-[node name="ItemContainer" type="PanelContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer" unique_id=199911122]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 2
+
+[node name="ItemContainer" type="PanelContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/ScrollContainer" unique_id=226703665]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Grid" type="GridContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/ScrollContainer/ItemContainer" unique_id=679831904]
 layout_mode = 2
 
-[node name="Grid" type="GridContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/ItemContainer"]
-layout_mode = 2
-
-[node name="CurrencyContainer" type="PanelContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer"]
+[node name="CurrencyContainer" type="PanelContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer" unique_id=1980186667]
 visible = false
 custom_minimum_size = Vector2(0, 180)
 layout_mode = 2
+size_flags_vertical = 3
 
-[node name="MarginContainer" type="MarginContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/CurrencyContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/CurrencyContainer" unique_id=1730918532]
 layout_mode = 2
 theme_override_constants/margin_left = 6
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 6
 theme_override_constants/margin_bottom = 6
 
-[node name="Vbox" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/CurrencyContainer/MarginContainer"]
+[node name="Vbox" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/CurrencyContainer/MarginContainer" unique_id=1512503440]
 layout_mode = 2
 
-[node name="HBox" type="HBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/CurrencyContainer/MarginContainer/Vbox"]
+[node name="HBox" type="HBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/CurrencyContainer/MarginContainer/Vbox" unique_id=1850496441]
 layout_mode = 2
 
-[node name="Gold_Texture" type="TextureRect" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/CurrencyContainer/MarginContainer/Vbox/HBox"]
+[node name="Gold_Texture" type="TextureRect" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/CurrencyContainer/MarginContainer/Vbox/HBox" unique_id=1073774783]
 layout_mode = 2
 
-[node name="Gold_label" type="Label" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/CurrencyContainer/MarginContainer/Vbox/HBox"]
+[node name="Gold_label" type="Label" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/CurrencyContainer/MarginContainer/Vbox/HBox" unique_id=1211777757]
 layout_mode = 2
 
-[node name="Skill_Panel" type="PanelContainer" parent="VBox_Root/Body"]
+[node name="Skill_Panel" type="PanelContainer" parent="VBox_Root/Body" unique_id=409314871]
 visible = false
 custom_minimum_size = Vector2(0, 500)
 layout_mode = 2
 
-[node name="Skill_Margin" type="MarginContainer" parent="VBox_Root/Body/Skill_Panel"]
+[node name="Skill_Margin" type="MarginContainer" parent="VBox_Root/Body/Skill_Panel" unique_id=610564824]
 layout_mode = 2
 theme_override_constants/margin_left = 10
 theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 10
 
-[node name="Talents_Panel" type="PanelContainer" parent="VBox_Root/Body"]
+[node name="VBoxContainer" type="VBoxContainer" parent="VBox_Root/Body/Skill_Panel/Skill_Margin" unique_id=2002631174]
+layout_mode = 2
+
+[node name="VBox_Skills" type="VBoxContainer" parent="VBox_Root/Body/Skill_Panel/Skill_Margin/VBoxContainer" unique_id=377941282]
+layout_mode = 2
+
+[node name="Header" type="Label" parent="VBox_Root/Body/Skill_Panel/Skill_Margin/VBoxContainer/VBox_Skills" unique_id=1414521533]
+layout_mode = 2
+text = "Active Skills"
+
+[node name="Active_Container" type="HBoxContainer" parent="VBox_Root/Body/Skill_Panel/Skill_Margin/VBoxContainer/VBox_Skills" unique_id=490164485]
+layout_mode = 2
+
+[node name="HSeparator" type="HSeparator" parent="VBox_Root/Body/Skill_Panel/Skill_Margin/VBoxContainer/VBox_Skills" unique_id=343785602]
+layout_mode = 2
+
+[node name="Header2" type="Label" parent="VBox_Root/Body/Skill_Panel/Skill_Margin/VBoxContainer/VBox_Skills" unique_id=1127880431]
+layout_mode = 2
+text = "Spellbook"
+
+[node name="HBox_btn_control" type="HBoxContainer" parent="VBox_Root/Body/Skill_Panel/Skill_Margin/VBoxContainer/VBox_Skills" unique_id=1362711175]
+layout_mode = 2
+
+[node name="Btn_skills_mage" type="Button" parent="VBox_Root/Body/Skill_Panel/Skill_Margin/VBoxContainer/VBox_Skills/HBox_btn_control" unique_id=53171782]
+layout_mode = 2
+text = "Mage"
+
+[node name="Btn_skills_paladin" type="Button" parent="VBox_Root/Body/Skill_Panel/Skill_Margin/VBoxContainer/VBox_Skills/HBox_btn_control" unique_id=1373237988]
+layout_mode = 2
+text = "Paladin"
+
+[node name="Btn_skills_buffs" type="Button" parent="VBox_Root/Body/Skill_Panel/Skill_Margin/VBoxContainer/VBox_Skills/HBox_btn_control" unique_id=1501537369]
+layout_mode = 2
+text = "Buffs"
+
+[node name="spellbook_panel_base" type="PanelContainer" parent="VBox_Root/Body/Skill_Panel/Skill_Margin/VBoxContainer" unique_id=1598709321]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_20dno")
+
+[node name="Mage_Panel" type="PanelContainer" parent="VBox_Root/Body/Skill_Panel/Skill_Margin/VBoxContainer/spellbook_panel_base" unique_id=1294313318]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_u7w1k")
+
+[node name="mage_grid_spellbook" type="GridContainer" parent="VBox_Root/Body/Skill_Panel/Skill_Margin/VBoxContainer/spellbook_panel_base/Mage_Panel" unique_id=1538387488]
+layout_mode = 2
+
+[node name="Paladin_Panel" type="PanelContainer" parent="VBox_Root/Body/Skill_Panel/Skill_Margin/VBoxContainer/spellbook_panel_base" unique_id=739751868]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_u7w1k")
+
+[node name="paladin_grid_spellbook" type="GridContainer" parent="VBox_Root/Body/Skill_Panel/Skill_Margin/VBoxContainer/spellbook_panel_base/Paladin_Panel" unique_id=2051824117]
+layout_mode = 2
+
+[node name="Buffs_Panel" type="PanelContainer" parent="VBox_Root/Body/Skill_Panel/Skill_Margin/VBoxContainer/spellbook_panel_base" unique_id=392257803]
+visible = false
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_u7w1k")
+
+[node name="buffs_grid_spellbook" type="GridContainer" parent="VBox_Root/Body/Skill_Panel/Skill_Margin/VBoxContainer/spellbook_panel_base/Buffs_Panel" unique_id=1268651521]
+layout_mode = 2
+
+[node name="Talents_Panel" type="PanelContainer" parent="VBox_Root/Body" unique_id=2087095042]
 visible = false
 custom_minimum_size = Vector2(0, 500)
 layout_mode = 2
 
-[node name="Margin" type="MarginContainer" parent="VBox_Root/Body/Talents_Panel"]
+[node name="Margin" type="MarginContainer" parent="VBox_Root/Body/Talents_Panel" unique_id=972779125]
 layout_mode = 2
 theme_override_constants/margin_left = 10
 theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 10
 
-[node name="VBoxContainer" type="VBoxContainer" parent="VBox_Root/Body/Talents_Panel/Margin"]
+[node name="VBoxContainer" type="VBoxContainer" parent="VBox_Root/Body/Talents_Panel/Margin" unique_id=274008130]
 layout_mode = 2
 
-[node name="Title" type="Label" parent="VBox_Root/Body/Talents_Panel/Margin/VBoxContainer"]
+[node name="Title" type="Label" parent="VBox_Root/Body/Talents_Panel/Margin/VBoxContainer" unique_id=1531715521]
 layout_mode = 2
 text = "Passive Skills"
 
-[node name="TalentGrid" type="GridContainer" parent="VBox_Root/Body/Talents_Panel/Margin/VBoxContainer"]
+[node name="TalentGrid" type="GridContainer" parent="VBox_Root/Body/Talents_Panel/Margin/VBoxContainer" unique_id=308214832]
 layout_mode = 2
 columns = 2
 
-[node name="Buttons_Container" type="HBoxContainer" parent="VBox_Root"]
+[node name="Buttons_Container" type="HBoxContainer" parent="VBox_Root" unique_id=1297786314]
 layout_mode = 2
 theme_override_constants/separation = 50
 alignment = 1
 
-[node name="Btn_Gear" type="Button" parent="VBox_Root/Buttons_Container"]
+[node name="Btn_Gear" type="Button" parent="VBox_Root/Buttons_Container" unique_id=184144148]
 custom_minimum_size = Vector2(128, 0)
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_u7w1k")
 text = "Gear"
 
-[node name="Btn_Skills" type="Button" parent="VBox_Root/Buttons_Container"]
+[node name="Btn_Skills" type="Button" parent="VBox_Root/Buttons_Container" unique_id=1710498374]
 custom_minimum_size = Vector2(128, 0)
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_u7w1k")
 text = "Skills"
 
-[node name="Btn_Talents" type="Button" parent="VBox_Root/Buttons_Container"]
+[node name="Btn_Talents" type="Button" parent="VBox_Root/Buttons_Container" unique_id=850943138]
 custom_minimum_size = Vector2(128, 0)
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_u7w1k")
 text = "Talents"
 
+[connection signal="pressed" from="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/Btn_ALL" to="." method="_on_btn_all_pressed"]
+[connection signal="pressed" from="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/Btn_GearOnly" to="." method="_on_btn_gear_only_pressed"]
+[connection signal="pressed" from="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/Btn_ConsumableOnly" to="." method="_on_btn_consumable_only_pressed"]
+[connection signal="pressed" from="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/Btn_LootOnly" to="." method="_on_btn_loot_only_pressed"]
 [connection signal="pressed" from="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/Btn_Split_Items" to="." method="_on_btn_split_items_pressed"]
 [connection signal="pressed" from="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/Btn_Split_Currency" to="." method="_on_btn_split_currency_pressed"]
+[connection signal="pressed" from="VBox_Root/Body/Skill_Panel/Skill_Margin/VBoxContainer/VBox_Skills/HBox_btn_control/Btn_skills_mage" to="." method="_on_btn_skills_mage_pressed"]
+[connection signal="pressed" from="VBox_Root/Body/Skill_Panel/Skill_Margin/VBoxContainer/VBox_Skills/HBox_btn_control/Btn_skills_paladin" to="." method="_on_btn_skills_paladin_pressed"]
+[connection signal="pressed" from="VBox_Root/Body/Skill_Panel/Skill_Margin/VBoxContainer/VBox_Skills/HBox_btn_control/Btn_skills_buffs" to="." method="_on_btn_skills_buffs_pressed"]
 [connection signal="pressed" from="VBox_Root/Buttons_Container/Btn_Gear" to="." method="_on_btn_gear_pressed"]
 [connection signal="pressed" from="VBox_Root/Buttons_Container/Btn_Skills" to="." method="_on_btn_skills_pressed"]
 [connection signal="pressed" from="VBox_Root/Buttons_Container/Btn_Talents" to="." method="_on_btn_talents_pressed"]
+[connection signal="pressed" from="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/HBoxContainer2/Btn_Sort" to="." method="_on_btn_sort_pressed"]

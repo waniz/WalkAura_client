@@ -16,4 +16,5 @@ var activities_texts = {
 	4: "Mining",
 	5: "Woodcutting",
 	6: "Fishing",
+	7: "Rift Explorer"
 }
