@@ -18,7 +18,9 @@ var _last_t := 0.0
 var _velocity := 0.0
 
 const ACTIVITY_PROGRESS_SCENE = preload("uid://bjvtquos2r8cj")
+const RIFT_SCENE = preload("uid://cdghj6jcvmuy5")
 var overlay = null
+var _rift_overlay = null
 
 
 func _enter_tree() -> void:
@@ -30,6 +32,7 @@ func _enter_tree() -> void:
 func _ready() -> void:
 	AccountManager.signal_ActivityProgressReceived.connect(_show_progress_hud)
 	SignalManager.signal_PageChanged.connect(_on_page_change)
+	SignalManager.signal_ShowRift.connect(_show_rift)
 
 	clip_contents = true
 	mouse_filter = Control.MOUSE_FILTER_PASS
@@ -37,6 +40,8 @@ func _ready() -> void:
 	var to_move := get_children()
 	for n in to_move:
 		if n != _track:
+			if n.name == "ProgressSteps":
+				continue  # keep as direct child of AppScenesHandler, rendered above _track
 			remove_child(n)
 			_track.add_child(n)
 
@@ -46,14 +51,30 @@ func _ready() -> void:
 	
 # ------ Handle global update window ------
 func _show_progress_hud(payload):
+	var d: Dictionary = payload.get("data", {}).get("data", {})
+	var has_content: bool = (
+		int(d.get("xp_gained", 0))   != 0 or
+		int(d.get("steps_in", 0))    != 0 or
+		not d.get("loot_counts", {}).is_empty() or
+		not d.get("new_items", []).is_empty()
+	)
+	if not has_content:
+		return
+
 	overlay = ACTIVITY_PROGRESS_SCENE.instantiate()
 	add_child(overlay)
-	
-	overlay.apply_activity_progress(payload["data"]["data"])
+	overlay.apply_activity_progress(d)
 	overlay.tree_exited.connect(_on_child_closed, Object.CONNECT_ONE_SHOT)
 	
 func _on_child_closed() -> void:
 	overlay = null
+
+func _show_rift() -> void:
+	if _rift_overlay != null and is_instance_valid(_rift_overlay):
+		return
+	_rift_overlay = RIFT_SCENE.instantiate()
+	add_child(_rift_overlay)
+	_rift_overlay.tree_exited.connect(func(): _rift_overlay = null, Object.CONNECT_ONE_SHOT)
 
 # ------ API ------
 func _notification(what):
@@ -65,6 +86,8 @@ func _layout_pages() -> void:
 	var i := 0
 	for c in _track.get_children():
 		if c.name == "ProgressUpdate":
+			continue
+		if c.name == "ProgressSteps":
 			continue
 		if c.name == "GlobalHud":
 			continue

@@ -115,9 +115,25 @@ var activity
 var activity_site
 var account_step_carry
 
+# rift statuses
+var rift_id
+var rift_steps
+var rift_steps_max
+var rift_milestone_index
+var rift_total_milestones
+var rift_instance_id
+var rift_lvl
+var rift_xp
+
 var variance
 var vit_crit_soften
 var spirit_healing_mult
+
+# structures to keep autoloaded
+var raw_structures = {
+	"all_server_skills": null,
+	"account_skills": null,
+}
 
 func to_dict() -> Dictionary:
 	# export everything (flat), matching server keys
@@ -126,6 +142,9 @@ func to_dict() -> Dictionary:
 		if p.usage & PROPERTY_USAGE_SCRIPT_VARIABLE != 0:
 			var name = p.name
 			# skip signals/constants/methods
-			if has_method(name): continue
+			if has_method(name):
+				continue
+			if p.name == "raw_structures":
+				continue
 			out[name] = get(name)
 	return out

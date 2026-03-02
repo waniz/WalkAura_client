@@ -1,39 +1,39 @@
-[gd_scene load_steps=2 format=3 uid="uid://caj4vm4x2p0am"]
+[gd_scene format=3 uid="uid://caj4vm4x2p0am"]
 
 [ext_resource type="Script" uid="uid://c52l0p0hcwbar" path="res://scenes/support_screens/cheat_panel.gd" id="1_fmce2"]
 
-[node name="CheatPanel" type="Control"]
+[node name="CheatPanel" type="Control" unique_id=1714118611]
 layout_mode = 3
 anchors_preset = 0
 size_flags_horizontal = 4
 size_flags_vertical = 4
 script = ExtResource("1_fmce2")
 
-[node name="PanelContainer" type="PanelContainer" parent="."]
+[node name="PanelContainer" type="PanelContainer" parent="." unique_id=1618154549]
 layout_mode = 1
 offset_right = 199.0
 offset_bottom = 31.0
 mouse_default_cursor_shape = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="PanelContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="PanelContainer" unique_id=425234137]
 layout_mode = 2
 
-[node name="Cheat_100_button" type="Button" parent="PanelContainer/HBoxContainer"]
+[node name="Cheat_100_button" type="Button" parent="PanelContainer/HBoxContainer" unique_id=1224904378]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 text = "+100"
 
-[node name="Cheat_1000_button" type="Button" parent="PanelContainer/HBoxContainer"]
+[node name="Cheat_1000_button" type="Button" parent="PanelContainer/HBoxContainer" unique_id=518284271]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 text = "+1k"
 
-[node name="Cheat_10000_button" type="Button" parent="PanelContainer/HBoxContainer"]
+[node name="Cheat_10000_button" type="Button" parent="PanelContainer/HBoxContainer" unique_id=1554490461]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 text = "+10k"
 
-[node name="PedometerPluginButton" type="Button" parent="PanelContainer/HBoxContainer"]
+[node name="PedometerPluginButton" type="Button" parent="PanelContainer/HBoxContainer" unique_id=421321830]
 layout_mode = 2
 text = "Mobile"
 

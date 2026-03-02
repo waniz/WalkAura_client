@@ -76,6 +76,7 @@ const PROFESSIONS_KEYS1 = [
 ]
 const PROFESSIONS_KEYS2 = [
 	{"k":"alchemy_lvl","n":"Alchemy", "exp": "alchemy_xp"},
+	{"k":"rift_lvl",   "n":"Rift Explorer", "exp": "rift_xp"},
 ]
 
 var STATS_TOTAL_TO_LEVEL = {1: 0}
@@ -284,6 +285,7 @@ func _make_mini_card(name: String, lvl: int, activity_exp: int, accent: Color) -
 		"Mining"       : "mining",
 		"Forester"     : "woodcutting",
 		"Fishing"      : "fishing",
+		"Rift Explorer": "rift",
 	}
 
 	icon.texture = ItemDB.ICONS.get(icon_key.get(name))

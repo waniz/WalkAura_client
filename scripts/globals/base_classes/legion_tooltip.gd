@@ -342,6 +342,7 @@ func _update_buttons_state() -> void:
 		if "ring" in slot or "trinket" in slot:
 			_btn_equip.text = "Equip (Left)"
 			_btn_equip_slot2.text = "Equip (Right)"
+			_btn_equip.visible = true
 			_btn_equip_slot2.visible = true
 			
 			# Reconnect signals cleanly

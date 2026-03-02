@@ -61,6 +61,8 @@ func _update_character_hud(value):
 		activity_label.text = "No Activity"
 	else:
 		texture_rect.visible = true
-		texture_rect.texture = ItemDB.ICONS[current_activity_name.to_lower()]
+		var icon_key_overrides := {"Rift Explorer": "rift"}
+		var icon_key_name: String = icon_key_overrides.get(current_activity_name, current_activity_name.to_lower())
+		texture_rect.texture = ItemDB.ICONS[icon_key_name]
 		activity_label.text = current_activity_name
 	

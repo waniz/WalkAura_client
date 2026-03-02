@@ -8,12 +8,16 @@
 
 config_version=5
 
+[animation]
+
+compatibility/default_parent_skeleton_in_mesh_instance_3d=true
+
 [application]
 
 config/name="WalkAura"
-config/version="0.1.9.125"
+config/version="0.2.0.138"
 run/main_scene="uid://dlfywtlps2ee4"
-config/features=PackedStringArray("4.5", "Mobile")
+config/features=PackedStringArray("4.6", "Mobile")
 boot_splash/bg_color=Color(0.14117648, 0.14117648, 0.14117648, 0.18039216)
 boot_splash/use_filter=false
 boot_splash/image="uid://85xger1d18ll"
@@ -37,13 +41,13 @@ ServerParams="*res://scripts/globals/base_classes/server_params.gd"
 [display]
 
 window/size/viewport_width=720
-window/size/viewport_height=1280
+window/size/viewport_height=1360
 window/energy_saving/keep_screen_on=false
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=1
 window/ios/allow_high_refresh_rate=false
-window/version="0.1.8.117"
+window/version="0.2.0.127"
 
 [editor_plugins]
 
@@ -70,4 +74,4 @@ renderer/rendering_method="mobile"
 textures/vram_compression/import_etc2_astc=true
 environment/ssao/quality=1
 environment/ssil/quality=1
-environment/defaults/default_clear_color=Color(0.2556589, 0.25565878, 0.25565878, 0.5019608)
+environment/defaults/default_clear_color=Color(0.40960324, 0.40960327, 0.40960324, 0.5019608)
