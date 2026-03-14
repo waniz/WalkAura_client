@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dcu0eilupidoo"
-path="res://.godot/imported/off_hand_0.png-944afc9e382ab00bd00d08092f65e27d.ctex"
+uid="uid://cwolhgen1c02g"
+path="res://.godot/imported/paladin_lay_of_hands.png-77ecb8b21b6a35c09a3b6b0df9d45b38.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/equipment/off_hand/off_hand_0.png"
-dest_files=["res://.godot/imported/off_hand_0.png-944afc9e382ab00bd00d08092f65e27d.ctex"]
+source_file="res://assets/skills/paladin/paladin_lay_of_hands.png"
+dest_files=["res://.godot/imported/paladin_lay_of_hands.png-77ecb8b21b6a35c09a3b6b0df9d45b38.ctex"]
 
 [params]
 

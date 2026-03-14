@@ -19,8 +19,10 @@ var _velocity := 0.0
 
 const ACTIVITY_PROGRESS_SCENE = preload("uid://bjvtquos2r8cj")
 const RIFT_SCENE = preload("uid://cdghj6jcvmuy5")
+const _SKIP_LAYOUT_NAMES := ["ProgressUpdate", "ProgressSteps", "GlobalHud"]
 var overlay = null
 var _rift_overlay = null
+var _snap_tween: Tween = null
 
 
 func _enter_tree() -> void:
@@ -85,11 +87,7 @@ func _notification(what):
 func _layout_pages() -> void:
 	var i := 0
 	for c in _track.get_children():
-		if c.name == "ProgressUpdate":
-			continue
-		if c.name == "ProgressSteps":
-			continue
-		if c.name == "GlobalHud":
+		if c.name in _SKIP_LAYOUT_NAMES:
 			continue
 		if c is Control:
 			var cc := c as Control
@@ -205,9 +203,10 @@ func _go_to(index: int) -> void:
 	_swiping = false
 
 func _snap_to(index: int, duration: float) -> void:
-	var target := -index * size.x
-	var tw := create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tw.tween_property(_track, "position:x", target, duration)
+	if is_instance_valid(_snap_tween):
+		_snap_tween.kill()
+	_snap_tween = create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_snap_tween.tween_property(_track, "position:x", -index * size.x, duration)
 	
 func _on_page_change(index) -> void:
 	_page = index

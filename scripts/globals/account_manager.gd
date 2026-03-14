@@ -29,15 +29,14 @@ func parse_message(message):
 	
 	var json = JSON.new()
 	var error = json.parse(message)
-	if error == OK:
-		pass
-	else:
+	if error != OK:
 		printerr("JSON Parse Error: ", json.get_error_message(), " in ", message, " at line ", json.get_error_line())
+		return
 
 	# router
 	if json.data.cmd == "login_user":
 		check_login_result(json.data)
-	if json.data.cmd == "login_params":
+	elif json.data.cmd == "login_params":
 		get_login_params(json.data)
 	elif json.data.cmd == "account_attributes":
 		get_account_attrs(json.data)
@@ -190,6 +189,10 @@ func get_account_attrs(json_msg):
 	Account.rift_milestone_index = int(json_msg.data.statuses.get("rift_milestone_index", 0))
 	Account.rift_total_milestones = int(json_msg.data.statuses.get("rift_total_milestones", 0))
 	Account.rift_instance_id = str(json_msg.data.statuses.get("rift_instance_id", ""))
+
+	Account.travel_destination = int(json_msg.data.statuses.get("travel_destination", 0))
+	Account.travel_steps       = int(json_msg.data.statuses.get("travel_steps",       0))
+	Account.travel_steps_max   = int(json_msg.data.statuses.get("travel_steps_max",   0))
 
 	Account.variance = json_msg.data.internal.variance
 	Account.vit_crit_soften = json_msg.data.internal.vit_crit_soften

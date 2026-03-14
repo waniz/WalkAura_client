@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://u48w1gvbl5ci"
-path="res://.godot/imported/off_hand_1.png-00c2c5bf8a58c85ce8adfb74e70d76fc.ctex"
+uid="uid://dco7i46uvn63y"
+path="res://.godot/imported/buff_improved_shield.png-cb44202296b7d112c298ddbc6131b73f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/equipment/off_hand/off_hand_1.png"
-dest_files=["res://.godot/imported/off_hand_1.png-00c2c5bf8a58c85ce8adfb74e70d76fc.ctex"]
+source_file="res://assets/skills/buffs/buff_improved_shield.png"
+dest_files=["res://.godot/imported/buff_improved_shield.png-cb44202296b7d112c298ddbc6131b73f.ctex"]
 
 [params]
 

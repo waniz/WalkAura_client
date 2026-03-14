@@ -27,17 +27,36 @@ offset_bottom = 1105.0
 
 [node name="Body" type="PanelContainer" parent="VBox_Root" unique_id=558080218]
 layout_mode = 2
+size_flags_vertical = 3
 
 [node name="Gear_Panel" type="PanelContainer" parent="VBox_Root/Body" unique_id=267432820]
 layout_mode = 2
+size_flags_vertical = 3
 
 [node name="VBoxContainer" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel" unique_id=588080939]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Equipment_Panel" type="PanelContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer" unique_id=1808041064]
-custom_minimum_size = Vector2(0, 400)
+[node name="Gear_Tab_Buttons" type="HBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer" unique_id=111111001]
 layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Btn_Tab_Inventory" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Gear_Tab_Buttons" unique_id=111111002]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("2_u7w1k")
+text = "Inventory"
+
+[node name="Btn_Tab_Gear" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Gear_Tab_Buttons" unique_id=111111003]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("2_u7w1k")
+text = "Gear"
+
+[node name="Equipment_Panel" type="PanelContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer" unique_id=1808041064]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
 
 [node name="MarginContainer" type="MarginContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel" unique_id=1896465776]
 layout_mode = 2
@@ -64,6 +83,7 @@ stretch_mode = 3
 
 [node name="col_right" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer/equipment_vbox/HBoxContainer" unique_id=2090183713]
 layout_mode = 2
+size_flags_horizontal = 0
 
 [node name="ILVL_Label" type="Label" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer/equipment_vbox" unique_id=1401017680]
 layout_mode = 2
@@ -71,13 +91,9 @@ theme_override_fonts/font = ExtResource("2_u7w1k")
 text = "Average Gear Level: 0"
 horizontal_alignment = 1
 
-[node name="HSeparator" type="HSeparator" parent="VBox_Root/Body/Gear_Panel/VBoxContainer" unique_id=1875685236]
-layout_mode = 2
-theme_override_constants/separation = 8
-
 [node name="Inventory_Panel" type="PanelContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer" unique_id=2084679990]
-custom_minimum_size = Vector2(0, 300)
 layout_mode = 2
+size_flags_vertical = 3
 
 [node name="MarginContainer" type="MarginContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel" unique_id=2050444499]
 layout_mode = 2
@@ -190,8 +206,8 @@ layout_mode = 2
 
 [node name="Skill_Panel" type="PanelContainer" parent="VBox_Root/Body" unique_id=409314871]
 visible = false
-custom_minimum_size = Vector2(0, 500)
 layout_mode = 2
+size_flags_vertical = 3
 
 [node name="Skill_Margin" type="MarginContainer" parent="VBox_Root/Body/Skill_Panel" unique_id=610564824]
 layout_mode = 2
@@ -267,8 +283,8 @@ layout_mode = 2
 
 [node name="Talents_Panel" type="PanelContainer" parent="VBox_Root/Body" unique_id=2087095042]
 visible = false
-custom_minimum_size = Vector2(0, 500)
 layout_mode = 2
+size_flags_vertical = 3
 
 [node name="Margin" type="MarginContainer" parent="VBox_Root/Body/Talents_Panel" unique_id=972779125]
 layout_mode = 2
@@ -311,6 +327,8 @@ layout_mode = 2
 theme_override_fonts/font = ExtResource("2_u7w1k")
 text = "Talents"
 
+[connection signal="pressed" from="VBox_Root/Body/Gear_Panel/VBoxContainer/Gear_Tab_Buttons/Btn_Tab_Inventory" to="." method="_on_btn_tab_inventory_pressed"]
+[connection signal="pressed" from="VBox_Root/Body/Gear_Panel/VBoxContainer/Gear_Tab_Buttons/Btn_Tab_Gear" to="." method="_on_btn_tab_gear_pressed"]
 [connection signal="pressed" from="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/Btn_ALL" to="." method="_on_btn_all_pressed"]
 [connection signal="pressed" from="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/Btn_GearOnly" to="." method="_on_btn_gear_only_pressed"]
 [connection signal="pressed" from="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/Btn_ConsumableOnly" to="." method="_on_btn_consumable_only_pressed"]

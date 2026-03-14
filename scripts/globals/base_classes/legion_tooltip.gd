@@ -29,11 +29,14 @@ var _btn_use: Button
 var _btn_equip: Button
 var _btn_equip_slot2: Button
 var _btn_sell: Button
+var _btn_fill_max: Button
 
 # Data
 var _def: Dictionary = {}
+var _qty: int = 1
 var _source: String = ""
 var _slot_name: String = ""
+var _compare_def: Dictionary = {}
 
 
 func _ready() -> void:
@@ -144,10 +147,14 @@ func _setup_footer_area() -> void:
 	_btn_equip = _create_button("Equip", Color(0.2, 0.8, 0.2))
 	_btn_equip_slot2 = _create_button("Equip Slot 2", Color(0.2, 0.8, 0.2))
 	_btn_sell = _create_button("Sell", Color(1.0, 0.85, 0.0))
+	_btn_fill_max = _create_button("Fill to Max", Color(0.2, 0.85, 0.5))
 	
 # --- Main Data Function ---
-func set_data(item_def: Dictionary, qty: int=1, tooltip_source="inventory", slot_index=-1, slot_name="") -> void:
-	_def = item_def
+func set_data(item_def: Dictionary, qty: int = 1, tooltip_source = "inventory",
+		slot_index = -1, slot_name = "", compare_def: Dictionary = {}) -> void:
+	_def         = item_def
+	_compare_def = compare_def
+	_qty = qty
 	_source = tooltip_source
 	_slot_name = slot_name
 	
@@ -215,38 +222,42 @@ func _rebuild_stats_section() -> void:
 	# Clear old labels
 	for c in _stats_container.get_children():
 		c.queue_free()
-		
-	var base_attrs = _def.get("base_attributes", {})
+
+	var base_attrs = _def.get("base_attributes",   {})
 	var prim_attrs = _def.get("primary_attributes", {})
-	var sec_attrs = _def.get("secondary_attributes", {})
-	
+	var sec_attrs  = _def.get("secondary_attributes", {})
+
+	var cmp_base = _compare_def.get("base_attributes",   {})
+	var cmp_prim = _compare_def.get("primary_attributes", {})
+	var cmp_sec  = _compare_def.get("secondary_attributes", {})
+	var has_cmp  = not _compare_def.is_empty()
+
 	# A. "Attribute" Header (Base + Primary)
 	if not base_attrs.is_empty() or not prim_attrs.is_empty():
 		_add_section_header("Attributes")
-		
+
 		# 1. Base Stats (Armor, Block) - Keep Dark/White
 		for k in base_attrs:
-			_add_stat_row("%s %s" % [base_attrs[k], k.capitalize()], text_color_dark)
-		
+			var arrow = _stat_arrow(base_attrs[k], cmp_base.get(k, 0)) if has_cmp else 0
+			_add_stat_row("%s %s" % [base_attrs[k], k.capitalize()], text_color_dark, false, arrow)
+
 		for k in prim_attrs:
-			# Use color_legendary here instead of text_color_dark
-			_add_stat_row("+%s %s" % [prim_attrs[k], k.to_upper()], text_color_green)
-	
+			var arrow = _stat_arrow(prim_attrs[k], cmp_prim.get(k, 0)) if has_cmp else 0
+			_add_stat_row("+%s %s" % [prim_attrs[k], k.to_upper()], text_color_green, false, arrow)
+
 	# B. "Additional Attributes" Header (Secondary)
 	if not sec_attrs.is_empty():
 		_add_spacer(8)
 		_add_section_header("Additional Attributes")
-		
+
 		for k in sec_attrs:
 			var val = sec_attrs[k]
-			# Example Logic: If val is rating, calculate %, otherwise show raw
-			# You can plug your RatingConverter logic here
 			var pct_text = ""
 			if val is int and val > 0:
-				pct_text = " (%.2f%%)" % (float(val)/100.0) # Dummy conversion
-			
+				pct_text = " (%.2f%%)" % (float(val)/100.0)
+			var arrow = _stat_arrow(val, cmp_sec.get(k, 0)) if has_cmp else 0
 			var txt = "+%s %s%s" % [val, k.capitalize(), pct_text]
-			_add_stat_row(txt, text_color_green, true) # Bold green text
+			_add_stat_row(txt, text_color_green, true, arrow)
 
 func _rebuild_footer(item_def: Dictionary) -> void:
 	for c in _footer_container.get_children():
@@ -285,24 +296,41 @@ func _add_section_header(text: String) -> void:
 	l.add_theme_font_size_override("font_size", 16)
 	_stats_container.add_child(l)
 
-func _add_stat_row(text: String, color: Color, bold: bool = false) -> void:
+func _stat_arrow(my_val, their_val) -> int:
+	var a := float(str(my_val))
+	var b := float(str(their_val))
+	if a > b: return  1
+	if a < b: return -1
+	return 0
+
+func _add_stat_row(text: String, color: Color, bold: bool = false, arrow: int = 0) -> void:
 	# 1. Create a horizontal row to hold spacer + text
 	var hbox = HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 0) # Tight spacing
 	_stats_container.add_child(hbox)
-	
+
 	# 2. Add Indentation (The Spacer)
 	var spacer = Control.new()
 	spacer.custom_minimum_size = Vector2(12, 0) # 12px Left Margin
 	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hbox.add_child(spacer)
-	
+
 	# 3. Add the Label
 	var l = Label.new()
 	l.text = text
 	l.add_theme_color_override("font_color", color)
-	
 	hbox.add_child(l)
+
+	# 4. Optional comparison arrow
+	if arrow != 0:
+		var al := Label.new()
+		al.text = " ▲" if arrow > 0 else " ▼"
+		al.add_theme_color_override("font_color",
+			Color(0.1, 0.75, 0.1) if arrow > 0 else Color(0.85, 0.15, 0.15))
+		if "QUADRAT_FONT" in Styler:
+			al.add_theme_font_override("font", Styler.QUADRAT_FONT)
+		al.add_theme_font_size_override("font_size", 14)
+		hbox.add_child(al)
 
 func _add_visual_separator() -> void:
 	var sep = HSeparator.new()
@@ -325,6 +353,12 @@ func _create_button(text: String, color: Color) -> Button:
 
 func _update_buttons_state() -> void:
 	_btn_use.visible = _can_use()
+	var _fill_qty := _calc_fill_qty()
+	_btn_fill_max.visible = _can_use() and _fill_qty > 1
+	if _btn_fill_max.visible:
+		_btn_fill_max.text = "Fill to Max (%d)" % _fill_qty
+	if not _btn_fill_max.pressed.is_connected(_on_fill_max_pressed):
+		_btn_fill_max.pressed.connect(_on_fill_max_pressed)
 	_btn_sell.visible = (_source == "inventory")
 	_btn_equip_slot2.visible = false # default
 	
@@ -401,7 +435,7 @@ func _can_equip() -> bool:
 
 # --- Signal Handlers ---
 func _on_use_pressed():
-	SignalManager.signal_UseItem.emit(_def["item_uid"])
+	SignalManager.signal_UseItem.emit(_def["item_uid"], 1)
 	
 func _on_sell_pressed():
 	SignalManager.signal_SellItem.emit(_def["item_uid"])
@@ -422,3 +456,25 @@ func _resolve_slot(is_second: bool) -> String:
 	if "ring" in s: return "ring_right" if is_second else "ring_left"
 	if "trinket" in s: return "trinket_right" if is_second else "trinket_left"
 	return s
+
+func _on_fill_max_pressed():
+	var qty := _calc_fill_qty()
+	if qty > 0:
+		SignalManager.signal_UseItem.emit(_def["item_uid"], qty)
+
+func _calc_fill_qty() -> int:
+	var attrs: Dictionary = _def.get("primary_attributes", {})
+	var stack: int = _qty
+	if attrs.has("Recovery HP"):
+		var recovery := int(attrs["Recovery HP"])
+		var deficit = Account.hp_max - Account.hp
+		if deficit <= 0 or recovery <= 0:
+			return 0
+		return min(ceili(float(deficit) / float(recovery)), stack)
+	if attrs.has("Recovery Mana"):
+		var recovery := int(attrs["Recovery Mana"])
+		var deficit = Account.mp_max - Account.mp
+		if deficit <= 0 or recovery <= 0:
+			return 0
+		return min(ceili(float(deficit) / float(recovery)), stack)
+	return 0

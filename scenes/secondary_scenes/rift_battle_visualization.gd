@@ -28,9 +28,7 @@ func _build_ui() -> void:
 	panel.offset_right  = -24
 	panel.offset_top    =  210
 	panel.offset_bottom = -150
-	Styler.style_panel_no_margins(panel,
-		Color.from_rgba8(16, 18, 24, 245),
-		Color.from_rgba8(255, 200, 66, 180))
+	Styler._apply_parchment_style(panel)
 	add_child(panel)
 
 	var margin := MarginContainer.new()
@@ -52,7 +50,9 @@ func _build_ui() -> void:
 	var title := Label.new()
 	title.text = "BATTLE LOG"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	Styler.style_title(title)
+	title.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
+	title.add_theme_font_size_override("font_size", 24)
+	title.add_theme_font_override("font", Styler.JANDA_FONT)
 	header.add_child(title)
 
 	var close_btn := Button.new()
@@ -71,7 +71,7 @@ func _build_ui() -> void:
 	var tick_lbl := Label.new()
 	tick_lbl.text = "Milestone Tick:  %d / %d" % [m_idx, total_m]
 	tick_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	Styler.style_name_label(tick_lbl, Color.from_rgba8(255, 200, 66))
+	Styler.style_name_label(tick_lbl, Styler.COLOR_GOLD)
 	root_vbox.add_child(tick_lbl)
 
 	root_vbox.add_child(HSeparator.new())
@@ -102,9 +102,12 @@ func _current_enemy_name() -> String:
 func _build_player_panel() -> Control:
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(110, 0)
-	Styler.style_panel_no_margins(panel,
-		Color.from_rgba8(18, 28, 50, 220),
-		Color.from_rgba8(80, 120, 200, 150))
+	var _psb := StyleBoxFlat.new()
+	_psb.bg_color     = Color.from_rgba8(80, 120, 200, 25)
+	_psb.border_color = Color.from_rgba8(80, 120, 200, 160)
+	_psb.set_border_width_all(1)
+	_psb.set_corner_radius_all(5)
+	panel.add_theme_stylebox_override("panel", _psb)
 
 	var margin := MarginContainer.new()
 	margin.add_theme_constant_override("margin_left",   8)
@@ -134,7 +137,7 @@ func _build_player_panel() -> Control:
 	name_lbl.text = str(Account.username) if Account.username != null else "Hero"
 	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_lbl.autowrap_mode = 3
-	Styler.style_name_label(name_lbl, Color.from_rgba8(255, 200, 66))
+	Styler.style_name_label(name_lbl, Styler.COLOR_TEXT_DARK)
 	vbox.add_child(name_lbl)
 
 	# HP bar
@@ -147,13 +150,20 @@ func _build_player_panel() -> Control:
 	hp_bar.value            = hp
 	hp_bar.show_percentage  = false
 	hp_bar.custom_minimum_size = Vector2(0, 10)
-	Styler.style_bar(hp_bar, Color.from_rgba8(220, 60, 60), Color.from_rgba8(40, 20, 20))
+	var _hp_bg := StyleBoxFlat.new()
+	_hp_bg.bg_color = Color(0.0, 0.0, 0.0, 0.2)
+	_hp_bg.set_corner_radius_all(10)
+	hp_bar.add_theme_stylebox_override("background", _hp_bg)
+	var _hp_fill := StyleBoxFlat.new()
+	_hp_fill.bg_color = Color.from_rgba8(220, 60, 60)
+	_hp_fill.set_corner_radius_all(10)
+	hp_bar.add_theme_stylebox_override("fill", _hp_fill)
 	vbox.add_child(hp_bar)
 
 	var hp_lbl := Label.new()
 	hp_lbl.text = "%d / %d" % [hp, hp_max]
 	hp_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	Styler.style_name_label(hp_lbl, Color.from_rgba8(220, 100, 100))
+	Styler.style_name_label(hp_lbl, Styler.COLOR_TEXT_DARK)
 	vbox.add_child(hp_lbl)
 
 	return panel
@@ -162,9 +172,12 @@ func _build_player_panel() -> Control:
 func _build_enemy_panel(enemy_name: String) -> Control:
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(110, 0)
-	Styler.style_panel_no_margins(panel,
-		Color.from_rgba8(50, 18, 18, 220),
-		Color.from_rgba8(200, 60, 60, 150))
+	var _esb := StyleBoxFlat.new()
+	_esb.bg_color     = Color.from_rgba8(200, 60, 60, 25)
+	_esb.border_color = Color.from_rgba8(200, 60, 60, 160)
+	_esb.set_border_width_all(1)
+	_esb.set_corner_radius_all(5)
+	panel.add_theme_stylebox_override("panel", _esb)
 
 	var margin := MarginContainer.new()
 	margin.add_theme_constant_override("margin_left",   8)
@@ -203,13 +216,13 @@ func _build_enemy_panel(enemy_name: String) -> Control:
 	name_lbl.text = enemy_name
 	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_lbl.autowrap_mode = 3
-	Styler.style_name_label(name_lbl, Color.from_rgba8(220, 120, 100))
+	Styler.style_name_label(name_lbl, Styler.COLOR_TEXT_DARK)
 	vbox.add_child(name_lbl)
 
 	var type_lbl := Label.new()
 	type_lbl.text = "ENEMY"
 	type_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	Styler.style_name_label(type_lbl, Color.from_rgba8(150, 80, 80))
+	Styler.style_name_label(type_lbl, Styler.COLOR_TEXT_DARK)
 	vbox.add_child(type_lbl)
 
 	return panel
@@ -256,7 +269,12 @@ func _build_fight_card(fight: Dictionary, hp_max: int) -> Control:
 
 	var card := PanelContainer.new()
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	Styler.style_panel_no_margins(card, Color.from_rgba8(22, 24, 32, 240), border_color)
+	var _fsb := StyleBoxFlat.new()
+	_fsb.bg_color     = Color(0.0, 0.0, 0.0, 0.05)
+	_fsb.border_color = border_color
+	_fsb.set_border_width_all(1)
+	_fsb.set_corner_radius_all(5)
+	card.add_theme_stylebox_override("panel", _fsb)
 
 	var margin := MarginContainer.new()
 	margin.add_theme_constant_override("margin_left",   8)
@@ -276,7 +294,7 @@ func _build_fight_card(fight: Dictionary, hp_max: int) -> Control:
 
 	var num_lbl := Label.new()
 	num_lbl.text = "#%d" % (m_idx + 1)
-	Styler.style_name_label(num_lbl, Color.from_rgba8(140, 140, 140))
+	Styler.style_name_label(num_lbl, Styler.COLOR_TEXT_DARK)
 	top_row.add_child(num_lbl)
 
 	var sword_lbl := Label.new()
@@ -286,7 +304,7 @@ func _build_fight_card(fight: Dictionary, hp_max: int) -> Control:
 	var monster_lbl := Label.new()
 	monster_lbl.text = monster_raw.replace("_", " ").capitalize()
 	monster_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	Styler.style_name_label(monster_lbl, Color.from_rgba8(220, 190, 120))
+	Styler.style_name_label(monster_lbl, Styler.COLOR_TEXT_DARK)
 	top_row.add_child(monster_lbl)
 
 	var result_lbl := Label.new()
@@ -302,7 +320,7 @@ func _build_fight_card(fight: Dictionary, hp_max: int) -> Control:
 	var hp_label := Label.new()
 	hp_label.text = "HP  %d → %d" % [hp_before, hp_after]
 	hp_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	Styler.style_name_label(hp_label, Color.from_rgba8(180, 180, 180))
+	Styler.style_name_label(hp_label, Styler.COLOR_TEXT_DARK)
 	hp_row.add_child(hp_label)
 
 	var dmg_lbl := Label.new()
@@ -317,7 +335,14 @@ func _build_fight_card(fight: Dictionary, hp_max: int) -> Control:
 	bar.value               = hp_after
 	bar.show_percentage     = false
 	bar.custom_minimum_size = Vector2(0, 8)
-	Styler.style_bar(bar, bar_color, Color.from_rgba8(30, 35, 50, 255))
+	var _bar_bg := StyleBoxFlat.new()
+	_bar_bg.bg_color = Color(0.0, 0.0, 0.0, 0.2)
+	_bar_bg.set_corner_radius_all(10)
+	bar.add_theme_stylebox_override("background", _bar_bg)
+	var _bar_fill := StyleBoxFlat.new()
+	_bar_fill.bg_color = bar_color
+	_bar_fill.set_corner_radius_all(10)
+	bar.add_theme_stylebox_override("fill", _bar_fill)
 	vbox.add_child(bar)
 
 	return card

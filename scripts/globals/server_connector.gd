@@ -27,11 +27,14 @@ func _ready() -> void:
 	SignalManager.signal_EquipItem.connect(_on_equip_request)
 	SignalManager.signal_UnequipItem.connect(_on_unequip_request)
 	SignalManager.signal_SellItem.connect(_on_sell_item_request)
+	SignalManager.signal_SellItems.connect(_on_sell_items_request)
 
 	SignalManager.signal_EquipSkill.connect(_on_equip_skill_request)
 	SignalManager.signal_UnEquipSkill.connect(_on_unequip_skill_request)
 
 	SignalManager.signal_RequestRiftFights.connect(_on_request_rift_fights)
+	SignalManager.signal_RequestRiftFightLog.connect(_on_request_rift_fight_log)
+	SignalManager.signal_TravelRequest.connect(_on_travel_request)
 
 
 func connect_to_server() -> void:
@@ -152,17 +155,18 @@ func _on_inventory_request(action) -> void:
 	socket.send_text(server_request)
 	server_connector_message_bus.emit("[Client] Request Inventory: {0}".format([action]))
 	
-func _on_useitem_request(item_to_use) -> void:
+func _on_useitem_request(item_to_use, qty: int) -> void:
 	var payload := {
 		"cmd": "inventory",
 		"payload": {
 			"action": "use_item",
 			"item_uid": item_to_use,
+			"qty": qty,
 		}
 	}
 	var server_request = JSON.stringify(payload)
 	socket.send_text(server_request)
-	server_connector_message_bus.emit("[Client] Request to Use item: {0}".format([item_to_use]))
+	server_connector_message_bus.emit("[Client] Request to Use item: {0} x{1}".format([item_to_use, qty]))
 
 func _on_equip_request(item_to_equip, slot_type) -> void:
 	var payload := {
@@ -201,6 +205,17 @@ func _on_sell_item_request(item_to_sell) -> void:
 	socket.send_text(server_request)
 	server_connector_message_bus.emit("[Client] Request to Sell item {0}".format([item_to_sell]))
 	
+func _on_sell_items_request(item_uids: Array) -> void:
+	var payload := {
+		"cmd": "inventory",
+		"payload": {
+			"action": "sell_batch",
+			"item_uids": item_uids,
+		}
+	}
+	socket.send_text(JSON.stringify(payload))
+	server_connector_message_bus.emit("[Client] Request to Sell %d items" % item_uids.size())
+
 func _on_equip_skill_request(idx, skill_id):
 	var payload := {
 		"cmd": "skills",
@@ -236,3 +251,19 @@ func _on_request_rift_fights(rift_instance_id: String) -> void:
 	var server_request = JSON.stringify(payload)
 	socket.send_text(server_request)
 	server_connector_message_bus.emit("[Client] Requesting rift fights for: {0}".format([rift_instance_id]))
+
+func _on_request_rift_fight_log(rift_instance_id: String, fight_uid: String) -> void:
+	var payload := {
+		"cmd": "rift_fights",
+		"payload": {"rift_instance_id": rift_instance_id, "fight_uid": fight_uid},
+	}
+	socket.send_text(JSON.stringify(payload))
+	server_connector_message_bus.emit("[Client] Requesting fight log for fight: {0}".format([fight_uid]))
+
+func _on_travel_request(location_id: int) -> void:
+	var payload := {
+		"cmd": "travel",
+		"payload": {"location": location_id},
+	}
+	socket.send_text(JSON.stringify(payload))
+	server_connector_message_bus.emit("[Client] Requesting travel to location: %d" % location_id)

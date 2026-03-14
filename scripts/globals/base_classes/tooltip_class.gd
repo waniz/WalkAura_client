@@ -253,7 +253,7 @@ func _can_equip(def: Dictionary) -> bool:
 func _on_use_pressed() -> void:
 	if _def.is_empty():
 		return
-	SignalManager.signal_UseItem.emit(_def["item_uid"])
+	SignalManager.signal_UseItem.emit(_def["item_uid"], 1)
 
 func _on_equip_pressed() -> void:
 	if _def.is_empty():

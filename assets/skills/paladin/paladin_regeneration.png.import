@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://1nl58v56bnuy"
-path="res://.godot/imported/paladin_minorheal.png-2b5e085bf25d91b7de7aa0a519ccde20.ctex"
+uid="uid://dbkahmj16dy30"
+path="res://.godot/imported/paladin_regeneration.png-d634dc2d3847bd2295ab1e8fe6c15cae.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/skills/paladin_minorheal.png"
-dest_files=["res://.godot/imported/paladin_minorheal.png-2b5e085bf25d91b7de7aa0a519ccde20.ctex"]
+source_file="res://assets/skills/paladin/paladin_regeneration.png"
+dest_files=["res://.godot/imported/paladin_regeneration.png-d634dc2d3847bd2295ab1e8fe6c15cae.ctex"]
 
 [params]
 

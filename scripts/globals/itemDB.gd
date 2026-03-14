@@ -77,12 +77,6 @@ var ITEM_ICONS = {
 	# ===== Legs
 	"legs_0":            load("res://assets/equipment/legs/legs_0.png") as Texture2D,
 	"legs_1":            load("res://assets/equipment/legs/legs_1.png") as Texture2D,
-	# ===== MAIN_Hand
-	"main_hand_0":       load("res://assets/equipment/main_hand/main_hand_0.png") as Texture2D,
-	"main_hand_1":       load("res://assets/equipment/main_hand/main_hand_1.png") as Texture2D,
-	# ===== OFF_Hand
-	"off_hand_0":       load("res://assets/equipment/off_hand/off_hand_0.png") as Texture2D,
-	"off_hand_1":       load("res://assets/equipment/off_hand/off_hand_1.png") as Texture2D,
 	# ===== Necks
 	"neck_0":            load("res://assets/equipment/necks/neck_0.png") as Texture2D,
 	"neck_1":            load("res://assets/equipment/necks/neck_1.png") as Texture2D,
@@ -101,8 +95,26 @@ var ITEM_ICONS = {
 	# ===== Wrists
 	"wrist_0":           load("res://assets/equipment/wrists/wrist_0.png") as Texture2D,
 	
+		# ===== MAIN_Hand
+	"main_hand_sword_0":       load("res://assets/equipment/main_hand/sword/0.png") as Texture2D,
+	"main_hand_sword_1":       load("res://assets/equipment/main_hand/sword/1.png") as Texture2D,
 	
+	"main_hand_bow_0":       load("res://assets/equipment/main_hand/bow/0.png") as Texture2D,
+	"main_hand_bow_1":       load("res://assets/equipment/main_hand/bow/1.png") as Texture2D,
 	
+	"main_hand_axe_0":       load("res://assets/equipment/main_hand/axe/0.png") as Texture2D,
+	"main_hand_axe_1":       load("res://assets/equipment/main_hand/axe/1.png") as Texture2D,
+	
+	"main_hand_staff_0":       load("res://assets/equipment/main_hand/staff/0.png") as Texture2D,
+	"main_hand_staff_1":       load("res://assets/equipment/main_hand/staff/1.png") as Texture2D,
+	
+	# ===== OFF_Hand
+	"off_hand_shield_0":       load("res://assets/equipment/off_hand/shield/0.png") as Texture2D,
+	"off_hand_shield_1":       load("res://assets/equipment/off_hand/shield/1.png") as Texture2D,
+	
+	"off_hand_book_0":       load("res://assets/equipment/off_hand/book/0.png") as Texture2D,
+	"off_hand_book_1":       load("res://assets/equipment/off_hand/book/1.png") as Texture2D,
+		
 	# Herbalism
 	"dill":              load("res://assets/professions/herbalism/herb_dill.png") as Texture2D,
 	"rucola":            load("res://assets/professions/herbalism/herb_rucola.png") as Texture2D,
@@ -170,14 +182,68 @@ var ICONS = {
 	"evasion_training":     load("res://assets/general_icons/passive_talents/evasion_training.png") as Texture2D,
 	
 	# skills
-	"buff_attack_up":       load("res://assets/skills/buff_attack_up.png") as Texture2D,
-	"buff_hp_up":           load("res://assets/skills/buff_hp_up.png") as Texture2D,
-	"mage_fireball":        load("res://assets/skills/mage_fireball.png") as Texture2D,
-	"mage_frostshield":     load("res://assets/skills/mage_frostshield.png") as Texture2D,
-	"mage_frostbolt":       load("res://assets/skills/mage_frostbolt.png") as Texture2D,
-	"mage_pyroblast":       load("res://assets/skills/mage_pyroblast.png") as Texture2D,
-	"paladin_minorheal":    load("res://assets/skills/paladin_minorheal.png") as Texture2D,
-	"paladin_regeneration": load("res://assets/skills/paladin_regeneration.png") as Texture2D,
+	"buff_attack_up":       load("res://assets/skills/buffs/buff_attack_up.png") as Texture2D,
+	"buff_hp_up":           load("res://assets/skills/buffs/buff_hp_up.png") as Texture2D,
+	"buff_improved_shield": load("res://assets/skills/buffs/buff_improved_shield.png") as Texture2D,
+	"buff_shield_regeneration": load("res://assets/skills/buffs/buff_shield_regeneration.png") as Texture2D,
+	
+	"mage_fireball":        load("res://assets/skills/mage/mage_fireball.png") as Texture2D,
+	"mage_frostshield":     load("res://assets/skills/mage/mage_frostshield.png") as Texture2D,
+	"mage_frostbolt":       load("res://assets/skills/mage/mage_frostbolt.png") as Texture2D,
+	"mage_pyroblast":       load("res://assets/skills/mage/mage_pyroblast.png") as Texture2D,
+	
+	"paladin_minorheal":         load("res://assets/skills/paladin/paladin_minorheal.png") as Texture2D,
+	"paladin_regeneration":      load("res://assets/skills/paladin/paladin_regeneration.png") as Texture2D,
+	"paladin_crusader_strike":   load("res://assets/skills/paladin/paladin_crusader_strike.png") as Texture2D,
+	"paladin_holy_sword":        load("res://assets/skills/paladin/paladin_holy_sword.png") as Texture2D,
+	"paladin_hummer_of_justice": load("res://assets/skills/paladin/paladin_hummer_of_justice.png") as Texture2D,
+	"paladin_judgement":         load("res://assets/skills/paladin/paladin_judgement.png") as Texture2D,
+	"paladin_lay_of_hands":      load("res://assets/skills/paladin/paladin_lay_of_hands.png") as Texture2D,
+	"paladin_wrath":             load("res://assets/skills/paladin/paladin_wrath.png") as Texture2D,
+}
+
+# ── World waypoints ──────────────────────────────────────────────────────────
+# key   : unique location ID used in waypoint_pressed signal
+# value : map position as ratio Vector2(x, y) in range 0.0–1.0
+var WAYPOINTS: Dictionary = {
+	"starter_village": Vector2(0.33, 0.42),
+	"ancient_forest":  Vector2(0.38, 0.31),
+	"dark_swamp":      Vector2(0.39, 0.55),
+	"mountains":       Vector2(0.57, 0.26),
+	"iron_mountain":   Vector2(0.68, 0.27),
+	"human_village":   Vector2(0.72, 0.35),
+	"tower":           Vector2(0.84, 0.56),
+	"sunken_harbor":   Vector2(0.49, 0.81),
+	"dragon_lair":     Vector2(0.58, 0.50),
+	"ancient_place":   Vector2(0.77, 0.74),
+}
+
+# Display names for server location IDs — mirrors server LOCATION_DICT
+var LOCATION_NAMES: Dictionary = {
+	1:  "A little Tent location",
+	2:  "Ancient Forest",
+	3:  "Dark Swamp",
+	4:  "The Mountains",
+	5:  "Iron Mountain",
+	6:  "Human Village",
+	7:  "The Tower",
+	8:  "Sunken Harbor",
+	9:  "Dragon Lair",
+	10: "Ancient Place",
+}
+
+# Maps waypoint string IDs -> server integer location IDs
+var WAYPOINT_LOCATION_IDS: Dictionary = {
+	"starter_village": 1,
+	"ancient_forest":  2,
+	"dark_swamp":      3,
+	"mountains":       4,
+	"iron_mountain":   5,
+	"human_village":   6,
+	"tower":           7,
+	"sunken_harbor":   8,
+	"dragon_lair":     9,
+	"ancient_place":   10,
 }
 
 # Equipment rows

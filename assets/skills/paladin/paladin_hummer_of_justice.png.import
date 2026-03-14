@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://v4mi3tjhg04x"
-path="res://.godot/imported/mage_fireball.png-d9fa36198310a389a3066e1d369c992a.ctex"
+uid="uid://cfb80ck20kwtp"
+path="res://.godot/imported/paladin_hummer_of_justice.png-de5f5444001b2e3388fd3a3d7b438a2f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/skills/mage_fireball.png"
-dest_files=["res://.godot/imported/mage_fireball.png-d9fa36198310a389a3066e1d369c992a.ctex"]
+source_file="res://assets/skills/paladin/paladin_hummer_of_justice.png"
+dest_files=["res://.godot/imported/paladin_hummer_of_justice.png-de5f5444001b2e3388fd3a3d7b438a2f.ctex"]
 
 [params]
 

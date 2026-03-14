@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c47dr5i34wy00"
-path="res://.godot/imported/buff_hp_up.png-21080e77449b363b117a95cbeb610d26.ctex"
+uid="uid://b12t2pqytldkx"
+path="res://.godot/imported/paladin_judgement.png-0bf06f3e26477d8a68b6de7d999e2aab.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/skills/buff_hp_up.png"
-dest_files=["res://.godot/imported/buff_hp_up.png-21080e77449b363b117a95cbeb610d26.ctex"]
+source_file="res://assets/skills/paladin/paladin_judgement.png"
+dest_files=["res://.godot/imported/paladin_judgement.png-0bf06f3e26477d8a68b6de7d999e2aab.ctex"]
 
 [params]
 
