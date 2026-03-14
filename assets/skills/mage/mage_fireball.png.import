@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://p5b63ltnj6nu"
-path="res://.godot/imported/mage_frostbolt.png-1c47db9df35d199784251f31c63fe14b.ctex"
+uid="uid://v4mi3tjhg04x"
+path="res://.godot/imported/mage_fireball.png-f7557afae5a26c75c5ddea9a4406e26c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/skills/mage_frostbolt.png"
-dest_files=["res://.godot/imported/mage_frostbolt.png-1c47db9df35d199784251f31c63fe14b.ctex"]
+source_file="res://assets/skills/mage/mage_fireball.png"
+dest_files=["res://.godot/imported/mage_fireball.png-f7557afae5a26c75c5ddea9a4406e26c.ctex"]
 
 [params]
 

@@ -37,22 +37,47 @@ alignment = 1
 
 [node name="Location_Image_Panel" type="PanelContainer" parent="VBoxContainer" unique_id=245937098]
 layout_mode = 2
-size_flags_horizontal = 0
+size_flags_horizontal = 3
 size_flags_vertical = 0
 
 [node name="LocationPicture" type="TextureRect" parent="VBoxContainer/Location_Image_Panel" unique_id=662894214]
-custom_minimum_size = Vector2(600, 400)
+custom_minimum_size = Vector2(0, 300)
 layout_mode = 2
-size_flags_horizontal = 0
+size_flags_horizontal = 3
 size_flags_vertical = 0
 texture = ExtResource("2_aaoyo")
 expand_mode = 1
-stretch_mode = 4
+stretch_mode = 5
+
+[node name="Location_Info_Panel" type="PanelContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/Location_Info_Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/Location_Info_Panel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Location_Name_Label" type="Label" parent="VBoxContainer/Location_Info_Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Location Name"
+
+[node name="Location_Desc_Label" type="Label" parent="VBoxContainer/Location_Info_Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Location description."
 
 [node name="Location_Activities_Panel" type="PanelContainer" parent="VBoxContainer" unique_id=1486514092]
 layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/Location_Activities_Panel" unique_id=579033611]
 layout_mode = 2
@@ -78,42 +103,45 @@ layout_mode = 2
 [node name="PanelContainer" type="PanelContainer" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/gathering_panel" unique_id=1377304090]
 layout_mode = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/gathering_panel/PanelContainer" unique_id=1763393319]
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/gathering_panel/PanelContainer"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 4
 
-[node name="Label" type="Label" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/gathering_panel/PanelContainer/HBoxContainer" unique_id=1025695064]
+[node name="Label" type="Label" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/gathering_panel/PanelContainer/VBoxContainer" unique_id=1025695064]
 layout_mode = 2
-theme_override_fonts/font = ExtResource("3_ud2jj")
-text = "Gathering:"
+text = "Gathering"
 
-[node name="Gathering_Btb_Herb" type="TextureButton" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/gathering_panel/PanelContainer/HBoxContainer" unique_id=1223033430]
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/gathering_panel/PanelContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Gathering_Btb_Herb" type="TextureButton" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/gathering_panel/PanelContainer/VBoxContainer/HBoxContainer" unique_id=1223033430]
 visible = false
-custom_minimum_size = Vector2(96, 96)
+custom_minimum_size = Vector2(56, 56)
 layout_mode = 2
 texture_normal = ExtResource("3_mkis3")
 ignore_texture_size = true
 stretch_mode = 4
 
-[node name="Gathering_Btn_Mining" type="TextureButton" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/gathering_panel/PanelContainer/HBoxContainer" unique_id=760055099]
+[node name="Gathering_Btn_Mining" type="TextureButton" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/gathering_panel/PanelContainer/VBoxContainer/HBoxContainer" unique_id=760055099]
 visible = false
-custom_minimum_size = Vector2(96, 96)
+custom_minimum_size = Vector2(56, 56)
 layout_mode = 2
 texture_normal = ExtResource("4_ud2jj")
 ignore_texture_size = true
 stretch_mode = 4
 
-[node name="Gathering_Btn_Woodcutting" type="TextureButton" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/gathering_panel/PanelContainer/HBoxContainer" unique_id=1198224238]
+[node name="Gathering_Btn_Woodcutting" type="TextureButton" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/gathering_panel/PanelContainer/VBoxContainer/HBoxContainer" unique_id=1198224238]
 visible = false
-custom_minimum_size = Vector2(96, 96)
+custom_minimum_size = Vector2(56, 56)
 layout_mode = 2
 texture_normal = ExtResource("5_6cteu")
 ignore_texture_size = true
 stretch_mode = 4
 
-[node name="Gathering_Btn_Fishing" type="TextureButton" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/gathering_panel/PanelContainer/HBoxContainer" unique_id=202261942]
+[node name="Gathering_Btn_Fishing" type="TextureButton" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/gathering_panel/PanelContainer/VBoxContainer/HBoxContainer" unique_id=202261942]
 visible = false
-custom_minimum_size = Vector2(96, 96)
+custom_minimum_size = Vector2(56, 56)
 layout_mode = 2
 texture_normal = ExtResource("6_mkis3")
 ignore_texture_size = true
@@ -125,18 +153,21 @@ layout_mode = 2
 [node name="PanelContainer" type="PanelContainer" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/crafting_panel" unique_id=1236540868]
 layout_mode = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/crafting_panel/PanelContainer" unique_id=1743989274]
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/crafting_panel/PanelContainer"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 4
 
-[node name="Label" type="Label" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/crafting_panel/PanelContainer/HBoxContainer" unique_id=611131011]
+[node name="Label" type="Label" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/crafting_panel/PanelContainer/VBoxContainer" unique_id=611131011]
 layout_mode = 2
-theme_override_fonts/font = ExtResource("3_ud2jj")
-text = "Crafting:     "
+text = "Crafting"
 
-[node name="Craft_Btn_Alchemy" type="TextureButton" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/crafting_panel/PanelContainer/HBoxContainer" unique_id=98273693]
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/crafting_panel/PanelContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Craft_Btn_Alchemy" type="TextureButton" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/crafting_panel/PanelContainer/VBoxContainer/HBoxContainer" unique_id=98273693]
 visible = false
-custom_minimum_size = Vector2(96, 96)
+custom_minimum_size = Vector2(56, 56)
 layout_mode = 2
 texture_normal = ExtResource("6_ea5ol")
 ignore_texture_size = true
@@ -148,26 +179,29 @@ layout_mode = 2
 [node name="PanelContainer" type="PanelContainer" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/battle_panel" unique_id=1999704469]
 layout_mode = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/battle_panel/PanelContainer" unique_id=1924813803]
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/battle_panel/PanelContainer"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 4
 
-[node name="Label" type="Label" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/battle_panel/PanelContainer/HBoxContainer" unique_id=1629779663]
+[node name="Label" type="Label" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/battle_panel/PanelContainer/VBoxContainer" unique_id=1629779663]
 layout_mode = 2
-theme_override_fonts/font = ExtResource("3_ud2jj")
-text = "Battle:         "
+text = "Battle"
 
-[node name="Battle_Btn_Hunting" type="TextureButton" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/battle_panel/PanelContainer/HBoxContainer" unique_id=1032078249]
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/battle_panel/PanelContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Battle_Btn_Hunting" type="TextureButton" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/battle_panel/PanelContainer/VBoxContainer/HBoxContainer" unique_id=1032078249]
 visible = false
-custom_minimum_size = Vector2(96, 96)
+custom_minimum_size = Vector2(56, 56)
 layout_mode = 2
 texture_normal = ExtResource("7_32q5o")
 ignore_texture_size = true
 stretch_mode = 4
 
-[node name="Battle_Btn_Rift" type="TextureButton" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/battle_panel/PanelContainer/HBoxContainer" unique_id=1746645250]
+[node name="Battle_Btn_Rift" type="TextureButton" parent="VBoxContainer/Location_Activities_Panel/VBoxContainer/battle_panel/PanelContainer/VBoxContainer/HBoxContainer" unique_id=1746645250]
 visible = false
-custom_minimum_size = Vector2(96, 96)
+custom_minimum_size = Vector2(56, 56)
 layout_mode = 2
 texture_normal = ExtResource("10_6cteu")
 ignore_texture_size = true
@@ -177,11 +211,54 @@ stretch_mode = 4
 visible = false
 layout_mode = 2
 
+[node name="Activity_Stats_Panel" type="PanelContainer" parent="VBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/Activity_Stats_Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/Activity_Stats_Panel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Stats_Title_Label" type="Label" parent="VBoxContainer/Activity_Stats_Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Activity — Level 0"
+
+[node name="Stats_XP_Bar" type="ProgressBar" parent="VBoxContainer/Activity_Stats_Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 16)
+min_value = 0.0
+max_value = 100.0
+show_percentage = false
+
+[node name="Stats_XP_Label" type="Label" parent="VBoxContainer/Activity_Stats_Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "0 / 0 XP to next level"
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer/Activity_Stats_Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Stats_Steps_Label" type="Label" parent="VBoxContainer/Activity_Stats_Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Session steps: 0"
+
+[node name="Stats_Actions_Label" type="Label" parent="VBoxContainer/Activity_Stats_Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Actions done: 0"
+
 [connection signal="pressed" from="VBoxContainer/Location_Activities_Panel/VBoxContainer/HBoxContainer/Btn_Stop" to="." method="_on_btn_stop_pressed"]
-[connection signal="pressed" from="VBoxContainer/Location_Activities_Panel/VBoxContainer/gathering_panel/PanelContainer/HBoxContainer/Gathering_Btb_Herb" to="." method="_on_gathering_btb_herb_pressed"]
-[connection signal="pressed" from="VBoxContainer/Location_Activities_Panel/VBoxContainer/gathering_panel/PanelContainer/HBoxContainer/Gathering_Btn_Mining" to="." method="_on_gathering_btn_mining_pressed"]
-[connection signal="pressed" from="VBoxContainer/Location_Activities_Panel/VBoxContainer/gathering_panel/PanelContainer/HBoxContainer/Gathering_Btn_Woodcutting" to="." method="_on_gathering_btn_woodcutting_pressed"]
-[connection signal="pressed" from="VBoxContainer/Location_Activities_Panel/VBoxContainer/gathering_panel/PanelContainer/HBoxContainer/Gathering_Btn_Fishing" to="." method="_on_gathering_btn_fishing_pressed"]
-[connection signal="pressed" from="VBoxContainer/Location_Activities_Panel/VBoxContainer/crafting_panel/PanelContainer/HBoxContainer/Craft_Btn_Alchemy" to="." method="_on_craft_btn_alchemy_pressed"]
-[connection signal="pressed" from="VBoxContainer/Location_Activities_Panel/VBoxContainer/battle_panel/PanelContainer/HBoxContainer/Battle_Btn_Hunting" to="." method="_on_battle_btn_hunting_pressed"]
-[connection signal="pressed" from="VBoxContainer/Location_Activities_Panel/VBoxContainer/battle_panel/PanelContainer/HBoxContainer/Battle_Btn_Rift" to="." method="_on_battle_btn_rift_pressed"]
+[connection signal="pressed" from="VBoxContainer/Location_Activities_Panel/VBoxContainer/gathering_panel/PanelContainer/VBoxContainer/HBoxContainer/Gathering_Btb_Herb" to="." method="_on_gathering_btb_herb_pressed"]
+[connection signal="pressed" from="VBoxContainer/Location_Activities_Panel/VBoxContainer/gathering_panel/PanelContainer/VBoxContainer/HBoxContainer/Gathering_Btn_Mining" to="." method="_on_gathering_btn_mining_pressed"]
+[connection signal="pressed" from="VBoxContainer/Location_Activities_Panel/VBoxContainer/gathering_panel/PanelContainer/VBoxContainer/HBoxContainer/Gathering_Btn_Woodcutting" to="." method="_on_gathering_btn_woodcutting_pressed"]
+[connection signal="pressed" from="VBoxContainer/Location_Activities_Panel/VBoxContainer/gathering_panel/PanelContainer/VBoxContainer/HBoxContainer/Gathering_Btn_Fishing" to="." method="_on_gathering_btn_fishing_pressed"]
+[connection signal="pressed" from="VBoxContainer/Location_Activities_Panel/VBoxContainer/crafting_panel/PanelContainer/VBoxContainer/HBoxContainer/Craft_Btn_Alchemy" to="." method="_on_craft_btn_alchemy_pressed"]
+[connection signal="pressed" from="VBoxContainer/Location_Activities_Panel/VBoxContainer/battle_panel/PanelContainer/VBoxContainer/HBoxContainer/Battle_Btn_Hunting" to="." method="_on_battle_btn_hunting_pressed"]
+[connection signal="pressed" from="VBoxContainer/Location_Activities_Panel/VBoxContainer/battle_panel/PanelContainer/VBoxContainer/HBoxContainer/Battle_Btn_Rift" to="." method="_on_battle_btn_rift_pressed"]

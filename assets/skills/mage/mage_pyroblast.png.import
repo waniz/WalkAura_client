@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dbkahmj16dy30"
-path="res://.godot/imported/paladin_regeneration.png-4a7614ead181f1ae9a1b5a47b2f53c97.ctex"
+uid="uid://cdb80fe8p8jnb"
+path="res://.godot/imported/mage_pyroblast.png-468ba9761b40e3f44667c76d3429e18a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/skills/paladin_regeneration.png"
-dest_files=["res://.godot/imported/paladin_regeneration.png-4a7614ead181f1ae9a1b5a47b2f53c97.ctex"]
+source_file="res://assets/skills/mage/mage_pyroblast.png"
+dest_files=["res://.godot/imported/mage_pyroblast.png-468ba9761b40e3f44667c76d3429e18a.ctex"]
 
 [params]
 

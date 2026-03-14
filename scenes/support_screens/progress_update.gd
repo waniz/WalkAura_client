@@ -1,249 +1,320 @@
 class_name ActivityProgressView extends Control
 
-var _card_box_ref: Callable = Callable() # call to get StyleBox for panel
-var _item_name_resolver: Callable = Callable() # (id:String)->String
+# --- Colors ---
+var COL_PANEL_BG     := Color.from_rgba8(20, 22, 30, 240)
+var COL_PANEL_BORDER := Color.from_rgba8(255, 200, 66, 90)
+var COL_GOLD         := Color.from_rgba8(255, 215, 128)
+var COL_LEVELUP      := Color.from_rgba8(255, 230, 50)
+var COL_XP_FILL      := Color.from_rgba8(80, 160, 255)
+const COL_XP_TEXT      := Color(0.4, 0.78, 1.0)
+const COL_SEPARATOR    := Color(1, 1, 1, 0.08)
+const COL_SUBTEXT      := Color(0.65, 0.65, 0.65)
 
-@onready var _panel: PanelContainer = $PanelContainer
-@onready var _title: Label = $PanelContainer/VBoxContainer/Title
-@onready var close_button: Button = $PanelContainer/VBoxContainer/Close
+# --- Scene References ---
+@onready var _panel:        PanelContainer = $PanelContainer
+@onready var _title:        Label          = $PanelContainer/VBoxContainer/Title
+@onready var _content_vbox: VBoxContainer  = $PanelContainer/VBoxContainer/ContentScroll/ContentVBox
+@onready var close_button:  Button         = $PanelContainer/VBoxContainer/Close
 
-@onready var _grid: GridContainer = $PanelContainer/VBoxContainer/ContentScroll/GridContainer
-
-@onready var _steps_label: Label = $PanelContainer/VBoxContainer/ContentScroll/GridContainer/stepsLabel
-@onready var _xp_label: Label = $PanelContainer/VBoxContainer/ContentScroll/GridContainer/xpLabel
-@onready var _xp_bar: ProgressBar = $PanelContainer/VBoxContainer/ContentScroll/GridContainer/ProgressBar
-@onready var loot_title: Label = $PanelContainer/VBoxContainer/ContentScroll/GridContainer/LootTitle
-@onready var _loot_list: VBoxContainer = $PanelContainer/VBoxContainer/ContentScroll/GridContainer/LootList
-
-@onready var root: VBoxContainer = $PanelContainer/VBoxContainer
-var _equipment_list: VBoxContainer
-var icon_mapper: Dictionary
-
-var COL_PANEL_BG = Color.from_rgba8(16, 18, 24, 220)
-var COL_PANEL_BR = Color.from_rgba8(255, 255, 255, 30)
-var bg_color = Color.from_rgba8(28, 30, 40, 255)
-var border_color = Color.from_rgba8(255, 255, 255, 30)
+# --- State ---
+var _stats_vbox:  VBoxContainer
+var _loot_vbox:   VBoxContainer
+var _equip_vbox:  VBoxContainer
 
 
 func _ready() -> void:
 	_build_ui()
-	
-	# Create the equipment container dynamically since it might not exist in scene
-	_equipment_list = VBoxContainer.new()
-	_equipment_list.name = "EquipmentList"
-	_equipment_list.add_theme_constant_override("separation", 6)
-	
-	# Add it to the main grid, right after the loot list
-	_grid.add_child(_equipment_list)
-	
-	Styler.style_panel(_panel, COL_PANEL_BG, COL_PANEL_BR)
+
+
+func _build_ui() -> void:
+	Styler.style_panel(_panel, COL_PANEL_BG, COL_PANEL_BORDER)
 	Styler.style_title(_title)
-	Styler.style_title(loot_title)
-	Styler.style_button(close_button, Color.from_rgba8(255,200,66))
+	Styler.style_button(close_button, Styler.GOLD_COLOR)
 	Styler.wire_button_anim(close_button)
-	Styler.style_name_label(_steps_label, Color.from_rgba8(255, 215, 128))
-	Styler.style_name_label(_xp_label, Color.from_rgba8(255, 215, 128))
-	Styler.style_bar(_xp_bar, bg_color, border_color)
+
+	_content_vbox.add_theme_constant_override("separation", 12)
+
+	_stats_vbox = VBoxContainer.new()
+	_stats_vbox.add_theme_constant_override("separation", 8)
+	_content_vbox.add_child(_stats_vbox)
+
+	_content_vbox.add_child(_mk_separator())
+
+	_loot_vbox = VBoxContainer.new()
+	_loot_vbox.add_theme_constant_override("separation", 6)
+	_content_vbox.add_child(_loot_vbox)
+
+	_equip_vbox = VBoxContainer.new()
+	_equip_vbox.add_theme_constant_override("separation", 6)
+	_content_vbox.add_child(_equip_vbox)
 
 
-func set_card_box(card_box_callable: Callable) -> void:
-	_card_box_ref = card_box_callable
-	if is_instance_valid(_panel) and _card_box_ref.is_valid():
-		var sb = _card_box_ref.call()
-		if typeof(sb) == TYPE_OBJECT:
-			_panel.add_theme_stylebox_override("panel", sb)
-
-
-func set_item_name_resolver(resolver: Callable) -> void:
-	_item_name_resolver = resolver
-	
 # ------------------ Public API ------------------
 func apply_activity_progress(d: Dictionary) -> void:
-	var activities_completed: int = int(d.get("activities_completed", 0))
-	var steps_in: int = int(d.get("steps_in", 0))
-	var xp_gained: int = int(d.get("xp_gained", 0))
-	var lvl: int = int(d.get("level", 1))
-	var lvl_prev: int = int(d.get("level_before", lvl))
-	var lvls_gained: int = int(d.get("levels_gained", 0))
-	var xp_into: int = int(d.get("xp_into_level", 0))
-	var xp_to_next = d.get("xp_to_next", null)
-	var req_skill: int = int(d.get("req_skill", 1))
+	var lvls_gained := int(d.get("levels_gained", 0))
+	var req_skill   := int(d.get("req_skill", 1))
 
-	# Loot Data
-	var resource_counts = d.get("loot_counts", {}) # Standard resources (Wood, Ore)
-	var equipment_blueprints = d.get("new_items", []) # New Gear
-	icon_mapper = d.get("mapping", [])
-	
-	# Title / header
-	var title = "Activity Progress"
-	if d.has("locked") and d["locked"]:
-		title += " — Locked: requires %d" % req_skill
+	if d.get("locked", false):
+		_title.text = "Activity — Locked  (Req. Lv. %d)" % req_skill
 	elif lvls_gained > 0:
-		title += " — Level Up x%d!" % lvls_gained
-	_title.text = title
-	
-	# Steps progress
-	_steps_label.text = "Progress: (+%d steps, %d activities finishes)" % [steps_in, activities_completed]
-	
-	# XP progress
-	if xp_to_next:
-		_xp_bar.max_value = max(1, int(xp_to_next))
-		_xp_bar.value = clamp(xp_into, 0, _xp_bar.max_value)
+		_title.text = "Activity Complete  ·  Level Up!"
 	else:
-		_xp_bar.value = 100
-		_xp_bar.max_value = 100
+		_title.text = "Activity Complete"
 
-	_xp_label.text = "Activity Level %d (%d -> %d) XP: +%d" % [lvl, lvl_prev, lvl, xp_gained]
-	
-	loot_title.text = "Loot:"
+	_render_stats(d)
+	_render_loot(d.get("loot_counts", {}), d.get("mapping", {}))
+	_render_equipment(d.get("new_items", []))
 
-	# Render Both Lists
-	_render_loot(resource_counts)
-	_render_equipment(equipment_blueprints)
 
-# ------------------ UI building ------------------
-func _build_ui() -> void:
-	anchor_left = 0; anchor_top = 0; anchor_right = 1; anchor_bottom = 1
-	size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	size_flags_vertical = Control.SIZE_EXPAND_FILL
-
-	_panel.name = "Card"
-	_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	
-	if _card_box_ref.is_valid():
-		var sb = _card_box_ref.call()
-		if typeof(sb) == TYPE_OBJECT:
-			_panel.add_theme_stylebox_override("panel", sb)
-
-	root.name = "Root"
-	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	root.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root.add_theme_constant_override("separation", 10)
-
-	_title.text = "Activity Progress"
-	_title.add_theme_font_size_override("font_size", 18)
-
-	# Stats Grid settings
-	_grid.columns = 1
-	_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_grid.add_theme_constant_override("h_separation", 8)
-	_grid.add_theme_constant_override("v_separation", 6)
-
-	_xp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_xp_bar.min_value = 0; _xp_bar.max_value = 100; _xp_bar.value = 0
-	_xp_bar.tooltip_text = "XP into current level"
-	
-	# Spacers/Layout
-	# Check if spacer exists to avoid duplicate adding if scene is static
-	# _grid.add_child(_mk_spacer()) 
-
-	loot_title.text = "Loot"
-	loot_title.add_theme_font_size_override("font_size", 16)
-
-	_loot_list.add_theme_constant_override("separation", 6)
-	
-func _mk_label(t: String) -> Label:
-	var l := Label.new()
-	l.text = t
-	return l
-
-func _mk_spacer() -> Control:
-	var c := Control.new()
-	c.custom_minimum_size = Vector2(1, 1)
-	return c
-	
-# ------------------ Loot rendering ------------------
-func _render_loot(summary) -> void:
-	for c in _loot_list.get_children():
+# ------------------ Stats Section ------------------
+func _render_stats(d: Dictionary) -> void:
+	for c in _stats_vbox.get_children():
 		c.queue_free()
 
-	if summary == null:
+	var steps_in            := int(d.get("steps_in", 0))
+	var activities_completed := int(d.get("activities_completed", 0))
+	var xp_gained           := int(d.get("xp_gained", 0))
+	var lvl                 := int(d.get("level", 1))
+	var lvl_prev            := int(d.get("level_before", lvl))
+	var lvls_gained         := int(d.get("levels_gained", 0))
+	var xp_into             := int(d.get("xp_into_level", 0))
+	var xp_to_next                   = d.get("xp_to_next", null)
+
+	# Steps row
+	_stats_vbox.add_child(
+		_mk_stat_row("steps", "Steps Used", "+%d" % steps_in, COL_GOLD))
+
+	# Activities row
+	_stats_vbox.add_child(
+		_mk_stat_row("", "Activities Completed", "×%d" % activities_completed, COL_GOLD))
+
+	# XP row
+	_stats_vbox.add_child(
+		_mk_stat_row("", "Experience Gained", "+%d XP" % xp_gained, COL_XP_TEXT))
+
+	# Level row
+	if lvls_gained > 0:
+		var lvlup_lbl := Label.new()
+		lvlup_lbl.text = "⬆  Lv. %d → %d" % [lvl_prev, lvl]
+		lvlup_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lvlup_lbl.add_theme_color_override("font_color", COL_LEVELUP)
+		lvlup_lbl.add_theme_font_size_override("font_size", 16)
+		if "GROBOLT_FONT" in Styler:
+			lvlup_lbl.add_theme_font_override("font", Styler.GROBOLT_FONT)
+		_stats_vbox.add_child(lvlup_lbl)
+	else:
+		var lvl_lbl := Label.new()
+		lvl_lbl.text = "Level %d" % lvl
+		lvl_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		Styler.style_name_label(lvl_lbl, COL_GOLD)
+		_stats_vbox.add_child(lvl_lbl)
+
+	# XP progress bar
+	var xp_bar := ProgressBar.new()
+	xp_bar.custom_minimum_size = Vector2(0, 18)
+	xp_bar.min_value = 0
+	xp_bar.show_percentage = false
+	if xp_to_next:
+		xp_bar.max_value = max(1, int(xp_to_next))
+		xp_bar.value = clamp(xp_into, 0, xp_bar.max_value)
+	else:
+		xp_bar.max_value = 100
+		xp_bar.value = 100
+	Styler.style_mini_progress(xp_bar, COL_XP_FILL)
+	_stats_vbox.add_child(xp_bar)
+
+	# XP sub-text
+	if xp_to_next:
+		var xp_sub := Label.new()
+		xp_sub.text = "%d / %d XP to next level" % [xp_into, int(xp_to_next)]
+		xp_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		xp_sub.add_theme_color_override("font_color", COL_SUBTEXT)
+		xp_sub.add_theme_font_size_override("font_size", 11)
+		_stats_vbox.add_child(xp_sub)
+
+
+# ------------------ Loot Section ------------------
+func _render_loot(summary: Dictionary, mapper: Dictionary) -> void:
+	for c in _loot_vbox.get_children():
+		c.queue_free()
+
+	if summary.is_empty():
 		return
 
-	for key in summary.keys():
-		var qty = int(summary[key])
-		var icon_key = icon_mapper.get(key, key)
-		var row = _create_loot_row(icon_key, "x%d" % qty)
-		_loot_list.add_child(row)
+	_loot_vbox.add_child(_mk_section_header("Resources"))
 
+	for key in summary.keys():
+		var qty      := int(summary[key])
+		var icon_key := str(mapper.get(key, key))
+		var row      := _create_loot_row(icon_key, _format_resource_name(icon_key), "×%d" % qty)
+		_loot_vbox.add_child(row)
+
+
+# ------------------ Equipment Section ------------------
 func _render_equipment(items: Array) -> void:
-	# Clear previous items
-	for c in _equipment_list.get_children():
+	for c in _equip_vbox.get_children():
 		c.queue_free()
-		
+
 	if items.is_empty():
 		return
 
-	# Header
-	var eq_header = Label.new()
-	eq_header.text = "New Equipment"
-	eq_header.add_theme_font_size_override("font_size", 16)
-	eq_header.add_theme_color_override("font_color", Color(1, 0.84, 0.0)) # Gold
-	_equipment_list.add_child(eq_header)
+	_equip_vbox.add_child(_mk_section_header("New Equipment"))
 
 	for item_data in items:
-		# 1. Extract Icon
-		var icon_key = "chest_closed" 
-		var item_quality = int(item_data.get("quality", 1))
-		
-		if item_data.has("item_icon"):
-			var raw_icon = item_data["item_icon"]
-			# Safety check: Handle Python lists ["icon"] vs Strings "icon"
-			if raw_icon is Array and not raw_icon.is_empty():
-				icon_key = str(raw_icon[0])
-			elif raw_icon is String:
-				icon_key = raw_icon
+		var icon_key      = _extract_icon_key(item_data)
+		var item_quality  = int(item_data.get("quality", 1))
+		var ilvl          = item_data.get("ilvl", item_data.get("monster_level", 1))
+		var display_name  = str(item_data.get("name", "Unknown Item"))
+		var quality_name  = _get_quality_name(item_quality)
+		var quality_color = Styler.QUALITY_COLORS.get(item_quality, Styler.QUALITY_COLORS[1])
 
-		# 2. Extract Name and Level
-		# Try to use the real name if available, otherwise fallback to "Unidentified"
-		var ilvl = item_data.get("ilvl", item_data.get("monster_level", 1))
-		var display_name = item_data.get("name", "Unidentified Item (Lvl %d)" % ilvl)
+		_equip_vbox.add_child(
+			_create_equip_row(icon_key, display_name, quality_name, ilvl, quality_color))
 
-		# 3. Create the Row
-		# We pass the icon_key directly to our helper
-		var row = _create_loot_row(icon_key, "New!", Color(1, 0.8, 0.2))
-		
-		# 4. Update the Name Label
-		# _create_loot_row auto-capitalizes the icon name, so we overwrite it with the real name
-		var name_lbl = row.get_child(1) as Label
-		name_lbl.add_theme_color_override("font_color", Styler.QUALITY_COLORS[item_quality])
-		name_lbl.text = display_name
-		
-		_equipment_list.add_child(row)
 
-# Shared helper to create a visual row (Icon + Name + Right Text)
-func _create_loot_row(icon_key: String, right_text: String, right_color = null) -> HBoxContainer:
-	var row = HBoxContainer.new()
+# ------------------ Row Builders ------------------
+func _mk_stat_row(icon_key: String, label_text: String, value_text: String, value_color: Color) -> HBoxContainer:
+	var row := HBoxContainer.new()
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_theme_constant_override("separation", 8)
-	
-	# Icon
-	var icon = TextureRect.new()
-	var tex: Texture2D = ItemDB.ITEM_ICONS.get(icon_key, ItemDB.ITEM_ICONS.get("default_bag"))
-	icon.texture = tex
-	icon.custom_minimum_size = Vector2(40, 40)
+
+	if icon_key != "":
+		var icon := TextureRect.new()
+		icon.texture = ItemDB.ICONS.get(icon_key, null)
+		icon.custom_minimum_size = Vector2(24, 24)
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(icon)
+	else:
+		var spacer := Control.new()
+		spacer.custom_minimum_size = Vector2(24, 24)
+		row.add_child(spacer)
+
+	var lbl := Label.new()
+	lbl.text = label_text
+	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	Styler.style_name_label(lbl, COL_GOLD)
+	row.add_child(lbl)
+
+	var val := Label.new()
+	val.text = value_text
+	val.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	val.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	Styler.style_name_label(val, value_color)
+	row.add_child(val)
+
+	return row
+
+
+func _create_loot_row(icon_key: String, display_name: String, qty_text: String) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_theme_constant_override("separation", 8)
+
+	var icon := TextureRect.new()
+	icon.texture = ItemDB.ITEM_ICONS.get(icon_key, ItemDB.ITEM_ICONS.get("default_bag"))
+	icon.custom_minimum_size = Vector2(36, 36)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(icon)
 
-	# Name Label
-	var left := Label.new()
-	left.text = icon_key.capitalize().replace("_", " ")
-	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	row.add_child(left)
+	var name_lbl := Label.new()
+	name_lbl.text = display_name
+	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	Styler.style_name_label(name_lbl, Color.WHITE)
+	row.add_child(name_lbl)
 
-	# Quantity/Status Label
-	var right := Label.new()
-	right.text = right_text
-	right.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	right.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	if right_color:
-		right.add_theme_color_override("font_color", right_color)
-	row.add_child(right)
-	
+	var qty_lbl := Label.new()
+	qty_lbl.text = qty_text
+	qty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	qty_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	Styler.style_name_label(qty_lbl, COL_GOLD)
+	row.add_child(qty_lbl)
+
 	return row
+
+
+func _create_equip_row(icon_key: String, item_name: String, quality_name: String, ilvl, quality_color: Color) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_theme_constant_override("separation", 10)
+
+	var icon := TextureRect.new()
+	icon.texture = ItemDB.ITEM_ICONS.get(icon_key, ItemDB.ITEM_ICONS.get("default_bag"))
+	icon.custom_minimum_size = Vector2(44, 44)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(icon)
+
+	var info := VBoxContainer.new()
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info.alignment = BoxContainer.ALIGNMENT_CENTER
+	info.add_theme_constant_override("separation", 2)
+	row.add_child(info)
+
+	var name_lbl := Label.new()
+	name_lbl.text = item_name
+	name_lbl.add_theme_color_override("font_color", quality_color)
+	name_lbl.add_theme_font_size_override("font_size", 14)
+	info.add_child(name_lbl)
+
+	var sub_lbl := Label.new()
+	sub_lbl.text = "%s  ·  iLvl %s" % [quality_name, str(ilvl)]
+	sub_lbl.add_theme_color_override("font_color", COL_SUBTEXT)
+	sub_lbl.add_theme_font_size_override("font_size", 11)
+	info.add_child(sub_lbl)
+
+	return row
+
+
+# ------------------ Helpers ------------------
+func _mk_section_header(text: String) -> Label:
+	var lbl := Label.new()
+	lbl.text = text
+	lbl.add_theme_font_size_override("font_size", 16)
+	lbl.add_theme_color_override("font_color", Styler.GOLD_COLOR)
+	if "GROBOLT_FONT" in Styler:
+		lbl.add_theme_font_override("font", Styler.GROBOLT_FONT)
+	return lbl
+
+
+func _mk_separator() -> HSeparator:
+	var sep := HSeparator.new()
+	sep.add_theme_color_override("color", COL_SEPARATOR)
+	return sep
+
+
+func _format_resource_name(s: String) -> String:
+	var result := PackedStringArray()
+	for w in s.split("_"):
+		result.append(w.capitalize())
+	return " ".join(result)
+
+
+func _extract_icon_key(item_data: Dictionary) -> String:
+	var raw = item_data.get("item_icon", "")
+	if raw is Array and not raw.is_empty():
+		return str(raw[0])
+	if raw is String and raw != "":
+		return raw
+	return "chest_0"
+
+
+func _get_quality_name(q: int) -> String:
+	match q:
+		0: return "Poor"
+		1: return "Common"
+		2: return "Uncommon"
+		3: return "Rare"
+		4: return "Epic"
+		5: return "Legendary"
+		6: return "Mythic"
+	return "Common"
 
 
 func _on_close_pressed() -> void:

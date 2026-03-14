@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cdb80fe8p8jnb"
-path="res://.godot/imported/mage_pyroblast.png-771d65f268fee0cf855a0aadbd3f6f24.ctex"
+uid="uid://caya4i8m5vuti"
+path="res://.godot/imported/0.png-a04f921c516745359575c23c02ad6e4a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/skills/mage_pyroblast.png"
-dest_files=["res://.godot/imported/mage_pyroblast.png-771d65f268fee0cf855a0aadbd3f6f24.ctex"]
+source_file="res://assets/equipment/main_hand/axe/0.png"
+dest_files=["res://.godot/imported/0.png-a04f921c516745359575c23c02ad6e4a.ctex"]
 
 [params]
 

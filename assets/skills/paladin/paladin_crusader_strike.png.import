@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://di1hqk65lws02"
-path="res://.godot/imported/main_hand_0.png-66c4a2c9acc22a9d154a1a56037dad7b.ctex"
+uid="uid://vj8h5xujn822"
+path="res://.godot/imported/paladin_crusader_strike.png-d3aa1d375c1095f3637a5a7c02f94638.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/equipment/main_hand/main_hand_0.png"
-dest_files=["res://.godot/imported/main_hand_0.png-66c4a2c9acc22a9d154a1a56037dad7b.ctex"]
+source_file="res://assets/skills/paladin/paladin_crusader_strike.png"
+dest_files=["res://.godot/imported/paladin_crusader_strike.png-d3aa1d375c1095f3637a5a7c02f94638.ctex"]
 
 [params]
 

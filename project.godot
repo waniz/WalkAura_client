@@ -15,7 +15,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="WalkAura"
-config/version="0.2.0.138"
+config/version="0.2.1.146"
 run/main_scene="uid://dlfywtlps2ee4"
 config/features=PackedStringArray("4.6", "Mobile")
 boot_splash/bg_color=Color(0.14117648, 0.14117648, 0.14117648, 0.18039216)

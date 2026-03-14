@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://gmdl1jt3f2hv"]
+[gd_scene load_steps=7 format=3 uid="uid://gmdl1jt3f2hv"]
 
 [ext_resource type="PackedScene" uid="uid://btkqrwpy7ojlt" path="res://scenes/support_screens/character_hud.tscn" id="1_8dy8u"]
 [ext_resource type="PackedScene" uid="uid://caj4vm4x2p0am" path="res://scenes/support_screens/cheat_panel.tscn" id="2_g1adc"]
@@ -6,8 +6,24 @@
 [ext_resource type="PackedScene" uid="uid://c4op53aa1ck2j" path="res://scenes/support_screens/bottom_hud.tscn" id="4_8dy8u"]
 [ext_resource type="PackedScene" uid="uid://duiqfqme733ph" path="res://scenes/support_screens/map_hud.tscn" id="5_6fgtd"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_top_hud"]
+bg_color = Color(0.0706, 0.0549, 0.0392, 0.9725)
+border_color = Color(0.7059, 0.5490, 0.2353, 1.0)
+border_width_top = 0
+border_width_left = 0
+border_width_right = 0
+border_width_bottom = 2
+
 [node name="GlobalHud" type="CanvasLayer" unique_id=908821511]
 layer = 100
+
+[node name="TopHUDPanel" type="PanelContainer" parent="."]
+anchor_right = 1.0
+offset_bottom = 195.0
+grow_horizontal = 2
+grow_vertical = 1
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_top_hud")
 
 [node name="CharacterHUD" parent="." unique_id=1522707177 instance=ExtResource("1_8dy8u")]
 

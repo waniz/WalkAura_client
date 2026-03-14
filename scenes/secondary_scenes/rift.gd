@@ -6,7 +6,8 @@ const RIFTS := [
 	{"id": 2, "name": "Infernal Rift", "req_lvl": 5, "total_milestones": 10, "total_steps": 8000},
 ]
 
-const BATTLE_VIS = preload("res://scenes/secondary_scenes/rift_battle_visualization.gd")
+const BATTLE_VIS    = preload("res://scenes/secondary_scenes/rift_battle_visualization.gd")
+const FIGHT_LOG_VIS = preload("res://scenes/secondary_scenes/rift_fight_log_viewer.gd")
 
 var _selection_container: VBoxContainer
 var _active_container: VBoxContainer
@@ -19,6 +20,8 @@ var _fight_list: VBoxContainer
 var _battle_log_btn: Button
 var _cached_fights: Array = []
 var _battle_log_overlay: Control = null
+var _pending_fight_request: Dictionary = {}
+var _last_rift_instance_id: String = ""
 
 
 func _ready() -> void:
@@ -50,7 +53,7 @@ func _build_ui() -> void:
 	panel.offset_right = -24
 	panel.offset_top = 210
 	panel.offset_bottom = -150
-	Styler.style_panel_no_margins(panel, Color.from_rgba8(16, 18, 24, 245), Color.from_rgba8(255, 200, 66, 180))
+	Styler._apply_parchment_style(panel)
 	add_child(panel)
 
 	var margin := MarginContainer.new()
@@ -72,7 +75,9 @@ func _build_ui() -> void:
 	var title := Label.new()
 	title.text = "RIFT"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	Styler.style_title(title)
+	title.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
+	title.add_theme_font_size_override("font_size", 24)
+	title.add_theme_font_override("font", Styler.JANDA_FONT)
 	header.add_child(title)
 
 	var close_btn := Button.new()
@@ -103,7 +108,7 @@ func _build_ui() -> void:
 
 	var sel_title := Label.new()
 	sel_title.text = "Choose a Rift to Enter:"
-	Styler.style_name_label(sel_title, Color.from_rgba8(220, 200, 150))
+	Styler.style_name_label(sel_title, Styler.COLOR_GOLD)
 	_selection_container.add_child(sel_title)
 
 	var cards_hbox := HBoxContainer.new()
@@ -119,18 +124,29 @@ func _build_ui() -> void:
 	content_vbox.add_child(_active_container)
 
 	_rift_name_label = Label.new()
-	Styler.style_title(_rift_name_label)
+	_rift_name_label.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
+	_rift_name_label.add_theme_font_size_override("font_size", 22)
+	_rift_name_label.add_theme_font_override("font", Styler.JANDA_FONT)
 	_active_container.add_child(_rift_name_label)
 
 	_rift_lvl_label = Label.new()
-	Styler.style_name_label(_rift_lvl_label, Color.from_rgba8(160, 200, 240))
+	Styler.style_name_label(_rift_lvl_label, Styler.COLOR_GOLD)
 	_active_container.add_child(_rift_lvl_label)
 
-	# Progress bar
+	# Progress bar — transparent track on parchment
 	_progress_bar = ProgressBar.new()
 	_progress_bar.custom_minimum_size = Vector2(0, 32)
 	_progress_bar.show_percentage = false
-	Styler.style_bar(_progress_bar, Color.from_rgba8(80, 200, 120), Color.from_rgba8(30, 35, 50, 255))
+	var _pb_bg := StyleBoxFlat.new()
+	_pb_bg.bg_color = Color(0.0, 0.0, 0.0, 0.2)
+	_pb_bg.set_corner_radius_all(10)
+	_progress_bar.add_theme_stylebox_override("background", _pb_bg)
+	var _pb_fill := StyleBoxFlat.new()
+	_pb_fill.bg_color = Color.from_rgba8(80, 200, 120)
+	_pb_fill.shadow_color = Color(0, 0, 0, 0.25)
+	_pb_fill.shadow_size = 3
+	_pb_fill.set_corner_radius_all(10)
+	_progress_bar.add_theme_stylebox_override("fill", _pb_fill)
 	_active_container.add_child(_progress_bar)
 
 	# Milestone marker row (colored blocks, one per milestone)
@@ -140,7 +156,7 @@ func _build_ui() -> void:
 	_active_container.add_child(_milestone_row)
 
 	_steps_label = Label.new()
-	Styler.style_name_label(_steps_label, Color.from_rgba8(200, 220, 200))
+	Styler.style_name_label(_steps_label, Styler.COLOR_TEXT_DARK)
 	_active_container.add_child(_steps_label)
 
 	# Fight history header row
@@ -151,7 +167,7 @@ func _build_ui() -> void:
 	var fight_title := Label.new()
 	fight_title.text = "Fight History:"
 	fight_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	Styler.style_name_label(fight_title, Color.from_rgba8(180, 180, 180))
+	Styler.style_name_label(fight_title, Styler.COLOR_TEXT_DARK)
 	fight_header_row.add_child(fight_title)
 
 	var refresh_btn := Button.new()
@@ -201,7 +217,12 @@ func _build_ui() -> void:
 func _build_rift_card(cfg: Dictionary) -> PanelContainer:
 	var card := PanelContainer.new()
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	Styler.style_panel_no_margins(card, Color.from_rgba8(26, 28, 36, 255), Color.from_rgba8(100, 80, 40, 200))
+	var _csb := StyleBoxFlat.new()
+	_csb.bg_color     = Color(0.0, 0.0, 0.0, 0.06)
+	_csb.border_color = Color(0.0, 0.0, 0.0, 0.20)
+	_csb.set_border_width_all(1)
+	_csb.set_corner_radius_all(5)
+	card.add_theme_stylebox_override("panel", _csb)
 
 	var margin := MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 10)
@@ -214,29 +235,29 @@ func _build_rift_card(cfg: Dictionary) -> PanelContainer:
 	vbox.add_theme_constant_override("separation", 8)
 	margin.add_child(vbox)
 
-	# Image placeholder (replace ColorRect with TextureRect once art is ready)
+	# Image placeholder
 	var placeholder := ColorRect.new()
 	placeholder.custom_minimum_size = Vector2(0, 140)
 	placeholder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	placeholder.color = Color.from_rgba8(35, 45, 65, 255)
+	placeholder.color = Color(0.0, 0.0, 0.0, 0.08)
 	vbox.add_child(placeholder)
 
 	var name_lbl := Label.new()
 	name_lbl.text = cfg["name"]
 	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	Styler.style_name_label(name_lbl, Color.from_rgba8(255, 200, 66))
+	Styler.style_name_label(name_lbl, Styler.COLOR_TEXT_DARK)
 	vbox.add_child(name_lbl)
 
 	var req_lbl := Label.new()
 	req_lbl.text = "Req: Rift Lvl %d" % cfg["req_lvl"]
 	req_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	Styler.style_name_label(req_lbl, Color.from_rgba8(180, 180, 180))
+	Styler.style_name_label(req_lbl, Styler.COLOR_TEXT_DARK)
 	vbox.add_child(req_lbl)
 
 	var info_lbl := Label.new()
 	info_lbl.text = "%d steps / %d milestones" % [cfg["total_steps"], cfg["total_milestones"]]
 	info_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	Styler.style_name_label(info_lbl, Color.from_rgba8(140, 170, 140))
+	Styler.style_name_label(info_lbl, Styler.COLOR_TEXT_DARK)
 	vbox.add_child(info_lbl)
 
 	var rift_lvl: int = int(Account.rift_lvl) if Account.rift_lvl != null else 1
@@ -260,6 +281,16 @@ func _refresh() -> void:
 	var is_in_rift := rift_id > 0
 	_selection_container.visible = not is_in_rift
 	_active_container.visible = is_in_rift
+
+	var current_instance_id: String = str(Account.rift_instance_id) if Account.rift_instance_id != null else ""
+	if current_instance_id != _last_rift_instance_id:
+		_last_rift_instance_id = current_instance_id
+		_cached_fights = []
+		_battle_log_btn.disabled = true
+		for child in _fight_list.get_children():
+			child.queue_free()
+		_on_refresh_fights_pressed()
+
 	if is_in_rift:
 		_refresh_active_view()
 
@@ -297,7 +328,7 @@ func _refresh_active_view() -> void:
 		var marker := ColorRect.new()
 		marker.custom_minimum_size = Vector2(0, 16)
 		marker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		marker.color = Color.from_rgba8(100, 220, 100, 240) if i < m_idx else Color.from_rgba8(70, 80, 100, 180)
+		marker.color = Color.from_rgba8(60, 160, 80, 220) if i < m_idx else Color(0.0, 0.0, 0.0, 0.18)
 		_milestone_row.add_child(marker)
 
 
@@ -337,6 +368,15 @@ func _on_battle_log_pressed() -> void:
 	add_child(_battle_log_overlay)
 
 
+func _on_fight_row_pressed(fight: Dictionary) -> void:
+	var instance_id := str(Account.rift_instance_id) if Account.rift_instance_id != null else ""
+	var fight_uid   := str(fight.get("fight_uid", ""))
+	if instance_id.is_empty() or fight_uid.is_empty():
+		return
+	_pending_fight_request = fight
+	SignalManager.signal_RequestRiftFightLog.emit(instance_id, fight_uid)
+
+
 func _on_rift_fights_received(data) -> void:
 	for child in _fight_list.get_children():
 		child.queue_free()
@@ -359,12 +399,23 @@ func _on_rift_fights_received(data) -> void:
 		var hp_after: int = int(fight.get("player_hp_after", 0))
 		var result_color := Color.from_rgba8(100, 220, 100) if result else Color.from_rgba8(220, 80, 80)
 
-		var row := Label.new()
+		var row := Button.new()
 		row.text = "#%d: %s  %s  HP: %d→%d" % [
 			m_idx + 1, monster_id,
 			"WIN" if result else "LOSS",
 			hp_before, hp_after,
 		]
 		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		Styler.style_name_label(row, result_color)
+		row.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		Styler.style_button_small(row, result_color)
+		var fight_copy = fight.duplicate()
+		row.pressed.connect(func(): _on_fight_row_pressed(fight_copy))
 		_fight_list.add_child(row)
+
+	var fight_log = data.get("data", {}).get("fight_log")
+	if fight_log != null and not _pending_fight_request.is_empty():
+		var viewer := FIGHT_LOG_VIS.new()
+		viewer.fight_meta = _pending_fight_request
+		viewer.fight_log  = fight_log
+		viewer.tree_exited.connect(func(): _pending_fight_request = {}, CONNECT_ONE_SHOT)
+		add_child(viewer)

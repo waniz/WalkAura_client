@@ -49,12 +49,15 @@ func _on_pedometer_plugin_button_button_down() -> void:
 
 
 func _on_step_counter_android_update(data) -> void:
-	var delta = int(data["data"]["delta"])
+	var delta := int(data.get("data", {}).get("delta", 0))
 	if _android_plugin:
 		_android_plugin.getSteps(delta)
 
 
 func _total_steps_retrieved(json_text: String) -> void:
 	var data = JSON.parse_string(json_text)
+	if data == null:
+		printerr("CheatPanel: failed to parse steps JSON")
+		return
 	SignalManager.signal_StepsUpdatesAndroid.emit(data)
 	

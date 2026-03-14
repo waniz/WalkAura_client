@@ -125,6 +125,11 @@ var rift_instance_id
 var rift_lvl
 var rift_xp
 
+# travel statuses
+var travel_destination
+var travel_steps
+var travel_steps_max
+
 var variance
 var vit_crit_soften
 var spirit_healing_mult
