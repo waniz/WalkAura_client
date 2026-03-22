@@ -36,4 +36,5 @@ var activities_texts = {
 	6: "Fishing",
 	7: "Rift Explorer",
 	8: "Travelling",
+	9: "Enchanting",
 }
