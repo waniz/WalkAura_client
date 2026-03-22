@@ -92,7 +92,7 @@ func _ready() -> void:
 	_update_character_hud(true)
 
 
-func set_stats(hp_current: int, hp_max: int, mp_current: int, mp_max: int, shield_current: int, shield_max: int, xp_current: int, xp_max: int) -> void:
+func set_stats(hp_current: int, hp_max: int, mp_current: int, mp_max: int, shield_current: int, shield_max: int, _xp_current: int, _xp_max: int) -> void:
 	_set_bar(hp_bar, hp_label, hp_current, hp_max)
 	_set_bar(mp_bar, mp_label, mp_current, mp_max)
 

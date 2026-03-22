@@ -211,22 +211,22 @@ func clear() -> void:
 	# reset all script variables to their defaults
 	for p in get_property_list():
 		if p.usage & PROPERTY_USAGE_SCRIPT_VARIABLE != 0:
-			var name = p.name
+			var prop_name = p.name
 			# skip signals/constants/methods
-			if has_method(name):
+			if has_method(prop_name):
 				continue
-			if p.name == "raw_structures":
+			if prop_name == "raw_structures":
 				continue
 			# reset based on property type
 			match p.type:
 				TYPE_INT:
-					set(name, 0)
+					set(prop_name, 0)
 				TYPE_FLOAT:
-					set(name, 0.0)
+					set(prop_name, 0.0)
 				TYPE_STRING:
-					set(name, "")
+					set(prop_name, "")
 				_:
-					set(name, null)
+					set(prop_name, null)
 
 	# reset raw_structures dict values
 	raw_structures.all_server_skills = null
