@@ -9,19 +9,35 @@ var cryptoUtil = UserCrypto.new()
 
 var _is_connected = false
 
+# Part A: Credential storage
+var _saved_username: String = ""
+var _saved_password: String = ""
+var _was_authenticated: bool = false
+
+# Part B: Heartbeat constants and state
+const HEARTBEAT_INTERVAL := 15.0
+const HEARTBEAT_TIMEOUT := 10.0
+var _heartbeat_timer: float = 0.0
+var _heartbeat_pending: bool = false
+var _heartbeat_timeout_timer: float = 0.0
+var _connection_healthy: bool = true
+
+# Part C: Reconnection overlay
+var _reconnect_overlay: CanvasLayer = null
+
 func _ready() -> void:
-	
+
 	connect_to_server()
-	
+
 	SignalManager.signal_CreateUser.connect(_on_user_creating)
 	SignalManager.signal_LoginUser.connect(_on_user_login)
-	
+
 	SignalManager.signal_UserActivity.connect(_on_user_activity)
-	
+
 	SignalManager.signal_StepsUpdatesCheats.connect(_on_step_counter_cheat_update)
 	SignalManager.signal_StepsUpdatesAndroid.connect(_on_step_counter_android_update)
 	SignalManager.signal_StepsRequestLastTimestamp.connect(_on_step_counter_android_request_last_ts)
-	
+
 	SignalManager.signal_RequestInventory.connect(_on_inventory_request)
 	SignalManager.signal_UseItem.connect(_on_useitem_request)
 	SignalManager.signal_EquipItem.connect(_on_equip_request)
@@ -44,9 +60,9 @@ func _ready() -> void:
 func connect_to_server() -> void:
 	# --- FIX: Increase Buffer Size ---
 	# Default is often 64KB (65536). Let's set it to 10MB to be safe.
-	socket.inbound_buffer_size = 1 * 1024 * 1024 
+	socket.inbound_buffer_size = 1 * 1024 * 1024
 	# ---------------------------------
-	
+
 	var err = socket.connect_to_url(websocket_url)
 	if err != OK:
 		server_connector_message_bus.emit("[Client] ERROR: Cannot connect to server")
@@ -54,24 +70,115 @@ func connect_to_server() -> void:
 	else:
 		await get_tree().create_timer(1).timeout
 		server_connector_message_bus.emit("[Client] Connected to server ... ")
-		
+
 func _process(_delta: float) -> void:
 	socket.poll()
-	
+
 	var state = socket.get_ready_state()
 
 	if state == WebSocketPeer.STATE_OPEN:
-		_is_connected = true
+		if not _is_connected:
+			_is_connected = true
+			# Reset heartbeat state on fresh connection
+			_heartbeat_timer = 0.0
+			_heartbeat_pending = false
+			_heartbeat_timeout_timer = 0.0
+			# Auto-login if we were previously authenticated
+			if _was_authenticated and _saved_username != "" and _saved_password != "":
+				_auto_login()
+
 		while socket.get_available_packet_count():
-			server_connector_message_bus.emit(socket.get_packet().get_string_from_ascii())
-			
+			var raw_msg = socket.get_packet().get_string_from_ascii()
+			var parsed = JSON.parse_string(raw_msg)
+			if parsed != null and parsed.has("cmd") and parsed["cmd"] == "heartbeat_ack":
+				_heartbeat_pending = false
+				_heartbeat_timeout_timer = 0.0
+				if not _connection_healthy:
+					_connection_healthy = true
+					_hide_reconnect_overlay()
+					if _was_authenticated and _saved_username != "" and _saved_password != "":
+						_auto_login()
+			else:
+				server_connector_message_bus.emit(raw_msg)
+
+		# Heartbeat timer logic
+		_heartbeat_timer += _delta
+		if _heartbeat_timer >= HEARTBEAT_INTERVAL:
+			var hb_payload = JSON.stringify({"cmd": "heartbeat", "payload": {}})
+			socket.send_text(hb_payload)
+			_heartbeat_pending = true
+			_heartbeat_timer = 0.0
+
+		if _heartbeat_pending:
+			_heartbeat_timeout_timer += _delta
+			if _heartbeat_timeout_timer >= HEARTBEAT_TIMEOUT and _connection_healthy:
+				_connection_healthy = false
+				if _was_authenticated:
+					_show_reconnect_overlay()
+
 	elif state == WebSocketPeer.STATE_CLOSED:
 		if _is_connected:
 			_is_connected = false
+			# Reset heartbeat state
+			_heartbeat_pending = false
+			_heartbeat_timeout_timer = 0.0
+			_heartbeat_timer = 0.0
 			print("Disconnected. Code: %d, Reason: %s" % [socket.get_close_code(), socket.get_close_reason()])
+			if _was_authenticated:
+				_show_reconnect_overlay()
 
 			await get_tree().create_timer(3.0).timeout
 			connect_to_server()
+
+# Part C: Reconnection overlay methods
+func _show_reconnect_overlay() -> void:
+	if _reconnect_overlay != null:
+		return
+	_reconnect_overlay = CanvasLayer.new()
+	_reconnect_overlay.layer = 200
+	add_child(_reconnect_overlay)
+
+	var bg = ColorRect.new()
+	bg.color = Color(0, 0, 0, 0.7)
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_reconnect_overlay.add_child(bg)
+
+	var center = CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_reconnect_overlay.add_child(center)
+
+	var label = Label.new()
+	label.text = "Reconnecting..."
+	label.add_theme_font_override("font", Styler.QUADRAT_FONT)
+	label.add_theme_font_size_override("font_size", 24)
+	label.add_theme_color_override("font_color", Color(1.0, 0.78, 0.26))
+	center.add_child(label)
+
+func _hide_reconnect_overlay() -> void:
+	if _reconnect_overlay:
+		_reconnect_overlay.queue_free()
+		_reconnect_overlay = null
+
+# Part D: Auto-login after reconnect
+func _auto_login() -> void:
+	if _saved_username == "" or _saved_password == "":
+		return
+	_on_user_login(_saved_username, _saved_password)
+	var login_ok = await AccountManager.signal_LoginResult
+	var data_ok = await AccountManager.signal_AccountDataReceived
+	if login_ok and data_ok:
+		_connection_healthy = true
+		_hide_reconnect_overlay()
+	else:
+		clear_credentials()
+		_hide_reconnect_overlay()
+		SceneManage.goto("res://scenes/login_screen/login_scene.tscn")
+
+# Part A: Credential helper methods
+func clear_credentials() -> void:
+	_saved_username = ""
+	_saved_password = ""
+	_was_authenticated = false
 
 # ################################
 # """Signal compilator section"""
@@ -88,17 +195,22 @@ func _on_user_creating(user, password) -> void:
 	server_connector_message_bus.emit("[Client] Requesting user creating...")
 
 func _on_user_login(user, password) -> void:
+	# Part A: Save credentials on login
+	_saved_username = user
+	_saved_password = password
+	_was_authenticated = true
+
 	var payload := {
 		"cmd": "login_user",
 		"payload": {
 			"username": user,
 			"password": password,
 		}
-	}	
+	}
 	var server_request = JSON.stringify(payload)
 	socket.send_text(server_request)
 	server_connector_message_bus.emit("[Client] Requesting login...")
-	
+
 func _on_user_activity(activity, activity_site, action) -> void:
 	var payload := {
 		"cmd": "activity",
@@ -107,7 +219,7 @@ func _on_user_activity(activity, activity_site, action) -> void:
 			"activity_site": activity_site,
 			"action": action,
 		}
-	}	
+	}
 	var server_request = JSON.stringify(payload)
 	socket.send_text(server_request)
 	server_connector_message_bus.emit("[Client] Requesting activity: {0}, action: {1}".format([activity, action]))
@@ -126,7 +238,7 @@ func _on_step_counter_cheat_update(amount) -> void:
 func _on_step_counter_android_request_last_ts(is_requested) -> void:
 	if not is_requested:
 		return
-	
+
 	var payload := {
 		"cmd": "steps_request_last_ts",
 		"payload": {
@@ -136,7 +248,7 @@ func _on_step_counter_android_request_last_ts(is_requested) -> void:
 	var server_request = JSON.stringify(payload)
 	socket.send_text(server_request)
 	server_connector_message_bus.emit("[Client] Sending android steps request last ts")
-		
+
 func _on_step_counter_android_update(data) -> void:
 	var payload := {
 		"cmd": "steps_update_android",
@@ -158,7 +270,7 @@ func _on_inventory_request(action) -> void:
 	var server_request = JSON.stringify(payload)
 	socket.send_text(server_request)
 	server_connector_message_bus.emit("[Client] Request Inventory: {0}".format([action]))
-	
+
 func _on_useitem_request(item_to_use, qty: int) -> void:
 	var payload := {
 		"cmd": "inventory",
@@ -196,7 +308,7 @@ func _on_unequip_request(_slot_name) -> void:
 	var server_request = JSON.stringify(payload)
 	socket.send_text(server_request)
 	server_connector_message_bus.emit("[Client] Request to Unequip item from slot: {0}".format([_slot_name]))
-	
+
 func _on_sell_item_request(item_to_sell) -> void:
 	var payload := {
 		"cmd": "inventory",
@@ -208,7 +320,7 @@ func _on_sell_item_request(item_to_sell) -> void:
 	var server_request = JSON.stringify(payload)
 	socket.send_text(server_request)
 	server_connector_message_bus.emit("[Client] Request to Sell item {0}".format([item_to_sell]))
-	
+
 func _on_disenchant_item_request(item_uid: String) -> void:
 	var payload := {
 		"cmd": "inventory",
@@ -243,7 +355,7 @@ func _on_equip_skill_request(idx, skill_id):
 	var server_request = JSON.stringify(payload)
 	socket.send_text(server_request)
 	server_connector_message_bus.emit("[Client] Request to Equip skill {0}".format([skill_id]))
-	
+
 func _on_unequip_skill_request(idx):
 	var payload := {
 		"cmd": "skills",
