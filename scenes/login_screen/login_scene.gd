@@ -51,16 +51,29 @@ func _on_child_closed() -> void:
 	child = null
 
 func _on_button_login_button_down() -> void:
-	button_login.disabled = true
 	status_label.text = ""
-	
+	if username_login_edit.text.strip_edges() == "" or password_login_edit.text == "":
+		status_label.text = "Username and password are required"
+		return
+	button_login.disabled = true
+
+	var login_ok := false
+	var login_error := ""
+	AccountManager.signal_LoginResult.connect(func(ok: bool, error: String):
+		login_ok = ok
+		login_error = error
+	, CONNECT_ONE_SHOT)
+	AccountManager.signal_AccountDataReceived.connect(func(_result):
+		button_login.disabled = false
+		if login_ok:
+			SceneManage.goto("res://scenes/app_scenes_handler.tscn")
+			SceneManage.reload()
+		else:
+			match login_error:
+				"invalid_credentials":
+					status_label.text = "Invalid username or password"
+				_:
+					status_label.text = "Login failed: " + login_error
+	, CONNECT_ONE_SHOT)
+
 	SignalManager.signal_LoginUser.emit(username_login_edit.text, password_login_edit.text)
-	
-	var login_result = await AccountManager.signal_LoginResult
-	var login_data_result = await AccountManager.signal_AccountDataReceived
-	button_login.disabled = false
-	if login_result and login_data_result:
-		SceneManage.goto("res://scenes/app_scenes_handler.tscn")
-		SceneManage.reload()
-	else:
-		status_label.text = "Incorrect login data"

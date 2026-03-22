@@ -172,7 +172,7 @@ func _auto_login() -> void:
 	# Connect callbacks BEFORE sending so we don't miss signals
 	# (server may respond in the same frame, both signals fire back-to-back)
 	var login_ok := false
-	AccountManager.signal_LoginResult.connect(func(result):
+	AccountManager.signal_LoginResult.connect(func(result, _error):
 		login_ok = result
 	, CONNECT_ONE_SHOT)
 	AccountManager.signal_AccountDataReceived.connect(func(_result):

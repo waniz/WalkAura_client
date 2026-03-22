@@ -1,7 +1,8 @@
 extends Node
 
-signal signal_LoginResult(result)
+signal signal_LoginResult(ok: bool, error: String)
 signal signal_AccountDataReceived(result)
+signal signal_CreateUserResult(ok: bool, error: String)
 
 signal signal_LoginParamsReceived(data)
 signal signal_UserStepLastTSReceived(data)
@@ -34,36 +35,53 @@ func parse_message(message):
 		return
 
 	# router
-	if json.data.cmd == "login_user":
+	var cmd: String = json.data.cmd
+	if cmd == "login_user":
 		check_login_result(json.data)
-	elif json.data.cmd == "login_params":
+	elif cmd == "create_user":
+		signal_CreateUserResult.emit(true, "")
+	elif cmd == "login_params":
 		get_login_params(json.data)
-	elif json.data.cmd == "account_attributes":
+	elif cmd == "account_attributes":
 		get_account_attrs(json.data)
-	elif json.data.cmd == "_handle_user_steps_last_ts":
+	elif cmd == "_handle_user_steps_last_ts":
 		update_account_steps(json.data)
-	elif json.data.cmd == "activity_progress":
+	elif cmd == "activity_progress":
 		show_activity_progress(json.data)
-	elif json.data.cmd == "inventory":
+	elif cmd == "inventory":
 		update_inventory(json.data)
-	elif json.data.cmd == "all_skills_list":
+	elif cmd == "all_skills_list":
 		update_game_skills(json.data)
-	elif json.data.cmd == "skills_update":
+	elif cmd == "skills_update":
 		update_skills(json.data)
-	elif json.data.cmd == "rift_fights":
+	elif cmd == "rift_fights":
 		update_rift_fights(json.data)
-	elif json.data.cmd == "disenchant_result":
+	elif cmd == "disenchant_result":
 		handle_disenchant_result(json.data)
-	elif json.data.cmd == "profession_info":
+	elif cmd == "profession_info":
 		handle_profession_info(json.data)
+	elif cmd.begins_with("error:"):
+		_handle_server_error(json.data)
 		
 
 # router handlers
 func check_login_result(json_msg):
 	if json_msg.ok == true:
-		signal_LoginResult.emit(true)
+		signal_LoginResult.emit(true, "")
 	else:
-		signal_LoginResult.emit(false)
+		var err: String = json_msg.get("error", "unknown")
+		signal_LoginResult.emit(false, err)
+		signal_AccountDataReceived.emit(true)
+
+
+func _handle_server_error(json_msg) -> void:
+	var data = json_msg.get("data", {})
+	var code: String = data.get("code", "")
+	var message: String = data.get("message", "Unknown error")
+	if code == "create_user_failed" or (code == "bad_request" and "password_hash" in message):
+		signal_CreateUserResult.emit(false, message)
+	elif code == "login_failed" or (code == "bad_request" and "password are" in message):
+		signal_LoginResult.emit(false, message)
 		signal_AccountDataReceived.emit(true)
 		
 func get_login_params(data):
