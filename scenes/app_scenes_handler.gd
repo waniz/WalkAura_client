@@ -124,7 +124,7 @@ func _layout_pages() -> void:
 		if c is Control:
 			var cc := c as Control
 			cc.custom_minimum_size = size
-			cc.size = size
+			cc.set_deferred("size", size)
 			cc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			cc.size_flags_vertical   = Control.SIZE_EXPAND_FILL
 			cc.position = Vector2(i * size.x, 0)

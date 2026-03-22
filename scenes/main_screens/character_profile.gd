@@ -515,27 +515,27 @@ func _make_mini_card(stat_name: String, lvl: int, activity_exp: int, accent: Col
 
 	return panel
 
-func _make_steps_card(name: String, value_in: String, accent: Color) -> Control:
+func _make_steps_card(label_text: String, value_in: String, accent: Color) -> Control:
 	var v: int = int(value_in)
-	
+
 	# --- card container ---
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(120, 60)
 	panel.add_theme_stylebox_override("panel", Styler.card_box())
-	
+
 	var vb := VBoxContainer.new()
 	vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vb.size_flags_vertical   = Control.SIZE_EXPAND_FILL
 	panel.add_child(vb)
-	
+
 	# --- first line: name + value ---
 	var hb := HBoxContainer.new()
 	hb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hb.alignment = BoxContainer.ALIGNMENT_CENTER
 	vb.add_child(hb)
-		
+
 	var n_lbl := Label.new()
-	n_lbl.text = name
+	n_lbl.text = label_text
 	n_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	n_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 0.85))
 	n_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
@@ -551,7 +551,7 @@ func _make_steps_card(name: String, value_in: String, accent: Color) -> Control:
 
 	return panel
 
-func _make_steps_card_with_icon(name: String, value_in: String, accent: Color) -> Control:
+func _make_steps_card_with_icon(label_text: String, value_in: String, accent: Color) -> Control:
 	var v: int = int(value_in)
 	
 	# --- card container ---
@@ -581,12 +581,12 @@ func _make_steps_card_with_icon(name: String, value_in: String, accent: Color) -
 	hb.add_child(icon)
 	
 	var n_lbl := Label.new()
-	n_lbl.text = name
+	n_lbl.text = label_text
 	n_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	n_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 0.85))
 	n_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	hb.add_child(n_lbl)
-		
+
 	var v_lbl := Label.new()
 	v_lbl.text = str(v)
 	v_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -597,7 +597,7 @@ func _make_steps_card_with_icon(name: String, value_in: String, accent: Color) -
 
 	return panel
 
-func _make_row(name: String, value: String, percent_: String, accent: Color) -> Control:
+func _make_row(label_text: String, value: String, percent_: String, accent: Color) -> Control:
 	var hb := HBoxContainer.new()
 	hb.custom_minimum_size = Vector2(36, 36)
 	hb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -636,17 +636,17 @@ func _make_row(name: String, value: String, percent_: String, accent: Color) -> 
 		"Versatility Rating": "versatility",
 	}
 
-	icon.texture = ItemDB.get_icon(icon_key.get(name))
+	icon.texture = ItemDB.get_icon(icon_key.get(label_text))
 	hb.add_child(icon)
 
 	var name_lbl := Label.new()
-	name_lbl.text = name
+	name_lbl.text = label_text
 	name_lbl.add_theme_font_size_override("font_size", 14)
 	name_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	var val_lbl := Label.new()
-	if percent_ and name not in ["Physical ATK", "Magic ATK"]:
+	if percent_ and label_text not in ["Physical ATK", "Magic ATK"]:
 		val_lbl.text = value + " ({0}%)".format([float(percent_) * 100])
 	else:
 		val_lbl.text = value

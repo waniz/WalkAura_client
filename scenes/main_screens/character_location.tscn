@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dyrjw7qne5af5"]
 
-[ext_resource type="Script" uid="uid://cna5fks56fogn" path="res://scenes/main_screens/character_location.gd" id="1_23ukg"]
-[ext_resource type="Texture2D" uid="uid://5sfb8p5aidcv" path="res://assets/background/locations/location_1.png" id="2_aaoyo"]
+[ext_resource type="Script" uid="uid://buq41o2qsv1ul" path="res://scenes/main_screens/character_location.gd" id="1_23ukg"]
+[ext_resource type="Texture2D" path="res://assets/background/locations/location_1.png" id="2_aaoyo"]
 
 [node name="Character_Location" type="Control"]
 clip_contents = true
