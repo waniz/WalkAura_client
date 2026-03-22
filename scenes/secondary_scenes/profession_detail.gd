@@ -2,8 +2,10 @@ extends Control
 
 const ACTIVITY_ALCHEMY = 2
 const ACTIVITY_ENCHANTING = 9
+const CONFIRMATION_DIALOG = preload("res://scenes/secondary_scenes/confirmation_dialog.tscn")
 
 var _profession_name: String = ""
+var _confirm_dialog: Control = null
 var _loading_label: Label
 var _xp_bar: ProgressBar
 var _xp_pct_label: Label
@@ -642,15 +644,30 @@ func _build_recipe_card(recipe: Dictionary) -> PanelContainer:
 			craft_btn.text = "CRAFT"
 			Styler.style_button_small(craft_btn, Color.from_rgba8(60, 130, 70))
 			var rid: String = recipe.get("recipe_id", "")
-			craft_btn.pressed.connect(func(): _on_craft_pressed(rid))
+			var rname: String = recipe.get("name", "Unknown")
+			craft_btn.pressed.connect(func(): _on_craft_pressed(rid, rname))
 		vbox.add_child(craft_btn)
 
 	return panel
 
 
-func _on_craft_pressed(recipe_id: String) -> void:
+func _on_craft_pressed(recipe_id: String, recipe_name: String) -> void:
+	if _confirm_dialog and is_instance_valid(_confirm_dialog):
+		return
 	var act = ACTIVITY_ENCHANTING if _profession_name == "enchanting" else ACTIVITY_ALCHEMY
-	SignalManager.signal_StartCraftActivity.emit(act, Account.location, recipe_id)
+	var text: String
+	if Account.activity:
+		var current_name: String = GameTextEn.activities_texts.get(Account.activity, "Activity")
+		text = "Stop %s and Craft %s?" % [current_name, recipe_name]
+	else:
+		text = "Craft %s?" % recipe_name
+	_confirm_dialog = CONFIRMATION_DIALOG.instantiate()
+	_confirm_dialog.setup(text)
+	add_child(_confirm_dialog)
+	_confirm_dialog.confirmed.connect(func():
+		SignalManager.signal_StartCraftActivity.emit(act, Account.location, recipe_id)
+	)
+	_confirm_dialog.tree_exited.connect(func(): _confirm_dialog = null, CONNECT_ONE_SHOT)
 
 
 func _on_stop_craft() -> void:
