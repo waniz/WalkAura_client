@@ -332,12 +332,12 @@ func _build_herbalism_content(data: Dictionary) -> void:
 	left_vbox.add_child(steps_lbl)
 
 	var cycles_lbl = Label.new()
-	cycles_lbl.text = "Cycles: %d" % int(data.get("activity_cycles", 0))
+	cycles_lbl.text = "Actions: %d" % int(data.get("activity_cycles", 0))
 	Styler.style_parchment_label(cycles_lbl, Styler.COLOR_TEXT_DARK)
 	left_vbox.add_child(cycles_lbl)
 
 	var spc_lbl = Label.new()
-	spc_lbl.text = "Steps/cycle: %d" % int(data.get("base_steps", 0))
+	spc_lbl.text = "Steps per action: %d" % int(data.get("base_steps", 0))
 	Styler.style_parchment_label(spc_lbl, Styler.COLOR_TEXT_DARK)
 	left_vbox.add_child(spc_lbl)
 
