@@ -506,7 +506,7 @@ func _make_mini_card(stat_name: String, lvl: int, activity_exp: int, accent: Col
 		"Rift Explorer": "rift",
 	}
 	var prof_key: String = prof_key_map.get(stat_name, "")
-	if prof_key in ["herbalism", "alchemy"]:
+	if prof_key in ["herbalism", "alchemy", "enchanting"]:
 		panel.mouse_filter = Control.MOUSE_FILTER_STOP
 		panel.gui_input.connect(func(event: InputEvent):
 			if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
