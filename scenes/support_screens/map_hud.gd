@@ -24,6 +24,9 @@ const WHEEL_STEP := 1.05   # zoom factor per mouse-wheel tick
 var player_pos_ratio: Vector2 = Vector2(0.33, 0.42)
 var map_texture: Texture2D = load("res://assets/world_map_v1.png")
 
+const CONFIRMATION_DIALOG = preload("res://scenes/secondary_scenes/confirmation_dialog.tscn")
+var _confirm_dialog: Control = null
+
 var _tooltip_panel: PanelContainer = null
 var _tooltip_label: Label = null
 var _big_player_marker: TextureRect = null
@@ -379,7 +382,22 @@ func _location_to_map_ratio(location_id: int) -> Vector2:
 func _on_waypoint_pressed(waypoint_id: String) -> void:
 	var location_id: int = ItemDB.WAYPOINT_LOCATION_IDS.get(waypoint_id, -1)
 	if location_id == -1:
-		return  # safety: waypoint not mapped to a server location
-	full_map_overlay.visible = false
-	_hide_tooltip()
-	SignalManager.signal_TravelRequest.emit(location_id)
+		return
+	if _confirm_dialog and is_instance_valid(_confirm_dialog):
+		return
+	var location_name: String = ItemDB.LOCATION_NAMES.get(location_id, "Unknown")
+	var text: String
+	if Account.activity:
+		var current_name: String = GameTextEn.activities_texts.get(Account.activity, "Activity")
+		text = "Stop %s and Travel to %s?" % [current_name, location_name]
+	else:
+		text = "Travel to %s?" % location_name
+	_confirm_dialog = CONFIRMATION_DIALOG.instantiate()
+	_confirm_dialog.setup(text)
+	add_child(_confirm_dialog)
+	_confirm_dialog.confirmed.connect(func():
+		full_map_overlay.visible = false
+		_hide_tooltip()
+		SignalManager.signal_TravelRequest.emit(location_id)
+	)
+	_confirm_dialog.tree_exited.connect(func(): _confirm_dialog = null, CONNECT_ONE_SHOT)
