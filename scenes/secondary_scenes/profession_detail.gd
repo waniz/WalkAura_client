@@ -132,7 +132,7 @@ func _build_ui() -> void:
 	_xp_pct_label.text = "0%"
 	_xp_pct_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_xp_pct_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_xp_pct_label.add_theme_font_size_override("font_size", 12)
+	_xp_pct_label.add_theme_font_size_override("font_size", 15)
 	_xp_pct_label.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	_xp_pct_label.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 	_xp_pct_label.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -409,7 +409,7 @@ func _build_herb_row(herb: Dictionary, loot_counts: Dictionary = {}) -> PanelCon
 	var name_lbl = Label.new()
 	name_lbl.text = str(herb.get("name", "")).replace("_", " ").capitalize()
 	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	name_lbl.add_theme_font_size_override("font_size", 14)
+	name_lbl.add_theme_font_size_override("font_size", 15)
 	name_lbl.add_theme_color_override("font_color", quality_color)
 	name_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	hbox.add_child(name_lbl)
@@ -419,7 +419,7 @@ func _build_herb_row(herb: Dictionary, loot_counts: Dictionary = {}) -> PanelCon
 	var times_looted: int = int(loot_counts.get(herb_uid, 0))
 	var count_lbl = Label.new()
 	count_lbl.text = "x%d" % times_looted
-	count_lbl.add_theme_font_size_override("font_size", 12)
+	count_lbl.add_theme_font_size_override("font_size", 15)
 	count_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 	count_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	hbox.add_child(count_lbl)
@@ -427,7 +427,7 @@ func _build_herb_row(herb: Dictionary, loot_counts: Dictionary = {}) -> PanelCon
 	# Drop chance (2 decimal places)
 	var pct_lbl = Label.new()
 	pct_lbl.text = "%.2f%%" % float(herb.get("drop_pct", 0))
-	pct_lbl.add_theme_font_size_override("font_size", 12)
+	pct_lbl.add_theme_font_size_override("font_size", 15)
 	pct_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 	pct_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	hbox.add_child(pct_lbl)
@@ -546,7 +546,7 @@ func _build_recipe_card(recipe: Dictionary) -> PanelContainer:
 	name_lbl.text = recipe.get("name", "Unknown")
 	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var name_color = Styler.COLOR_TEXT_DARK if unlocked else Color(0.5, 0.5, 0.5)
-	name_lbl.add_theme_font_size_override("font_size", 15)
+	name_lbl.add_theme_font_size_override("font_size", 18)
 	name_lbl.add_theme_color_override("font_color", name_color)
 	name_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	header_hbox.add_child(name_lbl)
@@ -554,7 +554,7 @@ func _build_recipe_card(recipe: Dictionary) -> PanelContainer:
 	if not unlocked:
 		var lock_lbl = Label.new()
 		lock_lbl.text = "Lvl %d" % int(recipe.get("req_level", 0))
-		lock_lbl.add_theme_font_size_override("font_size", 12)
+		lock_lbl.add_theme_font_size_override("font_size", 15)
 		lock_lbl.add_theme_color_override("font_color", Color.from_rgba8(200, 80, 80))
 		lock_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 		header_hbox.add_child(lock_lbl)
@@ -566,7 +566,7 @@ func _build_recipe_card(recipe: Dictionary) -> PanelContainer:
 
 	var ing_label = Label.new()
 	ing_label.text = "Needs:"
-	ing_label.add_theme_font_size_override("font_size", 11)
+	ing_label.add_theme_font_size_override("font_size", 15)
 	ing_label.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 	ing_label.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	ing_hbox.add_child(ing_label)
@@ -589,7 +589,7 @@ func _build_recipe_card(recipe: Dictionary) -> PanelContainer:
 
 		var ing_name_lbl = Label.new()
 		ing_name_lbl.text = str(ing.get("name", "")).replace("_", " ").capitalize()
-		ing_name_lbl.add_theme_font_size_override("font_size", 11)
+		ing_name_lbl.add_theme_font_size_override("font_size", 15)
 		ing_name_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 		ing_name_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 		ing_item.add_child(ing_name_lbl)
@@ -599,7 +599,7 @@ func _build_recipe_card(recipe: Dictionary) -> PanelContainer:
 		var qty_color = Color.from_rgba8(60, 160, 80) if qty_have >= qty_need else Color.from_rgba8(200, 80, 80)
 		var qty_lbl = Label.new()
 		qty_lbl.text = "%d/%d" % [qty_have, qty_need]
-		qty_lbl.add_theme_font_size_override("font_size", 11)
+		qty_lbl.add_theme_font_size_override("font_size", 15)
 		qty_lbl.add_theme_color_override("font_color", qty_color)
 		qty_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 		ing_item.add_child(qty_lbl)
@@ -612,14 +612,14 @@ func _build_recipe_card(recipe: Dictionary) -> PanelContainer:
 	var out_lbl = Label.new()
 	out_lbl.text = "Makes: %dx %s" % [int(recipe.get("output_qty", 1)), recipe.get("output_name", "?")]
 	out_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	out_lbl.add_theme_font_size_override("font_size", 11)
+	out_lbl.add_theme_font_size_override("font_size", 15)
 	out_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 	out_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	info_hbox.add_child(out_lbl)
 
 	var steps_lbl = Label.new()
 	steps_lbl.text = "%d steps  %d XP" % [int(recipe.get("base_steps", 0)), int(recipe.get("base_xp", 0))]
-	steps_lbl.add_theme_font_size_override("font_size", 11)
+	steps_lbl.add_theme_font_size_override("font_size", 15)
 	steps_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 	steps_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	info_hbox.add_child(steps_lbl)
@@ -632,7 +632,7 @@ func _build_recipe_card(recipe: Dictionary) -> PanelContainer:
 			effects_parts.append("%s: +%s" % [eff_name, str(effects[eff_name])])
 		var eff_lbl = Label.new()
 		eff_lbl.text = "  ".join(effects_parts)
-		eff_lbl.add_theme_font_size_override("font_size", 11)
+		eff_lbl.add_theme_font_size_override("font_size", 15)
 		eff_lbl.add_theme_color_override("font_color", Color.from_rgba8(60, 200, 80))
 		eff_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 		vbox.add_child(eff_lbl)
