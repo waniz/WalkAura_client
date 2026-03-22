@@ -30,6 +30,7 @@ var _btn_equip: Button
 var _btn_equip_slot2: Button
 var _btn_sell: Button
 var _btn_fill_max: Button
+var _btn_disenchant: Button
 
 # Data
 var _def: Dictionary = {}
@@ -104,6 +105,7 @@ func _setup_header_area() -> void:
 	_icon_rect = TextureRect.new()
 	_icon_rect.custom_minimum_size = icon_size
 	_icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_icon_border.add_child(_icon_rect)
 	header_hbox.add_child(_icon_border)
 
@@ -148,6 +150,7 @@ func _setup_footer_area() -> void:
 	_btn_equip_slot2 = _create_button("Equip Slot 2", Color(0.2, 0.8, 0.2))
 	_btn_sell = _create_button("Sell", Color(1.0, 0.85, 0.0))
 	_btn_fill_max = _create_button("Fill to Max", Color(0.2, 0.85, 0.5))
+	_btn_disenchant = _create_button("Disenchant", Color(0.65, 0.3, 0.9))
 	
 # --- Main Data Function ---
 func set_data(item_def: Dictionary, qty: int = 1, tooltip_source = "inventory",
@@ -166,7 +169,7 @@ func set_data(item_def: Dictionary, qty: int = 1, tooltip_source = "inventory",
 	_lbl_title.modulate = q_color
 	
 	# Assumes your item_def has a key "icon" with the full path like "res://icons/sword.png"
-	_icon_rect.texture = ItemDB.ITEM_ICONS.get(_def["item_icon"], null)
+	_icon_rect.texture = ItemDB.get_item_icon(_def["item_icon"], null)
 	
 	# Update Icon border color
 	var ib_style = _icon_border.get_theme_stylebox("panel")
@@ -269,7 +272,22 @@ func _rebuild_footer(item_def: Dictionary) -> void:
 		var l = _create_label_simple(text_color_dark)
 		l.text = "Req Lv: %d" % req_lvl
 		_footer_container.add_child(l)
-		
+
+	# Attribute requirements (green if met, red if not)
+	var reqs = item_def.get("requirements", {})
+	if not reqs.is_empty():
+		var req_header := _create_label_simple(Color.BLACK)
+		req_header.text = "Requirements:"
+		_footer_container.add_child(req_header)
+		for stat_name in reqs:
+			var required_val: int = int(reqs[stat_name])
+			var player_val: int = _get_player_stat(stat_name)
+			var met: bool = player_val >= required_val
+			var color := Color(0.15, 0.65, 0.15) if met else Color(0.85, 0.15, 0.15)
+			var l := _create_label_simple(color)
+			l.text = "  %s: %d  (you: %d)" % [stat_name, required_val, player_val]
+			_footer_container.add_child(l)
+
 	# Price
 	var price = item_def.get("price", 0)
 	if _source == "inventory" and price > 0:
@@ -395,6 +413,17 @@ func _update_buttons_state() -> void:
 		if not _btn_sell.pressed.is_connected(_on_sell_pressed):
 			_btn_sell.pressed.connect(_on_sell_pressed)
 
+	var _JEWELRY_SLOTS = ["ring", "ring_left", "ring_right", "trinket", "trinket_left", "trinket_right", "neck"]
+	var _slot = str(_def.get("slot_type", ""))
+	var _is_disenchantable = (
+		_source == "inventory"
+		and _def.get("category", "") == "equipment"
+		and _slot not in _JEWELRY_SLOTS
+	)
+	_btn_disenchant.visible = _is_disenchantable
+	if _is_disenchantable and not _btn_disenchant.pressed.is_connected(_on_disenchant_pressed):
+		_btn_disenchant.pressed.connect(_on_disenchant_pressed)
+
 func _get_safe_int(data: Dictionary, key: String) -> int:
 	var val = data.get(key, 0)
 	
@@ -440,6 +469,9 @@ func _on_use_pressed():
 func _on_sell_pressed():
 	SignalManager.signal_SellItem.emit(_def["item_uid"])
 
+func _on_disenchant_pressed():
+	SignalManager.signal_DisenchantItem.emit(_def["item_uid"])
+
 func _on_unequip_pressed(): 
 	SignalManager.signal_UnequipItem.emit(_slot_name)
 
@@ -461,6 +493,13 @@ func _on_fill_max_pressed():
 	var qty := _calc_fill_qty()
 	if qty > 0:
 		SignalManager.signal_UseItem.emit(_def["item_uid"], qty)
+
+func _get_player_stat(stat_name: String) -> int:
+	match stat_name:
+		"Strength":  return int(Account.str)
+		"Agility":   return int(Account.agi)
+		"Intellect": return int(Account.int_stat)
+	return 0
 
 func _calc_fill_qty() -> int:
 	var attrs: Dictionary = _def.get("primary_attributes", {})

@@ -1,19 +1,32 @@
-[gd_scene load_steps=7 format=3 uid="uid://btkqrwpy7ojlt"]
+[gd_scene format=3 uid="uid://btkqrwpy7ojlt"]
 
-[ext_resource type="Shader" uid="uid://bnw7hvx23mw6m" path="res://shaders/avatar_shader.gdshader" id="1_acak7"]
-[ext_resource type="Script" uid="uid://b4xf2tlt68irp" path="res://scenes/support_screens/character_hud.gd" id="1_rye7s"]
-[ext_resource type="Texture2D" uid="uid://bkj538chw6wh2" path="res://assets/character_faces/pirat.png" id="1_v2ojc"]
+[ext_resource type="Script" uid="uid://clcm53sb76wyu" path="res://scenes/support_screens/character_hud.gd" id="1_rye7s"]
+[ext_resource type="Texture2D" uid="uid://bkj538chw6wh2" path="res://assets/avatars/pirat.png" id="1_v2ojc"]
 [ext_resource type="FontFile" uid="uid://gcygusgobosn" path="res://assets/fonts/janda.ttf" id="4_xi8vd"]
 [ext_resource type="FontFile" uid="uid://ckc03u8qer62y" path="res://assets/fonts/quadrat_regular.ttf" id="5_rptoq"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_acak7"]
-shader = ExtResource("1_acak7")
-shader_parameter/rect_size = Vector2(128, 128)
-shader_parameter/border_color = Color(1, 1, 1, 1)
-shader_parameter/border_px = 6.0
-shader_parameter/feather_px = 2.0
+[sub_resource type="Shader" id="Shader_round"]
+code = "shader_type canvas_item;
 
-[node name="CharacterHUD" type="Control"]
+uniform float radius : hint_range(0.0, 0.5) = 0.19;
+
+void fragment() {
+	vec2 uv = UV;
+	vec2 half_size = vec2(0.5);
+	vec2 center = abs(uv - half_size);
+	vec2 corner = center - half_size + vec2(radius);
+	float dist = length(max(corner, 0.0));
+	float alpha = 1.0 - smoothstep(radius - 0.01, radius, dist);
+	COLOR = texture(TEXTURE, uv);
+	COLOR.a *= alpha;
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_round"]
+shader = SubResource("Shader_round")
+shader_parameter/radius = 0.23
+
+[node name="CharacterHUD" type="Control" unique_id=1756609626]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -22,9 +35,13 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_rye7s")
 
-[node name="Avatar" type="TextureRect" parent="."]
-material = SubResource("ShaderMaterial_acak7")
-layout_mode = 0
+[node name="Avatar" type="TextureRect" parent="." unique_id=1452565100]
+material = SubResource("ShaderMaterial_round")
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.0027777778
+anchor_right = 0.0027777778
+anchor_bottom = 0.0125
 offset_left = 27.0
 offset_top = 26.0
 offset_right = 155.0
@@ -34,17 +51,17 @@ expand_mode = 1
 stretch_mode = 6
 metadata/_edit_use_anchors_ = true
 
-[node name="MainBars" type="VBoxContainer" parent="Avatar"]
+[node name="MainBars" type="VBoxContainer" parent="Avatar" unique_id=677696981]
 layout_mode = 1
 anchors_preset = -1
-anchor_top = -0.171875
-anchor_bottom = -0.171875
-offset_left = 131.0
-offset_right = 418.0
+anchor_top = 0.027586207
+anchor_bottom = 0.027586207
+offset_left = 143.0
+offset_right = 373.0
 offset_bottom = 147.0
 metadata/_edit_use_anchors_ = true
 
-[node name="Name_level" type="RichTextLabel" parent="Avatar/MainBars"]
+[node name="Name_level" type="RichTextLabel" parent="Avatar/MainBars" unique_id=1765683585]
 clip_contents = false
 custom_minimum_size = Vector2(0, 25)
 layout_mode = 2
@@ -52,13 +69,13 @@ theme_override_fonts/normal_font = ExtResource("4_xi8vd")
 theme_override_font_sizes/normal_font_size = 16
 bbcode_enabled = true
 
-[node name="HPBar" type="ProgressBar" parent="Avatar/MainBars"]
+[node name="HPBar" type="ProgressBar" parent="Avatar/MainBars" unique_id=2000291913]
 custom_minimum_size = Vector2(0, 18)
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 show_percentage = false
 
-[node name="HPLabel" type="Label" parent="Avatar/MainBars/HPBar"]
+[node name="HPLabel" type="Label" parent="Avatar/MainBars/HPBar" unique_id=1253346952]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -73,13 +90,13 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_fonts/font = ExtResource("5_rptoq")
 
-[node name="MPBar" type="ProgressBar" parent="Avatar/MainBars"]
+[node name="MPBar" type="ProgressBar" parent="Avatar/MainBars" unique_id=1179353355]
 custom_minimum_size = Vector2(0, 18)
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 show_percentage = false
 
-[node name="MPLabel" type="Label" parent="Avatar/MainBars/MPBar"]
+[node name="MPLabel" type="Label" parent="Avatar/MainBars/MPBar" unique_id=1711154725]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -94,14 +111,14 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_fonts/font = ExtResource("5_rptoq")
 
-[node name="ShieldBar" type="ProgressBar" parent="Avatar/MainBars"]
+[node name="ShieldBar" type="ProgressBar" parent="Avatar/MainBars" unique_id=1096073383]
 visible = false
 custom_minimum_size = Vector2(0, 16)
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 show_percentage = false
 
-[node name="ShieldLabel" type="Label" parent="Avatar/MainBars/ShieldBar"]
+[node name="ShieldLabel" type="Label" parent="Avatar/MainBars/ShieldBar" unique_id=328475759]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -116,21 +133,48 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_fonts/font = ExtResource("5_rptoq")
 
-[node name="HBoxContainer" type="HBoxContainer" parent="Avatar/MainBars"]
+[node name="HBoxContainer" type="HBoxContainer" parent="Avatar/MainBars" unique_id=900288550]
 layout_mode = 2
 
-[node name="PanelContainer" type="PanelContainer" parent="Avatar/MainBars/HBoxContainer"]
+[node name="LeftSpacer" type="Control" parent="Avatar/MainBars/HBoxContainer"]
+custom_minimum_size = Vector2(16, 0)
 layout_mode = 2
 
-[node name="TextureRect" type="TextureRect" parent="Avatar/MainBars/HBoxContainer/PanelContainer"]
+[node name="PanelContainer" type="PanelContainer" parent="Avatar/MainBars/HBoxContainer" unique_id=601613281]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="Avatar/MainBars/HBoxContainer/PanelContainer" unique_id=229656030]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="ActivityLabel" type="Label" parent="Avatar/MainBars/HBoxContainer"]
+[node name="ActivityLabel" type="Label" parent="Avatar/MainBars/HBoxContainer" unique_id=1133599]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("5_rptoq")
 theme_override_font_sizes/font_size = 12
 text = "LVL 1"
 vertical_alignment = 1
+
+[node name="LevelBadge" type="PanelContainer" parent="Avatar"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -33.0
+offset_top = -33.0
+offset_right = 17.0
+offset_bottom = 17.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="LevelLabel" type="Label" parent="Avatar/LevelBadge"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("4_xi8vd")
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "1"

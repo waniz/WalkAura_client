@@ -1,5 +1,34 @@
 extends Node
 
+# ------------------- Adaptive layout -------------------
+const TOP_HUD_HEIGHT := 195.0
+const BOTTOM_HUD_HEIGHT := 108.0
+const CONTENT_PAD_TOP := 16.0
+const CONTENT_PAD_BOTTOM := 8.0
+const CONTENT_MARGIN_H := 8.0
+const MODAL_MARGIN_H := 24.0
+
+var content_top: float = 0.0
+var content_bottom: float = 0.0
+var viewport_size: Vector2 = Vector2.ZERO
+
+func _ready() -> void:
+	get_viewport().size_changed.connect(_recalc_layout)
+	_recalc_layout()
+
+func _recalc_layout() -> void:
+	viewport_size = get_viewport().get_visible_rect().size
+	content_top = TOP_HUD_HEIGHT + CONTENT_PAD_TOP
+	content_bottom = viewport_size.y - BOTTOM_HUD_HEIGHT - CONTENT_PAD_BOTTOM
+
+func get_modal_offsets() -> Dictionary:
+	return {
+		"left": MODAL_MARGIN_H,
+		"right": -MODAL_MARGIN_H,
+		"top": content_top,
+		"bottom": -(BOTTOM_HUD_HEIGHT + 42.0),
+	}
+
 
 const QUALITY_COLORS := {
 	0: Color(0.62, 0.62, 0.62), # Poor
@@ -37,6 +66,12 @@ var QUADRAT_FONT  = load("res://assets/fonts/quadrat_regular.ttf")
 
 
 # ------------------- Styling helpers -------------------
+func style_parchment_label(lbl: Label, color: Color, font_size: int = 14) -> void:
+	lbl.add_theme_font_override("font", QUADRAT_FONT)
+	lbl.add_theme_font_size_override("font_size", font_size)
+	lbl.add_theme_color_override("font_color", color)
+	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+
 func style_name_label(lbl: Label, gold: Color) -> void:
 	var ls := LabelSettings.new()
 	# font: replace with your font if you have one

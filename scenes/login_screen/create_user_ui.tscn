@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://d1bmiemb8yjfl"]
+[gd_scene format=3 uid="uid://d1bmiemb8yjfl"]
 
 [ext_resource type="Script" uid="uid://bl74x3r4f613w" path="res://scenes/login_screen/create_user_ui.gd" id="1_pjd7g"]
 [ext_resource type="FontFile" uid="uid://ckc03u8qer62y" path="res://assets/fonts/quadrat_regular.ttf" id="2_umuyf"]

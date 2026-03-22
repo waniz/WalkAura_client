@@ -11,6 +11,8 @@ class_name CharacterHUD extends Control
 @onready var activity_label: Label = $Avatar/MainBars/HBoxContainer/ActivityLabel
 @onready var texture_rect: TextureRect = $Avatar/MainBars/HBoxContainer/PanelContainer/TextureRect
 @onready var panel_container: PanelContainer = $Avatar/MainBars/HBoxContainer/PanelContainer
+@onready var level_badge: PanelContainer = $Avatar/LevelBadge
+@onready var level_label: Label = $Avatar/LevelBadge/LevelLabel
 
 var _shield_overlay: ProgressBar = null
 
@@ -18,6 +20,9 @@ var _shield_overlay: ProgressBar = null
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	AccountManager.signal_AccountDataReceived.connect(_update_character_hud)
+	SignalManager.signal_AvatarChanged.connect(_on_avatar_changed)
+	avatar.mouse_filter = Control.MOUSE_FILTER_STOP
+	avatar.gui_input.connect(_on_avatar_gui_input)
 
 	# Make bars look "splendid": rounded, shadowed, colored
 	Styler.style_bar(hp_bar, Color.from_rgba8(220, 60, 60), Color.from_rgba8(40, 20, 20))
@@ -58,6 +63,32 @@ func _ready() -> void:
 	Styler.style_name_label(activity_label, Color.from_rgba8(255, 128, 128))
 	Styler.style_panel_no_margins(panel_container, Color.from_rgba8(16,18,24,220), Color.from_rgba8(255,255,255,30))
 
+	# ── Avatar border: dark frame matching the level badge border ─────────
+	var border_panel := Panel.new()
+	border_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	border_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	border_panel.offset_left = -5
+	border_panel.offset_top = -5
+	border_panel.offset_right = 5
+	border_panel.offset_bottom = 5
+	var border_style := StyleBoxFlat.new()
+	border_style.bg_color = Color(0, 0, 0, 0)
+	border_style.border_color = Color.from_rgba8(60, 50, 40, 255)
+	border_style.set_border_width_all(5)
+	border_style.set_corner_radius_all(30)
+	border_panel.add_theme_stylebox_override("panel", border_style)
+	avatar.add_child(border_panel)
+	avatar.move_child(border_panel, 0)
+
+	# ── Level badge: dark panel with thick border ──────────────────────────
+	var badge_style := StyleBoxFlat.new()
+	badge_style.bg_color = Color.from_rgba8(16, 18, 24, 255)
+	badge_style.border_color = Color.from_rgba8(60, 50, 40, 255)
+	badge_style.set_border_width_all(5)
+	badge_style.set_corner_radius_all(10)
+	badge_style.set_content_margin_all(4)
+	level_badge.add_theme_stylebox_override("panel", badge_style)
+
 	_update_character_hud(true)
 
 
@@ -80,8 +111,24 @@ func _set_bar(bar: ProgressBar, label: Label, cur: int, maxv: int) -> void:
 	var tw = create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	tw.tween_property(bar, "value", clamp(cur, 0, maxv), 0.25)
 	
+func _on_avatar_changed(id: int) -> void:
+	var tex = ItemDB.AVATARS.get(str(id), ItemDB.AVATARS.get("0"))
+	if tex != null:
+		avatar.texture = tex
+
+
+func _on_avatar_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		SignalManager.signal_ShowAvatars.emit()
+	elif event is InputEventScreenTouch and event.pressed:
+		SignalManager.signal_ShowAvatars.emit()
+
+
 func _update_character_hud(value):
 	# print("_update_character_hud: {0}".format([value]))
+	var av_tex = ItemDB.AVATARS.get(str(Account.avatar_id), ItemDB.AVATARS.get("0"))
+	if av_tex != null:
+		avatar.texture = av_tex
 	set_stats(
 		Account.hp,
 		Account.hp_max,
@@ -92,7 +139,8 @@ func _update_character_hud(value):
 		Account.buffer_steps,
 		Account.buffer_steps_max,
 	)
-	name_level.text = "[color=orange]{0}[/color]  Lv [color=orange]{1}[/color]".format([Account.username, Account.level])
+	name_level.text = "[color=orange]{0}[/color]".format([Account.username])
+	level_label.text = str(Account.level)
 	var current_activity_name: String = GameTextEn.activities_texts.get(Account.activity, "")
 	if current_activity_name.is_empty():
 		panel_container.visible = false
@@ -106,6 +154,6 @@ func _update_character_hud(value):
 		panel_container.visible = true
 		var icon_key_overrides := {"Rift Explorer": "rift"}
 		var icon_key_name: String = icon_key_overrides.get(current_activity_name, current_activity_name.to_lower())
-		texture_rect.texture = ItemDB.ICONS.get(icon_key_name, null)
+		texture_rect.texture = ItemDB.get_icon(icon_key_name, null)
 		activity_label.text = current_activity_name
 	

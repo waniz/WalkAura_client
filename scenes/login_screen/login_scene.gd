@@ -20,29 +20,22 @@ var status_login = false
 
 
 func _ready() -> void:
-	
 	Styler.style_name_label(client_version_label, Color.from_rgba8(255, 215, 128))
-	
-	await AccountManager.signal_LoginParamsReceived
-	
-	var project_version = ProjectSettings.get_setting("application/config/version", "")
-	client_version_label.text = " Client version: " + project_version + " SERVER: " + ServerParams.SERVER_VERSION
-	
 	Styler.style_button(button_login,  Color.from_rgba8(64,180,255))   # cyan (primary)
 	Styler.style_button(button_createuser, Color.from_rgba8(255,200,66)) # gold (secondary)
-	
 	Styler.wire_button_anim(button_login)
 	Styler.wire_button_anim(button_createuser)
-	
 	Styler.style_panel(panel_main_login, Color.from_rgba8(16,18,24,220), Color.from_rgba8(255,255,255,30))
-	
-	Styler.style_line_edit(username_login_edit,)
+	Styler.style_line_edit(username_login_edit)
 	Styler.style_line_edit(password_login_edit, true)
-	
 	Styler.style_title(username_login_label)
 	Styler.style_title(password_login_label)
-	
 	Styler.style_name_label(status_label, Color.from_rgba8(255, 10, 10, 220))
+
+	await AccountManager.signal_LoginParamsReceived
+
+	var project_version = ProjectSettings.get_setting("application/config/version", "")
+	client_version_label.text = " Client version: " + project_version + " SERVER: " + ServerParams.SERVER_VERSION
 
 func _on_button_createuser_button_down() -> void:
 	panel_main_login.visible = false

@@ -180,7 +180,7 @@ func _mk_stat_row(icon_key: String, label_text: String, value_text: String, valu
 
 	if icon_key != "":
 		var icon := TextureRect.new()
-		icon.texture = ItemDB.ICONS.get(icon_key, null)
+		icon.texture = ItemDB.get_icon(icon_key, null)
 		icon.custom_minimum_size = Vector2(24, 24)
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -214,7 +214,7 @@ func _create_loot_row(icon_key: String, display_name: String, qty_text: String) 
 	row.add_theme_constant_override("separation", 8)
 
 	var icon := TextureRect.new()
-	icon.texture = ItemDB.ITEM_ICONS.get(icon_key, ItemDB.ITEM_ICONS.get("default_bag"))
+	icon.texture = ItemDB.get_item_icon(icon_key, ItemDB.get_item_icon("default_bag"))
 	icon.custom_minimum_size = Vector2(36, 36)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -244,7 +244,7 @@ func _create_equip_row(icon_key: String, item_name: String, quality_name: String
 	row.add_theme_constant_override("separation", 10)
 
 	var icon := TextureRect.new()
-	icon.texture = ItemDB.ITEM_ICONS.get(icon_key, ItemDB.ITEM_ICONS.get("default_bag"))
+	icon.texture = ItemDB.get_item_icon(icon_key, ItemDB.get_item_icon("default_bag"))
 	icon.custom_minimum_size = Vector2(44, 44)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED

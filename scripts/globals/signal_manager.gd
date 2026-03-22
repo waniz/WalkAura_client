@@ -48,6 +48,18 @@ signal signal_UnEquipSkill(slot: int)
 @warning_ignore("unused_signal")
 signal signal_TravelRequest(location_id: int)
 
+# Avatar signals
+@warning_ignore("unused_signal")
+signal signal_ShowAvatars
+@warning_ignore("unused_signal")
+signal signal_AvatarChanged(avatar_id: int)
+
+# Disenchant signals
+@warning_ignore("unused_signal")
+signal signal_DisenchantItem(item_uid: String)
+@warning_ignore("unused_signal")
+signal signal_DisenchantResultReceived(data: Dictionary)
+
 # Rift signals
 @warning_ignore("unused_signal")
 signal signal_ShowRift
@@ -55,3 +67,13 @@ signal signal_ShowRift
 signal signal_RequestRiftFights(rift_instance_id: String)
 @warning_ignore("unused_signal")
 signal signal_RequestRiftFightLog(rift_instance_id: String, fight_uid: String)
+
+# Profession signals
+@warning_ignore("unused_signal")
+signal signal_ShowProfession(profession_name: String)
+@warning_ignore("unused_signal")
+signal signal_RequestProfessionInfo(profession: String)
+@warning_ignore("unused_signal")
+signal signal_ProfessionInfoReceived(data: Dictionary)
+@warning_ignore("unused_signal")
+signal signal_StartCraftActivity(activity: int, activity_site: int, recipe_id: String)

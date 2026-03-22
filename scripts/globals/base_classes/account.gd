@@ -110,6 +110,52 @@ var dodge
 var dmg_reduction
 var versatility
 
+var holy_resist_rating: int = 0
+var fire_resist_rating: int = 0
+var frost_resist_rating: int = 0
+var arcane_resist_rating: int = 0
+var dark_resist_rating: int = 0
+var holy_spell_dmg_rating: int = 0
+var fire_spell_dmg_rating: int = 0
+var frost_spell_dmg_rating: int = 0
+var arcane_spell_dmg_rating: int = 0
+var dark_spell_dmg_rating: int = 0
+
+var holy_resist: float = 0.0
+var fire_resist: float = 0.0
+var frost_resist: float = 0.0
+var arcane_resist: float = 0.0
+var dark_resist: float = 0.0
+var holy_spell_dmg: float = 0.0
+var fire_spell_dmg: float = 0.0
+var frost_spell_dmg: float = 0.0
+var arcane_spell_dmg: float = 0.0
+var dark_spell_dmg: float = 0.0
+
+# new affix ratings
+var hp_regen_battle_rating: int = 0
+var mp_regen_battle_rating: int = 0
+var shield_regen_battle_rating: int = 0
+var life_steal_rating: int = 0
+var precision_rating: int = 0
+var shield_absorb_bonus_rating: int = 0
+var thorns_rating: int = 0
+var crit_dmg_reduction_rating: int = 0
+var walk_regen_bonus_rating: int = 0
+var healing_amp_rating: int = 0
+
+# new affix converted values
+var hp_regen_battle: float = 0.0
+var mp_regen_battle: float = 0.0
+var shield_regen_battle: float = 0.0
+var life_steal: float = 0.0
+var precision: float = 0.0
+var shield_absorb_bonus: float = 0.0
+var thorns: float = 0.0
+var crit_dmg_reduction: float = 0.0
+var walk_regen_bonus: float = 0.0
+var healing_amp: float = 0.0
+
 var location
 var activity
 var activity_site
@@ -125,10 +171,16 @@ var rift_instance_id
 var rift_lvl
 var rift_xp
 
+var avatar_id: int = 0
+
 # travel statuses
 var travel_destination
 var travel_steps
 var travel_steps_max
+
+# crafting statuses
+var crafting_recipe_id: String = ""
+var crafting_steps: int = 0
 
 var variance
 var vit_crit_soften

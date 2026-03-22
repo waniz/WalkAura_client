@@ -6,7 +6,8 @@ var _log = ""
 
 func _ready() -> void:
 	#ServerConnector.server_connector_message_bus.connect(_on_message_log)
-	ServerConnector.server_connector_message_bus.connect(_on_message_print)
+	if OS.is_debug_build():
+		ServerConnector.server_connector_message_bus.connect(_on_message_print)
 	
 func _on_message_log(message):
 	#print(message)

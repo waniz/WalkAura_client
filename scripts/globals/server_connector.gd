@@ -28,6 +28,7 @@ func _ready() -> void:
 	SignalManager.signal_UnequipItem.connect(_on_unequip_request)
 	SignalManager.signal_SellItem.connect(_on_sell_item_request)
 	SignalManager.signal_SellItems.connect(_on_sell_items_request)
+	SignalManager.signal_DisenchantItem.connect(_on_disenchant_item_request)
 
 	SignalManager.signal_EquipSkill.connect(_on_equip_skill_request)
 	SignalManager.signal_UnEquipSkill.connect(_on_unequip_skill_request)
@@ -35,6 +36,9 @@ func _ready() -> void:
 	SignalManager.signal_RequestRiftFights.connect(_on_request_rift_fights)
 	SignalManager.signal_RequestRiftFightLog.connect(_on_request_rift_fight_log)
 	SignalManager.signal_TravelRequest.connect(_on_travel_request)
+	SignalManager.signal_AvatarChanged.connect(_on_avatar_changed)
+	SignalManager.signal_RequestProfessionInfo.connect(_on_request_profession_info)
+	SignalManager.signal_StartCraftActivity.connect(_on_start_craft_activity)
 
 
 func connect_to_server() -> void:
@@ -205,6 +209,17 @@ func _on_sell_item_request(item_to_sell) -> void:
 	socket.send_text(server_request)
 	server_connector_message_bus.emit("[Client] Request to Sell item {0}".format([item_to_sell]))
 	
+func _on_disenchant_item_request(item_uid: String) -> void:
+	var payload := {
+		"cmd": "inventory",
+		"payload": {
+			"action": "disenchant",
+			"item_uid": item_uid,
+		}
+	}
+	socket.send_text(JSON.stringify(payload))
+	server_connector_message_bus.emit("[Client] Request to Disenchant item %s" % item_uid)
+
 func _on_sell_items_request(item_uids: Array) -> void:
 	var payload := {
 		"cmd": "inventory",
@@ -267,3 +282,29 @@ func _on_travel_request(location_id: int) -> void:
 	}
 	socket.send_text(JSON.stringify(payload))
 	server_connector_message_bus.emit("[Client] Requesting travel to location: %d" % location_id)
+
+func _on_avatar_changed(avatar_id: int) -> void:
+	var payload := {"cmd": "set_avatar", "payload": {"avatar_id": avatar_id}}
+	socket.send_text(JSON.stringify(payload))
+	server_connector_message_bus.emit("[Client] Set avatar: " + str(avatar_id))
+
+func _on_request_profession_info(profession: String) -> void:
+	var payload := {
+		"cmd": "profession_info",
+		"payload": {"profession": profession},
+	}
+	socket.send_text(JSON.stringify(payload))
+	server_connector_message_bus.emit("[Client] Requesting profession info: %s" % profession)
+
+func _on_start_craft_activity(activity: int, activity_site: int, recipe_id: String) -> void:
+	var payload := {
+		"cmd": "activity",
+		"payload": {
+			"activity": activity,
+			"activity_site": activity_site,
+			"action": "start",
+			"recipe_id": recipe_id,
+		}
+	}
+	socket.send_text(JSON.stringify(payload))
+	server_connector_message_bus.emit("[Client] Starting craft: %s" % recipe_id)

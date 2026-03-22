@@ -17,6 +17,15 @@ var location_descriptions = {
 	10: "An ancient place of power, older than any known civilisation.",
 }
 
+var avatar_names = {
+	"0": "Pirat",
+	"1": "Avatar 1",
+	"2": "Avatar 2",
+	"3": "Avatar 3",
+	"4": "Avatar 4",
+	"5": "Avatar 5",
+}
+
 var activities_texts = {
 	0: "No",
 	1: "Herbalism",

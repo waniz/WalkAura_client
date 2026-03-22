@@ -24,10 +24,11 @@ func _build_ui() -> void:
 	# Inset panel — same clearance as rift.gd
 	var panel := PanelContainer.new()
 	panel.set_anchors_preset(Control.PRESET_FULL_RECT)
-	panel.offset_left   =  24
-	panel.offset_right  = -24
-	panel.offset_top    =  210
-	panel.offset_bottom = -150
+	var mo := Styler.get_modal_offsets()
+	panel.offset_left   = mo["left"]
+	panel.offset_right  = mo["right"]
+	panel.offset_top    = mo["top"]
+	panel.offset_bottom = mo["bottom"]
 	Styler._apply_parchment_style(panel)
 	add_child(panel)
 
@@ -71,7 +72,7 @@ func _build_ui() -> void:
 	var tick_lbl := Label.new()
 	tick_lbl.text = "Milestone Tick:  %d / %d" % [m_idx, total_m]
 	tick_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	Styler.style_name_label(tick_lbl, Styler.COLOR_GOLD)
+	Styler.style_parchment_label(tick_lbl, Styler.COLOR_GOLD)
 	root_vbox.add_child(tick_lbl)
 
 	root_vbox.add_child(HSeparator.new())
@@ -137,7 +138,7 @@ func _build_player_panel() -> Control:
 	name_lbl.text = str(Account.username) if Account.username != null else "Hero"
 	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_lbl.autowrap_mode = 3
-	Styler.style_name_label(name_lbl, Styler.COLOR_TEXT_DARK)
+	Styler.style_parchment_label(name_lbl, Styler.COLOR_TEXT_DARK)
 	vbox.add_child(name_lbl)
 
 	# HP bar
@@ -163,7 +164,7 @@ func _build_player_panel() -> Control:
 	var hp_lbl := Label.new()
 	hp_lbl.text = "%d / %d" % [hp, hp_max]
 	hp_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	Styler.style_name_label(hp_lbl, Styler.COLOR_TEXT_DARK)
+	Styler.style_parchment_label(hp_lbl, Styler.COLOR_TEXT_DARK)
 	vbox.add_child(hp_lbl)
 
 	return panel
@@ -216,13 +217,13 @@ func _build_enemy_panel(enemy_name: String) -> Control:
 	name_lbl.text = enemy_name
 	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_lbl.autowrap_mode = 3
-	Styler.style_name_label(name_lbl, Styler.COLOR_TEXT_DARK)
+	Styler.style_parchment_label(name_lbl, Styler.COLOR_TEXT_DARK)
 	vbox.add_child(name_lbl)
 
 	var type_lbl := Label.new()
 	type_lbl.text = "ENEMY"
 	type_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	Styler.style_name_label(type_lbl, Styler.COLOR_TEXT_DARK)
+	Styler.style_parchment_label(type_lbl, Styler.COLOR_TEXT_DARK)
 	vbox.add_child(type_lbl)
 
 	return panel
@@ -243,7 +244,7 @@ func _build_fight_log() -> Control:
 		var lbl := Label.new()
 		lbl.text = "No battles recorded yet."
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		Styler.style_name_label(lbl, Color.from_rgba8(150, 150, 150))
+		Styler.style_parchment_label(lbl, Color.from_rgba8(150, 150, 150))
 		vbox.add_child(lbl)
 		return scroll
 
@@ -294,7 +295,7 @@ func _build_fight_card(fight: Dictionary, hp_max: int) -> Control:
 
 	var num_lbl := Label.new()
 	num_lbl.text = "#%d" % (m_idx + 1)
-	Styler.style_name_label(num_lbl, Styler.COLOR_TEXT_DARK)
+	Styler.style_parchment_label(num_lbl, Styler.COLOR_TEXT_DARK)
 	top_row.add_child(num_lbl)
 
 	var sword_lbl := Label.new()
@@ -304,12 +305,12 @@ func _build_fight_card(fight: Dictionary, hp_max: int) -> Control:
 	var monster_lbl := Label.new()
 	monster_lbl.text = monster_raw.replace("_", " ").capitalize()
 	monster_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	Styler.style_name_label(monster_lbl, Styler.COLOR_TEXT_DARK)
+	Styler.style_parchment_label(monster_lbl, Styler.COLOR_TEXT_DARK)
 	top_row.add_child(monster_lbl)
 
 	var result_lbl := Label.new()
 	result_lbl.text = "WIN" if result else "LOSS"
-	Styler.style_name_label(result_lbl, result_color)
+	Styler.style_parchment_label(result_lbl, result_color)
 	top_row.add_child(result_lbl)
 
 	# ── Row 2: HP before → after  (+/- delta) ────────────────────────────
@@ -320,12 +321,12 @@ func _build_fight_card(fight: Dictionary, hp_max: int) -> Control:
 	var hp_label := Label.new()
 	hp_label.text = "HP  %d → %d" % [hp_before, hp_after]
 	hp_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	Styler.style_name_label(hp_label, Styler.COLOR_TEXT_DARK)
+	Styler.style_parchment_label(hp_label, Styler.COLOR_TEXT_DARK)
 	hp_row.add_child(hp_label)
 
 	var dmg_lbl := Label.new()
 	dmg_lbl.text = "(%+d)" % dmg
-	Styler.style_name_label(dmg_lbl, result_color)
+	Styler.style_parchment_label(dmg_lbl, result_color)
 	hp_row.add_child(dmg_lbl)
 
 	# ── Row 3: remaining-HP bar ───────────────────────────────────────────

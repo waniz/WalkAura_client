@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://c1uj7p2i64geq"]
+
+[ext_resource type="Script" path="res://scenes/main_screens/character_skills.gd" id="1_skills"]
+
+[node name="CharacterSkills" type="Control" unique_id=1825663956]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_skills")

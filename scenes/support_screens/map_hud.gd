@@ -28,6 +28,8 @@ var _tooltip_panel: PanelContainer = null
 var _tooltip_label: Label = null
 var _big_player_marker: TextureRect = null
 
+var _avatar_shader: Shader = preload("res://shaders/avatar_shader.gdshader")
+
 # Pan / zoom state
 var _offset: Vector2 = Vector2.ZERO
 var _scale: float = 1.0
@@ -54,22 +56,30 @@ func _ready() -> void:
 	_build_waypoints()
 	waypoint_pressed.connect(_on_waypoint_pressed)
 	Styler.style_button(close_btn, Color.from_rgba8(64, 180, 255))
+	var _btn_transparent := StyleBoxFlat.new()
+	_btn_transparent.bg_color = Color(0, 0, 0, 0)
+	_btn_transparent.set_corner_radius_all(30)
+	for state in ["normal", "hover", "pressed", "focus"]:
+		mini_map_btn.add_theme_stylebox_override(state, _btn_transparent)
 	mini_map_btn.pressed.connect(_on_mini_map_clicked)
 	close_btn.pressed.connect(_on_close_clicked)
 
-	_apply_circle_clip(mini_player_marker)
+	# Apply circle shader to minimap player marker
+	_apply_circle_shader(mini_player_marker, mini_player_marker.size)
 
 	_big_player_marker = TextureRect.new()
 	_big_player_marker.texture = mini_player_marker.texture
 	_big_player_marker.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_big_player_marker.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_big_player_marker.custom_minimum_size = Vector2(40, 40)
-	_big_player_marker.size = Vector2(40, 40)
+	_big_player_marker.custom_minimum_size = Vector2(64, 64)
+	_big_player_marker.size = Vector2(64, 64)
 	_big_player_marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_apply_circle_clip(_big_player_marker)
+	_apply_circle_shader(_big_player_marker, Vector2(64, 64))
 	map_canvas.add_child(_big_player_marker)
 
 	AccountManager.signal_AccountDataReceived.connect(_on_account_data_received)
+	SignalManager.signal_AvatarChanged.connect(_on_avatar_changed_signal)
+	_update_avatar_texture()
 	if Account.location != null:
 		update_location(_location_to_map_ratio(Account.location))
 	else:
@@ -113,6 +123,11 @@ func _on_close_clicked() -> void:
 # ── Input ─────────────────────────────────────────────────────────────────────
 
 func _input(event: InputEvent) -> void:
+	# Tooltip follows pointer on motion
+	if _tooltip_panel and _tooltip_panel.visible:
+		if event is InputEventMouseMotion or event is InputEventScreenDrag:
+			_update_tooltip_pos()
+
 	if not full_map_overlay.visible:
 		return
 
@@ -241,15 +256,14 @@ func _build_waypoints() -> void:
 		map_canvas.add_child(btn)
 
 
-func _process(_delta: float) -> void:
-	if _tooltip_panel and _tooltip_panel.visible:
-		var mp := get_viewport().get_mouse_position()
-		var vp_size := get_viewport().get_visible_rect().size
-		var tp_size := _tooltip_panel.size
-		var pos := mp + Vector2(12.0, -tp_size.y - 6.0)
-		pos.x = clampf(pos.x, 4.0, vp_size.x - tp_size.x - 4.0)
-		pos.y = clampf(pos.y, 4.0, vp_size.y - tp_size.y - 4.0)
-		_tooltip_panel.position = pos
+func _update_tooltip_pos() -> void:
+	var mp := get_viewport().get_mouse_position()
+	var vp_size := get_viewport().get_visible_rect().size
+	var tp_size := _tooltip_panel.size
+	var pos := mp + Vector2(12.0, -tp_size.y - 6.0)
+	pos.x = clampf(pos.x, 4.0, vp_size.x - tp_size.x - 4.0)
+	pos.y = clampf(pos.y, 4.0, vp_size.y - tp_size.y - 4.0)
+	_tooltip_panel.position = pos
 
 
 func _create_tooltip() -> void:
@@ -289,6 +303,7 @@ func _format_waypoint_name(id: String) -> String:
 func _show_tooltip(text: String) -> void:
 	_tooltip_label.text = text
 	_tooltip_panel.visible = true
+	_update_tooltip_pos()
 
 
 func _hide_tooltip() -> void:
@@ -325,16 +340,33 @@ func _center_on_player() -> void:
 	_apply_transform()
 
 
-func _apply_circle_clip(node: TextureRect) -> void:
-	var sh := Shader.new()
-	sh.code = "shader_type canvas_item;\nvoid fragment() {\n\tvec2 uv = UV - vec2(0.5);\n\tCOLOR = texture(TEXTURE, UV);\n\tCOLOR.a *= step(length(uv), 0.5);\n}"
-	var sm := ShaderMaterial.new()
-	sm.shader = sh
-	node.material = sm
-
 
 func _on_account_data_received(_value) -> void:
 	update_location(_location_to_map_ratio(Account.location))
+	_update_avatar_texture()
+
+
+func _on_avatar_changed_signal(_id: int) -> void:
+	_update_avatar_texture()
+
+
+func _update_avatar_texture() -> void:
+	var tex = ItemDB.AVATARS.get(str(Account.avatar_id), ItemDB.AVATARS.get("0"))
+	if tex == null:
+		return
+	mini_player_marker.texture = tex
+	if _big_player_marker != null:
+		_big_player_marker.texture = tex
+
+
+func _apply_circle_shader(target: TextureRect, sz: Vector2) -> void:
+	var mat := ShaderMaterial.new()
+	mat.shader = _avatar_shader
+	mat.set_shader_parameter("rect_size", sz)
+	mat.set_shader_parameter("border_color", Color(0.86, 0.69, 0.27, 1.0))
+	mat.set_shader_parameter("border_px", 2.0)
+	mat.set_shader_parameter("feather_px", 1.5)
+	target.material = mat
 
 
 func _location_to_map_ratio(location_id: int) -> Vector2:

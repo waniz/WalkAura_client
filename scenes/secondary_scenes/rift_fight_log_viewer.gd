@@ -25,10 +25,11 @@ func _build_ui() -> void:
 	# Inset panel — same clearance as rift.gd
 	var panel := PanelContainer.new()
 	panel.set_anchors_preset(Control.PRESET_FULL_RECT)
-	panel.offset_left   =  24
-	panel.offset_right  = -24
-	panel.offset_top    =  210
-	panel.offset_bottom = -150
+	var mo := Styler.get_modal_offsets()
+	panel.offset_left   = mo["left"]
+	panel.offset_right  = mo["right"]
+	panel.offset_top    = mo["top"]
+	panel.offset_bottom = mo["bottom"]
 	Styler._apply_parchment_style(panel)
 	add_child(panel)
 
@@ -81,7 +82,7 @@ func _build_ui() -> void:
 		hp_before, hp_after, hp_delta,
 	]
 	sub_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	Styler.style_name_label(sub_lbl, result_color)
+	Styler.style_parchment_label(sub_lbl, result_color)
 	root_vbox.add_child(sub_lbl)
 
 	root_vbox.add_child(HSeparator.new())

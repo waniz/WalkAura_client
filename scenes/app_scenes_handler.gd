@@ -19,9 +19,15 @@ var _velocity := 0.0
 
 const ACTIVITY_PROGRESS_SCENE = preload("uid://bjvtquos2r8cj")
 const RIFT_SCENE = preload("uid://cdghj6jcvmuy5")
-const _SKIP_LAYOUT_NAMES := ["ProgressUpdate", "ProgressSteps", "GlobalHud"]
+const AVATARS_SCENE = preload("uid://dp38cogt60cii")
+const DISENCHANT_RESULT_SCENE = preload("res://scenes/support_screens/disenchant_result.tscn")
+const PROFESSION_DETAIL_SCENE = preload("res://scenes/secondary_scenes/profession_detail.tscn")
+const _SKIP_LAYOUT_NAMES := ["ProgressUpdate", "ProgressSteps", "GlobalHud", "DisenchantResult"]
 var overlay = null
 var _rift_overlay = null
+var _avatars_overlay = null
+var _disenchant_overlay = null
+var _profession_overlay = null
 var _snap_tween: Tween = null
 
 
@@ -35,6 +41,9 @@ func _ready() -> void:
 	AccountManager.signal_ActivityProgressReceived.connect(_show_progress_hud)
 	SignalManager.signal_PageChanged.connect(_on_page_change)
 	SignalManager.signal_ShowRift.connect(_show_rift)
+	SignalManager.signal_ShowAvatars.connect(_show_avatars)
+	SignalManager.signal_DisenchantResultReceived.connect(_show_disenchant_result)
+	SignalManager.signal_ShowProfession.connect(_show_profession)
 
 	clip_contents = true
 	mouse_filter = Control.MOUSE_FILTER_PASS
@@ -77,6 +86,29 @@ func _show_rift() -> void:
 	_rift_overlay = RIFT_SCENE.instantiate()
 	add_child(_rift_overlay)
 	_rift_overlay.tree_exited.connect(func(): _rift_overlay = null, Object.CONNECT_ONE_SHOT)
+
+func _show_avatars() -> void:
+	if _avatars_overlay != null and is_instance_valid(_avatars_overlay):
+		return
+	_avatars_overlay = AVATARS_SCENE.instantiate()
+	add_child(_avatars_overlay)
+	_avatars_overlay.tree_exited.connect(func(): _avatars_overlay = null, Object.CONNECT_ONE_SHOT)
+
+func _show_profession(profession_name: String) -> void:
+	if _profession_overlay != null and is_instance_valid(_profession_overlay):
+		return
+	_profession_overlay = PROFESSION_DETAIL_SCENE.instantiate()
+	_profession_overlay.set_profession(profession_name)
+	add_child(_profession_overlay)
+	_profession_overlay.tree_exited.connect(func(): _profession_overlay = null, Object.CONNECT_ONE_SHOT)
+
+func _show_disenchant_result(data: Dictionary) -> void:
+	if _disenchant_overlay != null and is_instance_valid(_disenchant_overlay):
+		_disenchant_overlay.queue_free()
+	_disenchant_overlay = DISENCHANT_RESULT_SCENE.instantiate()
+	add_child(_disenchant_overlay)
+	_disenchant_overlay.apply_result(data)
+	_disenchant_overlay.tree_exited.connect(func(): _disenchant_overlay = null, Object.CONNECT_ONE_SHOT)
 
 # ------ API ------
 func _notification(what):

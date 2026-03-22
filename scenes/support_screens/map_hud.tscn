@@ -4,22 +4,23 @@
 [ext_resource type="Texture2D" uid="uid://bkj538chw6wh2" path="res://assets/character_faces/pirat.png" id="2_o0jm1"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_o0jm1"]
-bg_color = Color(0.38740894, 0.62563473, 0.82066566, 1)
+bg_color = Color(0, 0, 0, 0)
+border_color = Color(0.23529, 0.19608, 0.15686, 1)
 draw_center = false
-border_width_left = 4
-border_width_top = 4
-border_width_right = 4
-border_width_bottom = 4
-corner_radius_top_left = 20
-corner_radius_top_right = 20
-corner_radius_bottom_right = 20
-corner_radius_bottom_left = 20
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+corner_radius_top_left = 30
+corner_radius_top_right = 30
+corner_radius_bottom_right = 30
+corner_radius_bottom_left = 30
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ltn6w"]
-corner_radius_top_left = 20
-corner_radius_top_right = 20
-corner_radius_bottom_right = 20
-corner_radius_bottom_left = 20
+corner_radius_top_left = 30
+corner_radius_top_right = 30
+corner_radius_bottom_right = 30
+corner_radius_bottom_left = 30
 anti_aliasing_size = 2.0
 
 [node name="MapHUD" type="Control" unique_id=916111378]

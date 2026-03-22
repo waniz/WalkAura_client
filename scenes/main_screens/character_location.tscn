@@ -1,0 +1,135 @@
+[gd_scene format=3 uid="uid://dyrjw7qne5af5"]
+
+[ext_resource type="Script" uid="uid://cna5fks56fogn" path="res://scenes/main_screens/character_location.gd" id="1_23ukg"]
+[ext_resource type="Texture2D" uid="uid://5sfb8p5aidcv" path="res://assets/background/locations/location_1.png" id="2_aaoyo"]
+
+[node name="Character_Location" type="Control"]
+clip_contents = true
+layout_mode = 3
+anchors_preset = 0
+offset_top = 207.0
+offset_right = 703.0
+offset_bottom = 1105.0
+script = ExtResource("1_23ukg")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 216.0
+offset_right = 711.0
+offset_bottom = 1083.0
+theme_override_constants/separation = 8
+
+[node name="Main_Panel" type="PanelContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/Main_Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Main_Panel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Left_Column" type="VBoxContainer" parent="VBoxContainer/Main_Panel/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.0
+theme_override_constants/separation = 6
+
+[node name="Location_Title" type="Label" parent="VBoxContainer/Main_Panel/MarginContainer/HBoxContainer/Left_Column"]
+layout_mode = 2
+text = "Location Name"
+
+[node name="Image_Frame" type="PanelContainer" parent="VBoxContainer/Main_Panel/MarginContainer/HBoxContainer/Left_Column"]
+layout_mode = 2
+
+[node name="LocationPicture" type="TextureRect" parent="VBoxContainer/Main_Panel/MarginContainer/HBoxContainer/Left_Column/Image_Frame"]
+custom_minimum_size = Vector2(0, 300)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+texture = ExtResource("2_aaoyo")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Location_Desc" type="Label" parent="VBoxContainer/Main_Panel/MarginContainer/HBoxContainer/Left_Column"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Location description."
+
+[node name="Right_Column" type="VBoxContainer" parent="VBoxContainer/Main_Panel/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.0
+theme_override_constants/separation = 6
+
+[node name="Activities_Header" type="Label" parent="VBoxContainer/Main_Panel/MarginContainer/HBoxContainer/Right_Column"]
+layout_mode = 2
+text = "Activities"
+
+[node name="Activities_Scroll" type="ScrollContainer" parent="VBoxContainer/Main_Panel/MarginContainer/HBoxContainer/Right_Column"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Activities_VBox" type="VBoxContainer" parent="VBoxContainer/Main_Panel/MarginContainer/HBoxContainer/Right_Column/Activities_Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="Status_Panel" type="PanelContainer" parent="VBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/Status_Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="Status_VBox" type="VBoxContainer" parent="VBoxContainer/Status_Panel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Status_Title" type="Label" parent="VBoxContainer/Status_Panel/MarginContainer/Status_VBox"]
+layout_mode = 2
+text = "Activity - Level 0"
+
+[node name="Status_XP_Bar" type="ProgressBar" parent="VBoxContainer/Status_Panel/MarginContainer/Status_VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 16)
+min_value = 0.0
+max_value = 100.0
+show_percentage = false
+
+[node name="Status_XP_Label" type="Label" parent="VBoxContainer/Status_Panel/MarginContainer/Status_VBox"]
+layout_mode = 2
+text = "0 / 0 XP to next level"
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer/Status_Panel/MarginContainer/Status_VBox"]
+layout_mode = 2
+
+[node name="Status_Steps_Label" type="Label" parent="VBoxContainer/Status_Panel/MarginContainer/Status_VBox"]
+layout_mode = 2
+text = "Session steps: 0"
+
+[node name="Status_Actions_Label" type="Label" parent="VBoxContainer/Status_Panel/MarginContainer/Status_VBox"]
+layout_mode = 2
+text = "Actions done: 0"
+
+[node name="Status_Progress_Label" type="Label" parent="VBoxContainer/Status_Panel/MarginContainer/Status_VBox"]
+layout_mode = 2
+text = ""
+
+[node name="Btn_Stop" type="Button" parent="VBoxContainer/Status_Panel/MarginContainer/Status_VBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "STOP"

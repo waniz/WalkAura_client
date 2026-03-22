@@ -52,6 +52,10 @@ func parse_message(message):
 		update_skills(json.data)
 	elif json.data.cmd == "rift_fights":
 		update_rift_fights(json.data)
+	elif json.data.cmd == "disenchant_result":
+		handle_disenchant_result(json.data)
+	elif json.data.cmd == "profession_info":
+		handle_profession_info(json.data)
 		
 
 # router handlers
@@ -66,141 +70,108 @@ func get_login_params(data):
 	signal_LoginParamsReceived.emit(data)
 		
 func get_account_attrs(json_msg):
-	Account.user_uid = json_msg.data.user_uid
-	Account.userid = int(json_msg.data.userid)
-	Account.username = json_msg.data.username
-	
-	# primary parameters
-	Account.str = json_msg.data.primary_attributes.str
-	Account.agi = json_msg.data.primary_attributes.agi
-	Account.vit = json_msg.data.primary_attributes.vit
-	Account.int_stat = json_msg.data.primary_attributes.int_stat
-	Account.spi = json_msg.data.primary_attributes.spi
-	Account.luk = json_msg.data.primary_attributes.luk
-	
-	Account.str_exp = json_msg.data.primary_attributes.str_exp
-	Account.agi_exp = json_msg.data.primary_attributes.agi_exp
-	Account.vit_exp = json_msg.data.primary_attributes.vit_exp
-	Account.int_exp = json_msg.data.primary_attributes.int_exp
-	Account.spi_exp = json_msg.data.primary_attributes.spi_exp
-	Account.luk_exp = json_msg.data.primary_attributes.luk_exp
-	
-	Account.bonus_str = json_msg.data.primary_attributes.bonus_str
-	Account.bonus_agi = json_msg.data.primary_attributes.bonus_agi
-	Account.bonus_vit = json_msg.data.primary_attributes.bonus_vit
-	Account.bonus_int = json_msg.data.primary_attributes.bonus_int
-	Account.bonus_spi = json_msg.data.primary_attributes.bonus_spi
-	Account.bonus_luk = json_msg.data.primary_attributes.bonus_luk
-	
-	# primary_resources
-	Account.hp = int(json_msg.data.primary_resources.hp)
-	Account.mp = int(json_msg.data.primary_resources.mp)
-	Account.shield = int(json_msg.data.primary_resources.shield)
-	Account.hp_max = int(json_msg.data.primary_resources.hp_max)
-	Account.mp_max = int(json_msg.data.primary_resources.mp_max)
-	Account.shield_max = int(json_msg.data.primary_resources.shield_max)
-	Account.level = int(json_msg.data.primary_resources.level)
-	Account.level_exp = json_msg.data.primary_resources.level_exp
-	Account.total_steps = int(json_msg.data.primary_resources.total_steps)
-	Account.buffer_steps = int(json_msg.data.primary_resources.buffer_steps)
-	Account.buffer_steps_max = int(json_msg.data.primary_resources.buffer_steps_max)
-	Account.gold = int(json_msg.data.primary_resources.gold)
-	
-	# professions
-	Account.herbalism_lvl = int(json_msg.data.professions.herbalism_lvl)
-	Account.mining_lvl = int(json_msg.data.professions.mining_lvl)
-	Account.woodcutting_lvl = int(json_msg.data.professions.woodcutting_lvl)
-	Account.fishing_lvl = int(json_msg.data.professions.fishing_lvl)
-	Account.hunting_lvl = int(json_msg.data.professions.hunting_lvl)
-	Account.blacksmithing_lvl = int(json_msg.data.professions.blacksmithing_lvl)
-	Account.tailoring_lvl = int(json_msg.data.professions.tailoring_lvl)
-	Account.jewelcrafting_lvl = int(json_msg.data.professions.jewelcrafting_lvl)
-	Account.alchemy_lvl = int(json_msg.data.professions.alchemy_lvl)
-	Account.cooking_lvl = int(json_msg.data.professions.cooking_lvl)
-	Account.enchanting_lvl = int(json_msg.data.professions.enchanting_lvl)
-	
-	Account.herbalism_xp = int(json_msg.data.professions.herbalism_xp)
-	Account.mining_xp = int(json_msg.data.professions.mining_xp)
-	Account.woodcutting_xp = int(json_msg.data.professions.woodcutting_xp)
-	Account.fishing_xp = int(json_msg.data.professions.fishing_xp)
-	Account.hunting_xp = int(json_msg.data.professions.hunting_xp)
-	Account.blacksmithing_xp = int(json_msg.data.professions.blacksmithing_xp)
-	Account.tailoring_xp = int(json_msg.data.professions.tailoring_xp)
-	Account.jewelcrafting_xp = int(json_msg.data.professions.jewelcrafting_xp)
-	Account.alchemy_xp = int(json_msg.data.professions.alchemy_xp)
-	Account.cooking_xp = int(json_msg.data.professions.cooking_xp)
-	Account.enchanting_xp = int(json_msg.data.professions.enchanting_xp)
-	Account.rift_lvl = int(json_msg.data.professions.get("rift_lvl", 1))
-	Account.rift_xp = int(json_msg.data.professions.get("rift_xp", 0))
+	var d = json_msg.data
 
-	# passives
-	Account.thick_skin_lvl = int(json_msg.data.passives.thick_skin_lvl)
-	Account.thick_skin_xp = int(json_msg.data.passives.thick_skin_xp)
-	Account.brutal_finish_lvl = int(json_msg.data.passives.brutal_finish_lvl)
-	Account.brutal_finish_xp = int(json_msg.data.passives.brutal_finish_xp)
-	Account.magic_ward_lvl = int(json_msg.data.passives.magic_ward_lvl)
-	Account.magic_ward_xp = int(json_msg.data.passives.magic_ward_xp)
-	Account.guardian_shell_lvl = int(json_msg.data.passives.guardian_shell_lvl)
-	Account.guardian_shell_xp = int(json_msg.data.passives.guardian_shell_xp)
-	Account.evasion_training_lvl = int(json_msg.data.passives.evasion_training_lvl)
-	Account.evasion_training_xp = int(json_msg.data.passives.evasion_training_xp)
-	Account.mana_flow_lvl = int(json_msg.data.passives.mana_flow_lvl)
-	Account.mana_flow_xp = int(json_msg.data.passives.mana_flow_xp)
-	Account.regenerative_steps_lvl = int(json_msg.data.passives.regenerative_steps_lvl)
-	Account.regenerative_steps_xp = int(json_msg.data.passives.regenerative_steps_xp)
-	
-	# secondary parameters
-	Account.atk = json_msg.data.secondary_attributes.atk
-	Account.m_atk = json_msg.data.secondary_attributes.m_atk
-	Account.hit_rating = json_msg.data.secondary_attributes.hit_rating
-	Account.crit_chance_rating = json_msg.data.secondary_attributes.crit_chance_rating
-	Account.crit_damage_rating = json_msg.data.secondary_attributes.crit_damage_rating
-	Account.haste_rating = json_msg.data.secondary_attributes.haste_rating
-	Account.armor_pen_rating = json_msg.data.secondary_attributes.armor_pen_rating
-	Account.magic_pen_rating = json_msg.data.secondary_attributes.magic_pen_rating
-	Account.versatility_rating = json_msg.data.secondary_attributes.versatility_rating
-	Account.p_def_rating = json_msg.data.secondary_attributes.p_def_rating
-	Account.m_def_rating = json_msg.data.secondary_attributes.m_def_rating
-	Account.block_chance_rating = json_msg.data.secondary_attributes.block_chance_rating
-	Account.dodge_rating = json_msg.data.secondary_attributes.dodge_rating
-	Account.dmg_reduction_rating = json_msg.data.secondary_attributes.dmg_reduction_rating
-	
-	Account.hit = json_msg.data.secondary_attributes.hit
-	Account.crit_chance = json_msg.data.secondary_attributes.crit_chance
-	Account.crit_damage = json_msg.data.secondary_attributes.crit_damage
-	Account.haste = json_msg.data.secondary_attributes.haste
-	Account.armor_pen = json_msg.data.secondary_attributes.armor_pen
-	Account.magic_pen = json_msg.data.secondary_attributes.magic_pen
-	Account.versatility = json_msg.data.secondary_attributes.versatility
-	Account.p_def = json_msg.data.secondary_attributes.p_def
-	Account.m_def = json_msg.data.secondary_attributes.m_def
-	Account.block_chance = json_msg.data.secondary_attributes.block_chance
-	Account.dodge = json_msg.data.secondary_attributes.dodge
-	Account.dmg_reduction = json_msg.data.secondary_attributes.dmg_reduction
-	
-	# statuses
-	Account.location = int(json_msg.data.statuses.location)
-	Account.activity = int(json_msg.data.statuses.activity)
-	Account.activity_site = int(json_msg.data.statuses.activity_site)
+	# Bulk-assign groups via set() to avoid 100+ individual property lookups.
+	# Each section iterates a dict of {Account_property: value}.
+	_bulk_set(d.primary_attributes, [
+		"str", "agi", "vit", "int_stat", "spi", "luk",
+		"str_exp", "agi_exp", "vit_exp", "int_exp", "spi_exp", "luk_exp",
+		"bonus_str", "bonus_agi", "bonus_vit", "bonus_int", "bonus_spi", "bonus_luk",
+	])
 
-	Account.rift_id = int(json_msg.data.statuses.get("rift_id", 0))
-	Account.rift_steps = int(json_msg.data.statuses.get("rift_steps", 0))
-	Account.rift_steps_max = int(json_msg.data.statuses.get("rift_steps_max", 0))
-	Account.rift_milestone_index = int(json_msg.data.statuses.get("rift_milestone_index", 0))
-	Account.rift_total_milestones = int(json_msg.data.statuses.get("rift_total_milestones", 0))
-	Account.rift_instance_id = str(json_msg.data.statuses.get("rift_instance_id", ""))
+	Account.user_uid = d.user_uid
+	Account.userid = int(d.userid)
+	Account.username = d.username
 
-	Account.travel_destination = int(json_msg.data.statuses.get("travel_destination", 0))
-	Account.travel_steps       = int(json_msg.data.statuses.get("travel_steps",       0))
-	Account.travel_steps_max   = int(json_msg.data.statuses.get("travel_steps_max",   0))
+	_bulk_set_int(d.primary_resources, [
+		"hp", "mp", "shield", "hp_max", "mp_max", "shield_max",
+		"level", "total_steps", "buffer_steps", "buffer_steps_max", "gold",
+	])
+	Account.level_exp = d.primary_resources.level_exp
 
-	Account.variance = json_msg.data.internal.variance
-	Account.vit_crit_soften = json_msg.data.internal.vit_crit_soften
-	Account.spirit_healing_mult = json_msg.data.internal.spirit_healing_mult
-	
+	_bulk_set_int(d.professions, [
+		"herbalism_lvl", "mining_lvl", "woodcutting_lvl", "fishing_lvl",
+		"hunting_lvl", "blacksmithing_lvl", "tailoring_lvl", "jewelcrafting_lvl",
+		"alchemy_lvl", "cooking_lvl", "enchanting_lvl",
+		"herbalism_xp", "mining_xp", "woodcutting_xp", "fishing_xp",
+		"hunting_xp", "blacksmithing_xp", "tailoring_xp", "jewelcrafting_xp",
+		"alchemy_xp", "cooking_xp", "enchanting_xp",
+	])
+	Account.rift_lvl = int(d.professions.get("rift_lvl", 1))
+	Account.rift_xp = int(d.professions.get("rift_xp", 0))
+
+	_bulk_set_int(d.passives, [
+		"thick_skin_lvl", "thick_skin_xp",
+		"brutal_finish_lvl", "brutal_finish_xp",
+		"magic_ward_lvl", "magic_ward_xp",
+		"guardian_shell_lvl", "guardian_shell_xp",
+		"evasion_training_lvl", "evasion_training_xp",
+		"mana_flow_lvl", "mana_flow_xp",
+		"regenerative_steps_lvl", "regenerative_steps_xp",
+	])
+
+	var sa = d.secondary_attributes
+	_bulk_set(sa, [
+		"atk", "m_atk",
+		"hit_rating", "crit_chance_rating", "crit_damage_rating", "haste_rating",
+		"armor_pen_rating", "magic_pen_rating", "versatility_rating",
+		"p_def_rating", "m_def_rating", "block_chance_rating",
+		"dodge_rating", "dmg_reduction_rating",
+		"hit", "crit_chance", "crit_damage", "haste",
+		"armor_pen", "magic_pen", "versatility",
+		"p_def", "m_def", "block_chance", "dodge", "dmg_reduction",
+	])
+
+	# New affix ratings (use .get with defaults for backwards-compat)
+	for key in [
+		"hp_regen_battle_rating", "mp_regen_battle_rating",
+		"shield_regen_battle_rating", "life_steal_rating",
+		"precision_rating", "shield_absorb_bonus_rating",
+		"thorns_rating", "crit_dmg_reduction_rating",
+		"walk_regen_bonus_rating", "healing_amp_rating",
+	]:
+		Account.set(key, sa.get(key, 0))
+
+	for key in [
+		"hp_regen_battle", "mp_regen_battle", "shield_regen_battle",
+		"life_steal", "precision", "shield_absorb_bonus",
+		"thorns", "crit_dmg_reduction", "walk_regen_bonus", "healing_amp",
+	]:
+		Account.set(key, sa.get(key, 0.0))
+
+	# Statuses
+	var st = d.statuses
+	Account.location = int(st.location)
+	Account.activity = int(st.activity)
+	Account.activity_site = int(st.activity_site)
+
+	for key in ["rift_id", "rift_steps", "rift_steps_max",
+				 "rift_milestone_index", "rift_total_milestones",
+				 "travel_destination", "travel_steps", "travel_steps_max",
+				 "avatar_id", "crafting_steps"]:
+		Account.set(key, int(st.get(key, 0)))
+
+	Account.rift_instance_id = str(st.get("rift_instance_id", ""))
+	Account.crafting_recipe_id = str(st.get("crafting_recipe_id", ""))
+
+	Account.variance = d.internal.variance
+	Account.vit_crit_soften = d.internal.vit_crit_soften
+	Account.spirit_healing_mult = d.internal.spirit_healing_mult
+
 	update_client_visuals()
-	
+
 	signal_AccountDataReceived.emit(true)
+
+
+## Bulk helpers — reduce per-property overhead by iterating arrays
+func _bulk_set(source: Dictionary, keys: Array) -> void:
+	for key in keys:
+		Account.set(key, source[key])
+
+func _bulk_set_int(source: Dictionary, keys: Array) -> void:
+	for key in keys:
+		Account.set(key, int(source[key]))
 	
 func update_client_visuals():
 	var min_atk = snappedf(Account.atk * (1 - Account.variance), 0.1)
@@ -231,3 +202,9 @@ func update_skills(data):
 
 func update_rift_fights(data):
 	signal_RiftFightsReceived.emit(data)
+
+func handle_disenchant_result(json_msg) -> void:
+	SignalManager.signal_DisenchantResultReceived.emit(json_msg.data)
+
+func handle_profession_info(json_msg) -> void:
+	SignalManager.signal_ProfessionInfoReceived.emit(json_msg.data)

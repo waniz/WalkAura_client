@@ -1,0 +1,211 @@
+[gd_scene format=3 uid="uid://dbtuwwbbtspgn"]
+
+[ext_resource type="Script" uid="uid://d4i4bdkgft4pa" path="res://scenes/main_screens/character_inventory.gd" id="1_20dno"]
+[ext_resource type="FontFile" uid="uid://ckc03u8qer62y" path="res://assets/fonts/quadrat_regular.ttf" id="2_u7w1k"]
+
+[node name="CharacterInventory" type="Control" unique_id=413197890]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_20dno")
+columns = 7
+slot_padding = 4
+
+[node name="VBox_Root" type="VBoxContainer" parent="." unique_id=509841734]
+layout_mode = 0
+offset_left = 3.0
+offset_top = 207.0
+offset_right = 703.0
+offset_bottom = 1105.0
+
+[node name="Body" type="PanelContainer" parent="VBox_Root" unique_id=558080218]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Gear_Panel" type="PanelContainer" parent="VBox_Root/Body" unique_id=267432820]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel" unique_id=588080939]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Gear_Tab_Buttons" type="HBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer" unique_id=111111001]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Btn_Tab_Inventory" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Gear_Tab_Buttons" unique_id=111111002]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("2_u7w1k")
+text = "Inventory"
+
+[node name="Btn_Tab_Gear" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Gear_Tab_Buttons" unique_id=111111003]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("2_u7w1k")
+text = "Gear"
+
+[node name="Equipment_Panel" type="PanelContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer" unique_id=1808041064]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel" unique_id=1896465776]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 6
+
+[node name="equipment_vbox" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer" unique_id=448104839]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer/equipment_vbox" unique_id=695248875]
+layout_mode = 2
+
+[node name="col_left" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer/equipment_vbox/HBoxContainer" unique_id=1993815828]
+layout_mode = 2
+size_flags_horizontal = 0
+
+[node name="character_model" type="TextureRect" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer/equipment_vbox/HBoxContainer" unique_id=1692573957]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+stretch_mode = 3
+
+[node name="col_right" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer/equipment_vbox/HBoxContainer" unique_id=2090183713]
+layout_mode = 2
+size_flags_horizontal = 0
+
+[node name="ILVL_Label" type="Label" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer/equipment_vbox" unique_id=1401017680]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_u7w1k")
+text = "Average Gear Level: 0"
+horizontal_alignment = 1
+
+[node name="Inventory_Panel" type="PanelContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer" unique_id=2084679990]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel" unique_id=2050444499]
+layout_mode = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer" unique_id=262974154]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer" unique_id=2113083317]
+layout_mode = 2
+
+[node name="Btn_Split_Items" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer" unique_id=150048461]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_u7w1k")
+text = "Items"
+
+[node name="Btn_Split_Currency" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer" unique_id=297491067]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_u7w1k")
+text = "Currency"
+
+[node name="Label_Separator" type="Label" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer" unique_id=421401732]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_u7w1k")
+text = "               "
+
+[node name="Btn_ALL" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer" unique_id=1033951410]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_u7w1k")
+text = "ALL"
+
+[node name="Btn_GearOnly" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer" unique_id=1167030245]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_u7w1k")
+text = "Gear"
+
+[node name="Btn_ConsumableOnly" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer" unique_id=1243470710]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_u7w1k")
+text = "Consumable"
+
+[node name="Btn_LootOnly" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer" unique_id=1597777817]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_u7w1k")
+text = "Loot"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer" unique_id=1072828091]
+layout_mode = 2
+size_flags_horizontal = 6
+
+[node name="Space_Label" type="Label" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/HBoxContainer" unique_id=384953363]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_u7w1k")
+text = "Space 0 / 42"
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer" unique_id=681279065]
+layout_mode = 2
+size_flags_horizontal = 10
+
+[node name="Btn_Sort" type="Button" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/HBoxContainer2" unique_id=1381877699]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_u7w1k")
+text = "Sort"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer" unique_id=199911122]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 2
+
+[node name="ItemContainer" type="PanelContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/ScrollContainer" unique_id=226703665]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Grid" type="GridContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/ScrollContainer/ItemContainer" unique_id=679831904]
+layout_mode = 2
+
+[node name="CurrencyContainer" type="PanelContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer" unique_id=1980186667]
+visible = false
+custom_minimum_size = Vector2(0, 180)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/CurrencyContainer" unique_id=1730918532]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 6
+
+[node name="Vbox" type="VBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/CurrencyContainer/MarginContainer" unique_id=1512503440]
+layout_mode = 2
+
+[node name="HBox" type="HBoxContainer" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/CurrencyContainer/MarginContainer/Vbox" unique_id=1850496441]
+layout_mode = 2
+
+[node name="Gold_Texture" type="TextureRect" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/CurrencyContainer/MarginContainer/Vbox/HBox" unique_id=1073774783]
+layout_mode = 2
+
+[node name="Gold_label" type="Label" parent="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/CurrencyContainer/MarginContainer/Vbox/HBox" unique_id=1211777757]
+layout_mode = 2
+
+[connection signal="pressed" from="VBox_Root/Body/Gear_Panel/VBoxContainer/Gear_Tab_Buttons/Btn_Tab_Inventory" to="." method="_on_btn_tab_inventory_pressed"]
+[connection signal="pressed" from="VBox_Root/Body/Gear_Panel/VBoxContainer/Gear_Tab_Buttons/Btn_Tab_Gear" to="." method="_on_btn_tab_gear_pressed"]
+[connection signal="pressed" from="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/Btn_Split_Items" to="." method="_on_btn_split_items_pressed"]
+[connection signal="pressed" from="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/Btn_Split_Currency" to="." method="_on_btn_split_currency_pressed"]
+[connection signal="pressed" from="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/Btn_ALL" to="." method="_on_btn_all_pressed"]
+[connection signal="pressed" from="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/Btn_GearOnly" to="." method="_on_btn_gear_only_pressed"]
+[connection signal="pressed" from="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/Btn_ConsumableOnly" to="." method="_on_btn_consumable_only_pressed"]
+[connection signal="pressed" from="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/Btn_LootOnly" to="." method="_on_btn_loot_only_pressed"]
+[connection signal="pressed" from="VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/HBoxContainer2/Btn_Sort" to="." method="_on_btn_sort_pressed"]

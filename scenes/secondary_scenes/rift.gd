@@ -49,10 +49,11 @@ func _build_ui() -> void:
 	# Main panel — inset to clear the top CharacterHUD (~154 px) and bottom CanvasLayer HUD (~97 px)
 	var panel := PanelContainer.new()
 	panel.set_anchors_preset(Control.PRESET_FULL_RECT)
-	panel.offset_left = 24
-	panel.offset_right = -24
-	panel.offset_top = 210
-	panel.offset_bottom = -150
+	var mo := Styler.get_modal_offsets()
+	panel.offset_left = mo["left"]
+	panel.offset_right = mo["right"]
+	panel.offset_top = mo["top"]
+	panel.offset_bottom = mo["bottom"]
 	Styler._apply_parchment_style(panel)
 	add_child(panel)
 
@@ -108,7 +109,7 @@ func _build_ui() -> void:
 
 	var sel_title := Label.new()
 	sel_title.text = "Choose a Rift to Enter:"
-	Styler.style_name_label(sel_title, Styler.COLOR_GOLD)
+	Styler.style_parchment_label(sel_title, Styler.COLOR_GOLD)
 	_selection_container.add_child(sel_title)
 
 	var cards_hbox := HBoxContainer.new()
@@ -130,7 +131,7 @@ func _build_ui() -> void:
 	_active_container.add_child(_rift_name_label)
 
 	_rift_lvl_label = Label.new()
-	Styler.style_name_label(_rift_lvl_label, Styler.COLOR_GOLD)
+	Styler.style_parchment_label(_rift_lvl_label, Styler.COLOR_GOLD)
 	_active_container.add_child(_rift_lvl_label)
 
 	# Progress bar — transparent track on parchment
@@ -156,7 +157,7 @@ func _build_ui() -> void:
 	_active_container.add_child(_milestone_row)
 
 	_steps_label = Label.new()
-	Styler.style_name_label(_steps_label, Styler.COLOR_TEXT_DARK)
+	Styler.style_parchment_label(_steps_label, Styler.COLOR_TEXT_DARK)
 	_active_container.add_child(_steps_label)
 
 	# Fight history header row
@@ -167,7 +168,7 @@ func _build_ui() -> void:
 	var fight_title := Label.new()
 	fight_title.text = "Fight History:"
 	fight_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	Styler.style_name_label(fight_title, Styler.COLOR_TEXT_DARK)
+	Styler.style_parchment_label(fight_title, Styler.COLOR_TEXT_DARK)
 	fight_header_row.add_child(fight_title)
 
 	var refresh_btn := Button.new()
@@ -245,19 +246,19 @@ func _build_rift_card(cfg: Dictionary) -> PanelContainer:
 	var name_lbl := Label.new()
 	name_lbl.text = cfg["name"]
 	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	Styler.style_name_label(name_lbl, Styler.COLOR_TEXT_DARK)
+	Styler.style_parchment_label(name_lbl, Styler.COLOR_TEXT_DARK)
 	vbox.add_child(name_lbl)
 
 	var req_lbl := Label.new()
 	req_lbl.text = "Req: Rift Lvl %d" % cfg["req_lvl"]
 	req_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	Styler.style_name_label(req_lbl, Styler.COLOR_TEXT_DARK)
+	Styler.style_parchment_label(req_lbl, Styler.COLOR_TEXT_DARK)
 	vbox.add_child(req_lbl)
 
 	var info_lbl := Label.new()
 	info_lbl.text = "%d steps / %d milestones" % [cfg["total_steps"], cfg["total_milestones"]]
 	info_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	Styler.style_name_label(info_lbl, Styler.COLOR_TEXT_DARK)
+	Styler.style_parchment_label(info_lbl, Styler.COLOR_TEXT_DARK)
 	vbox.add_child(info_lbl)
 
 	var rift_lvl: int = int(Account.rift_lvl) if Account.rift_lvl != null else 1
@@ -387,7 +388,7 @@ func _on_rift_fights_received(data) -> void:
 	if fights == null or fights.is_empty():
 		var empty_lbl := Label.new()
 		empty_lbl.text = "No fights yet."
-		Styler.style_name_label(empty_lbl, Color.from_rgba8(150, 150, 150))
+		Styler.style_parchment_label(empty_lbl, Color.from_rgba8(150, 150, 150))
 		_fight_list.add_child(empty_lbl)
 		return
 
