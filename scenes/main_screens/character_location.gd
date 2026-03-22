@@ -19,6 +19,9 @@ const ACTIVITY_PROF_NAME := {
 	ACTIVITY_RIFT:        "rift",
 }
 
+const CONFIRMATION_DIALOG = preload("res://scenes/secondary_scenes/confirmation_dialog.tscn")
+var _confirm_dialog: Control = null
+
 # --- Scene References ---
 @onready var main_panel: PanelContainer = $VBoxContainer/Main_Panel
 @onready var location_title: Label = $VBoxContainer/Main_Panel/MarginContainer/HBoxContainer/Left_Column/Location_Title
@@ -259,10 +262,25 @@ func _make_activity_card(entry: Dictionary) -> PanelContainer:
 
 
 func _on_activity_card_clicked(activity_id: int) -> void:
-	if activity_id == ACTIVITY_RIFT:
-		SignalManager.signal_ShowRift.emit()
+	if _confirm_dialog and is_instance_valid(_confirm_dialog):
+		return
+	var activity_name: String = GameTextEn.activities_texts.get(activity_id, "Activity")
+	var text: String
+	if Account.activity:
+		var current_name: String = GameTextEn.activities_texts.get(Account.activity, "Activity")
+		text = "Stop %s and Start %s?" % [current_name, activity_name]
 	else:
-		SignalManager.signal_UserActivity.emit(activity_id, Account.location, "start")
+		text = "Start %s?" % activity_name
+	_confirm_dialog = CONFIRMATION_DIALOG.instantiate()
+	_confirm_dialog.setup(text)
+	add_child(_confirm_dialog)
+	_confirm_dialog.confirmed.connect(func():
+		if activity_id == ACTIVITY_RIFT:
+			SignalManager.signal_ShowRift.emit()
+		else:
+			SignalManager.signal_UserActivity.emit(activity_id, Account.location, "start")
+	)
+	_confirm_dialog.tree_exited.connect(func(): _confirm_dialog = null, CONNECT_ONE_SHOT)
 
 
 func _highlight_active_card() -> void:
