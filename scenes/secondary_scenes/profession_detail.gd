@@ -624,6 +624,19 @@ func _build_recipe_card(recipe: Dictionary) -> PanelContainer:
 	steps_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	info_hbox.add_child(steps_lbl)
 
+	# Effects (potion/scroll bonuses)
+	var effects = recipe.get("output_effects")
+	if effects != null and effects is Dictionary and effects.size() > 0:
+		var effects_parts: PackedStringArray = []
+		for eff_name in effects:
+			effects_parts.append("%s: +%s" % [eff_name, str(effects[eff_name])])
+		var eff_lbl = Label.new()
+		eff_lbl.text = "  ".join(effects_parts)
+		eff_lbl.add_theme_font_size_override("font_size", 11)
+		eff_lbl.add_theme_color_override("font_color", Color.from_rgba8(60, 200, 80))
+		eff_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
+		vbox.add_child(eff_lbl)
+
 	# Craft button (for crafting professions: alchemy, enchanting)
 	if _profession_name in ["alchemy", "enchanting"]:
 		var current_craft_activity = ACTIVITY_ENCHANTING if _profession_name == "enchanting" else ACTIVITY_ALCHEMY
