@@ -205,3 +205,29 @@ func to_dict() -> Dictionary:
 				continue
 			out[name] = get(name)
 	return out
+
+
+func clear() -> void:
+	# reset all script variables to their defaults
+	for p in get_property_list():
+		if p.usage & PROPERTY_USAGE_SCRIPT_VARIABLE != 0:
+			var name = p.name
+			# skip signals/constants/methods
+			if has_method(name):
+				continue
+			if p.name == "raw_structures":
+				continue
+			# reset based on property type
+			match p.type:
+				TYPE_INT:
+					set(name, 0)
+				TYPE_FLOAT:
+					set(name, 0.0)
+				TYPE_STRING:
+					set(name, "")
+				_:
+					set(name, null)
+
+	# reset raw_structures dict values
+	raw_structures.all_server_skills = null
+	raw_structures.account_skills = null
