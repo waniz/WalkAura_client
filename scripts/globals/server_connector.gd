@@ -21,6 +21,7 @@ var _heartbeat_timer: float = 0.0
 var _heartbeat_pending: bool = false
 var _heartbeat_timeout_timer: float = 0.0
 var _connection_healthy: bool = true
+var _auto_login_in_progress: bool = false
 
 # Part C: Reconnection overlay
 var _reconnect_overlay: CanvasLayer = null
@@ -96,8 +97,6 @@ func _process(_delta: float) -> void:
 				if not _connection_healthy:
 					_connection_healthy = true
 					_hide_reconnect_overlay()
-					if _was_authenticated and _saved_username != "" and _saved_password != "":
-						_auto_login()
 			else:
 				server_connector_message_bus.emit(raw_msg)
 
@@ -161,11 +160,15 @@ func _hide_reconnect_overlay() -> void:
 
 # Part D: Auto-login after reconnect
 func _auto_login() -> void:
+	if _auto_login_in_progress:
+		return
 	if _saved_username == "" or _saved_password == "":
 		return
+	_auto_login_in_progress = true
 	_on_user_login(_saved_username, _saved_password)
 	var login_ok = await AccountManager.signal_LoginResult
 	var data_ok = await AccountManager.signal_AccountDataReceived
+	_auto_login_in_progress = false
 	if login_ok and data_ok:
 		_connection_healthy = true
 		_hide_reconnect_overlay()
