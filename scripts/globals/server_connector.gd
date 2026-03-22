@@ -163,29 +163,33 @@ func _hide_reconnect_overlay() -> void:
 		_reconnect_overlay = null
 
 # Part D: Auto-login after reconnect
+var _auto_login_ok := false
+
 func _auto_login() -> void:
 	if _auto_login_in_progress:
 		return
 	if _saved_username == "" or _saved_password == "":
 		return
 	_auto_login_in_progress = true
-	# Connect callbacks BEFORE sending so we don't miss signals
-	# (server may respond in the same frame, both signals fire back-to-back)
-	var login_ok := false
-	AccountManager.signal_LoginResult.connect(func(result, _error):
-		login_ok = result
-	, CONNECT_ONE_SHOT)
-	AccountManager.signal_AccountDataReceived.connect(func(_result):
-		_auto_login_in_progress = false
-		if login_ok:
-			_connection_healthy = true
-			_hide_reconnect_overlay()
-		else:
-			clear_credentials()
-			_hide_reconnect_overlay()
-			SceneManage.goto("res://scenes/login_screen/login_scene.tscn")
-	, CONNECT_ONE_SHOT)
+	_auto_login_ok = false
+	AccountManager.signal_LoginResult.connect(_on_auto_login_result, CONNECT_ONE_SHOT)
+	AccountManager.signal_AccountDataReceived.connect(_on_auto_login_data, CONNECT_ONE_SHOT)
 	_on_user_login(_saved_username, _saved_password)
+
+
+func _on_auto_login_result(result: bool, _error: String) -> void:
+	_auto_login_ok = result
+
+
+func _on_auto_login_data(_result) -> void:
+	_auto_login_in_progress = false
+	if _auto_login_ok:
+		_connection_healthy = true
+		_hide_reconnect_overlay()
+	else:
+		clear_credentials()
+		_hide_reconnect_overlay()
+		SceneManage.goto("res://scenes/login_screen/login_scene.tscn")
 
 # Part A: Credential helper methods
 func clear_credentials() -> void:
