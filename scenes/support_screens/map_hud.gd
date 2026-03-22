@@ -92,20 +92,20 @@ func _ready() -> void:
 	else:
 		update_location(player_pos_ratio)
 
-	# Hamburger menu button (below minimap)
+	# Hamburger menu button (bottom-right corner of minimap)
 	_menu_btn = Button.new()
 	_menu_btn.text = "☰"
-	_menu_btn.custom_minimum_size = Vector2(40, 40)
+	_menu_btn.custom_minimum_size = Vector2(36, 36)
 	Styler.style_button(_menu_btn, Color.from_rgba8(40, 42, 54, 220))
-	_menu_btn.add_theme_font_size_override("font_size", 22)
+	_menu_btn.add_theme_font_size_override("font_size", 20)
 	_menu_btn.add_theme_color_override("font_color", Color(1.0, 0.78, 0.26))  # gold
 	_menu_btn.pressed.connect(_on_menu_btn_pressed)
 	add_child(_menu_btn)
-	# Position below minimap: right-aligned with minimap's right edge
+	# Position at bottom-right corner of minimap, overlapping slightly
 	await get_tree().process_frame
 	_menu_btn.position = Vector2(
-		mini_map_frame.position.x + mini_map_frame.size.x - 40,  # right-align
-		mini_map_frame.position.y + mini_map_frame.size.y + 8     # below minimap + gap
+		mini_map_frame.position.x + mini_map_frame.size.x - 36,
+		mini_map_frame.position.y + mini_map_frame.size.y - 36
 	)
 
 

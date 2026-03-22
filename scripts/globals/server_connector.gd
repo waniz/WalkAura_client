@@ -91,15 +91,18 @@ func _process(_delta: float) -> void:
 
 		while socket.get_available_packet_count():
 			var raw_msg = socket.get_packet().get_string_from_ascii()
-			var parsed = JSON.parse_string(raw_msg)
-			if parsed != null and parsed.has("cmd") and parsed["cmd"] == "heartbeat_ack":
-				_heartbeat_pending = false
-				_heartbeat_timeout_timer = 0.0
-				if not _connection_healthy:
-					_connection_healthy = true
-					_hide_reconnect_overlay()
-			else:
-				server_connector_message_bus.emit(raw_msg)
+			# Server messages are prefixed with "[SERVER] " (9 chars)
+			if raw_msg.begins_with("[SERVER] "):
+				var json_str = raw_msg.substr(9)
+				var parsed = JSON.parse_string(json_str)
+				if parsed != null and parsed is Dictionary and parsed.get("cmd") == "heartbeat_ack":
+					_heartbeat_pending = false
+					_heartbeat_timeout_timer = 0.0
+					if not _connection_healthy:
+						_connection_healthy = true
+						_hide_reconnect_overlay()
+					continue
+			server_connector_message_bus.emit(raw_msg)
 
 		# Heartbeat timer logic
 		_heartbeat_timer += _delta

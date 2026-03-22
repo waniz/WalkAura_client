@@ -71,8 +71,8 @@ func _ready() -> void:
 	await get_tree().process_frame
 	var panel_size = panel.size
 	panel.position = Vector2(
-		_anchor_pos.x + 40 - panel_size.x,  # right-align with button right edge
-		_anchor_pos.y + 40 + 4  # just below the button (40px button height + 4px gap)
+		_anchor_pos.x + 36 - panel_size.x,  # right-align with button right edge
+		_anchor_pos.y + 36 + 4  # just below the button
 	)
 
 	# Backdrop tap → close
