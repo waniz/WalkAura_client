@@ -445,10 +445,17 @@ func _on_relogin() -> void:
 func _on_exit() -> void:
 	if _confirm_dialog and is_instance_valid(_confirm_dialog):
 		return
+	# Hide reconnect overlay so it doesn't block the exit confirmation
+	ServerConnector.suppress_reconnect_overlay = true
+	if ServerConnector._reconnect_overlay:
+		ServerConnector._hide_reconnect_overlay()
 	_confirm_dialog = CONFIRMATION_DIALOG.instantiate()
 	_confirm_dialog.setup("Are you sure you want to exit?")
 	add_child(_confirm_dialog)
 	_confirm_dialog.confirmed.connect(func():
 		get_tree().quit()
 	)
-	_confirm_dialog.tree_exited.connect(func(): _confirm_dialog = null, CONNECT_ONE_SHOT)
+	_confirm_dialog.tree_exited.connect(func():
+		_confirm_dialog = null
+		ServerConnector.suppress_reconnect_overlay = false
+	, CONNECT_ONE_SHOT)

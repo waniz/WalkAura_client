@@ -22,6 +22,7 @@ var _heartbeat_pending: bool = false
 var _heartbeat_timeout_timer: float = 0.0
 var _connection_healthy: bool = true
 var _auto_login_in_progress: bool = false
+var suppress_reconnect_overlay: bool = false
 
 # Part C: Reconnection overlay
 var _reconnect_overlay: CanvasLayer = null
@@ -131,7 +132,7 @@ func _process(_delta: float) -> void:
 
 # Part C: Reconnection overlay methods
 func _show_reconnect_overlay() -> void:
-	if _reconnect_overlay != null:
+	if _reconnect_overlay != null or suppress_reconnect_overlay:
 		return
 	_reconnect_overlay = CanvasLayer.new()
 	_reconnect_overlay.layer = 200
