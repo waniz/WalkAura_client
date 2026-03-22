@@ -27,6 +27,10 @@ var map_texture: Texture2D = load("res://assets/world_map_v1.png")
 const CONFIRMATION_DIALOG = preload("res://scenes/secondary_scenes/confirmation_dialog.tscn")
 var _confirm_dialog: Control = null
 
+const SYSTEM_MENU_SCENE = preload("res://scenes/support_screens/system_menu.tscn")
+var _system_menu: Control = null
+var _menu_btn: Button
+
 var _tooltip_panel: PanelContainer = null
 var _tooltip_label: Label = null
 var _big_player_marker: TextureRect = null
@@ -87,6 +91,22 @@ func _ready() -> void:
 		update_location(_location_to_map_ratio(Account.location))
 	else:
 		update_location(player_pos_ratio)
+
+	# Hamburger menu button (below minimap)
+	_menu_btn = Button.new()
+	_menu_btn.text = "☰"
+	_menu_btn.custom_minimum_size = Vector2(40, 40)
+	Styler.style_button(_menu_btn, Color.from_rgba8(40, 42, 54, 220))
+	_menu_btn.add_theme_font_size_override("font_size", 22)
+	_menu_btn.add_theme_color_override("font_color", Color(1.0, 0.78, 0.26))  # gold
+	_menu_btn.pressed.connect(_on_menu_btn_pressed)
+	add_child(_menu_btn)
+	# Position below minimap: right-aligned with minimap's right edge
+	await get_tree().process_frame
+	_menu_btn.position = Vector2(
+		mini_map_frame.position.x + mini_map_frame.size.x - 40,  # right-align
+		mini_map_frame.position.y + mini_map_frame.size.y + 8     # below minimap + gap
+	)
 
 
 # Call whenever the player moves. pos_ratio: Vector2 where x/y are 0.0–1.0.
@@ -399,5 +419,36 @@ func _on_waypoint_pressed(waypoint_id: String) -> void:
 		full_map_overlay.visible = false
 		_hide_tooltip()
 		SignalManager.signal_TravelRequest.emit(location_id)
+	)
+	_confirm_dialog.tree_exited.connect(func(): _confirm_dialog = null, CONNECT_ONE_SHOT)
+
+
+func _on_menu_btn_pressed() -> void:
+	if _system_menu and is_instance_valid(_system_menu):
+		return
+	_system_menu = SYSTEM_MENU_SCENE.instantiate()
+	_system_menu.setup(_menu_btn.global_position)
+	add_child(_system_menu)
+	_system_menu.relogin_pressed.connect(_on_relogin)
+	_system_menu.exit_pressed.connect(_on_exit)
+	_system_menu.tree_exited.connect(func(): _system_menu = null, CONNECT_ONE_SHOT)
+
+
+func _on_relogin() -> void:
+	ServerConnector.socket.close()
+	ServerConnector.clear_credentials()
+	Account.clear()
+	SceneManage.goto("res://scenes/login_screen/login_scene.tscn")
+	ServerConnector.connect_to_server.call_deferred()
+
+
+func _on_exit() -> void:
+	if _confirm_dialog and is_instance_valid(_confirm_dialog):
+		return
+	_confirm_dialog = CONFIRMATION_DIALOG.instantiate()
+	_confirm_dialog.setup("Are you sure you want to exit?")
+	add_child(_confirm_dialog)
+	_confirm_dialog.confirmed.connect(func():
+		get_tree().quit()
 	)
 	_confirm_dialog.tree_exited.connect(func(): _confirm_dialog = null, CONNECT_ONE_SHOT)
