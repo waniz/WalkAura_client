@@ -68,36 +68,30 @@ func _build_ui() -> void:
 
 	# --- Tab Buttons ---
 	var tab_hbox := HBoxContainer.new()
-	tab_hbox.layout_mode = 2
 	tab_hbox.add_theme_constant_override("separation", 4)
 	vbox_root.add_child(tab_hbox)
 
 	btn_tab_skills = Button.new()
 	btn_tab_skills.text = "Skills"
-	btn_tab_skills.layout_mode = 2
 	btn_tab_skills.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tab_hbox.add_child(btn_tab_skills)
 
 	btn_tab_talents = Button.new()
 	btn_tab_talents.text = "Talents"
-	btn_tab_talents.layout_mode = 2
 	btn_tab_talents.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tab_hbox.add_child(btn_tab_talents)
 
 	# --- Body ---
 	var body := PanelContainer.new()
-	body.layout_mode = 2
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vbox_root.add_child(body)
 
 	# --- Skill Panel ---
 	skill_panel = PanelContainer.new()
-	skill_panel.layout_mode = 2
 	skill_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(skill_panel)
 
 	var skill_margin := MarginContainer.new()
-	skill_margin.layout_mode = 2
 	skill_margin.add_theme_constant_override("margin_left", 10)
 	skill_margin.add_theme_constant_override("margin_top", 10)
 	skill_margin.add_theme_constant_override("margin_right", 10)
@@ -105,96 +99,77 @@ func _build_ui() -> void:
 	skill_panel.add_child(skill_margin)
 
 	var skill_vbox_outer := VBoxContainer.new()
-	skill_vbox_outer.layout_mode = 2
 	skill_margin.add_child(skill_vbox_outer)
 
 	v_box_skills = VBoxContainer.new()
-	v_box_skills.layout_mode = 2
 	skill_vbox_outer.add_child(v_box_skills)
 
 	title_active_skills = Label.new()
 	title_active_skills.text = "Active Skills"
-	title_active_skills.layout_mode = 2
 	v_box_skills.add_child(title_active_skills)
 
 	active_container = HBoxContainer.new()
-	active_container.layout_mode = 2
 	v_box_skills.add_child(active_container)
 
 	h_separator = HSeparator.new()
-	h_separator.layout_mode = 2
 	v_box_skills.add_child(h_separator)
 
 	title_spellbook = Label.new()
 	title_spellbook.text = "Spellbook"
-	title_spellbook.layout_mode = 2
 	v_box_skills.add_child(title_spellbook)
 
 	h_box_btn_control = HBoxContainer.new()
-	h_box_btn_control.layout_mode = 2
 	v_box_skills.add_child(h_box_btn_control)
 
 	btn_skills_mage = Button.new()
 	btn_skills_mage.text = "Mage"
-	btn_skills_mage.layout_mode = 2
 	h_box_btn_control.add_child(btn_skills_mage)
 
 	btn_skills_paladin = Button.new()
 	btn_skills_paladin.text = "Paladin"
-	btn_skills_paladin.layout_mode = 2
 	h_box_btn_control.add_child(btn_skills_paladin)
 
 	btn_skills_buffs = Button.new()
 	btn_skills_buffs.text = "Buffs"
-	btn_skills_buffs.layout_mode = 2
 	h_box_btn_control.add_child(btn_skills_buffs)
 
 	spellbook_panel_base = PanelContainer.new()
-	spellbook_panel_base.layout_mode = 2
 	spellbook_panel_base.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	spellbook_panel_base.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	skill_vbox_outer.add_child(spellbook_panel_base)
 
 	mage_panel = PanelContainer.new()
-	mage_panel.layout_mode = 2
 	mage_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	mage_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	spellbook_panel_base.add_child(mage_panel)
 
 	mage_grid_spellbook = GridContainer.new()
-	mage_grid_spellbook.layout_mode = 2
 	mage_panel.add_child(mage_grid_spellbook)
 
 	paladin_panel = PanelContainer.new()
 	paladin_panel.visible = false
-	paladin_panel.layout_mode = 2
 	paladin_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	paladin_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	spellbook_panel_base.add_child(paladin_panel)
 
 	paladin_grid_spellbook = GridContainer.new()
-	paladin_grid_spellbook.layout_mode = 2
 	paladin_panel.add_child(paladin_grid_spellbook)
 
 	buffs_panel = PanelContainer.new()
 	buffs_panel.visible = false
-	buffs_panel.layout_mode = 2
 	buffs_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	spellbook_panel_base.add_child(buffs_panel)
 
 	buffs_grid_spellbook = GridContainer.new()
-	buffs_grid_spellbook.layout_mode = 2
 	buffs_panel.add_child(buffs_grid_spellbook)
 
 	# --- Talents Panel ---
 	talents_panel = PanelContainer.new()
 	talents_panel.visible = false
-	talents_panel.layout_mode = 2
 	talents_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(talents_panel)
 
 	var talent_margin := MarginContainer.new()
-	talent_margin.layout_mode = 2
 	talent_margin.add_theme_constant_override("margin_left", 10)
 	talent_margin.add_theme_constant_override("margin_top", 10)
 	talent_margin.add_theme_constant_override("margin_right", 10)
@@ -202,16 +177,13 @@ func _build_ui() -> void:
 	talents_panel.add_child(talent_margin)
 
 	var talent_vbox := VBoxContainer.new()
-	talent_vbox.layout_mode = 2
 	talent_margin.add_child(talent_vbox)
 
 	title_talents = Label.new()
 	title_talents.text = "Passive Skills"
-	title_talents.layout_mode = 2
 	talent_vbox.add_child(title_talents)
 
 	talent_grid = GridContainer.new()
-	talent_grid.layout_mode = 2
 	talent_grid.columns = 2
 	talent_vbox.add_child(talent_grid)
 
@@ -271,7 +243,7 @@ func _update_character_talents() -> void:
 	set_stats(stats)
 
 
-func _update_character_talents_signal(dummy) -> void:
+func _update_character_talents_signal(_dummy) -> void:
 	var stats = Account.to_dict()
 	set_stats(stats)
 
@@ -281,8 +253,8 @@ func set_stats(d: Dictionary) -> void:
 	var accent_color = Color.from_rgba8(64, 180, 255)
 	for entry in TALENT_KEYS:
 		var lvl = int(d.get(entry.k, 0))
-		var exp = int(d.get(entry.exp, 0))
-		var card = _make_mini_card_primary(entry.n, lvl, exp, accent_color)
+		var xp = int(d.get(entry.exp, 0))
+		var card = _make_mini_card_primary(entry.n, lvl, xp, accent_color)
 		talent_grid.add_child(card)
 
 
@@ -291,12 +263,12 @@ func _clear(node: Node) -> void:
 		c.queue_free()
 
 
-func _make_mini_card_primary(name: String, lvl: int, exp: int, accent: Color) -> Control:
+func _make_mini_card_primary(stat_name: String, lvl: int, xp: int, accent: Color) -> Control:
 	var lvl_key = str(lvl)
 	var next_lvl_key = str(lvl + 1)
 	var cur_base = PASSIVE_TOTAL_TO_LEVEL.get(lvl_key, 0)
 	var next_base = PASSIVE_TOTAL_TO_LEVEL.get(next_lvl_key, cur_base + 100)
-	var lvl_current = exp - cur_base
+	var lvl_current = xp - cur_base
 	var lvl_progress = next_base - cur_base
 	var frac = 0.0
 	if lvl_progress > 0: frac = float(lvl_current) / float(lvl_progress)
@@ -304,7 +276,7 @@ func _make_mini_card_primary(name: String, lvl: int, exp: int, accent: Color) ->
 
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(160, 80)
-	panel.tooltip_text = name + "\n(Passive Talent)"
+	panel.tooltip_text = stat_name + "\n(Passive Talent)"
 
 	var sb = StyleBoxFlat.new()
 	sb.bg_color = Color(0.0, 0.0, 0.0, 0.06)
@@ -344,8 +316,8 @@ func _make_mini_card_primary(name: String, lvl: int, exp: int, accent: Color) ->
 		"Thick Skin": "thick_skin", "Brutal Finish": "brutal_strike",
 		"Guardian Shell": "guardian_shell", "Evasion Training": "evasion_training",
 	}
-	if ItemDB.has_icon(icon_key.get(name)):
-		icon.texture = ItemDB.get_icon(icon_key.get(name))
+	if ItemDB.has_icon(icon_key.get(stat_name)):
+		icon.texture = ItemDB.get_icon(icon_key.get(stat_name))
 
 	var spacer = Control.new()
 	spacer.custom_minimum_size.x = 8
@@ -361,7 +333,7 @@ func _make_mini_card_primary(name: String, lvl: int, exp: int, accent: Color) ->
 	vb.add_child(hb)
 
 	var n_lbl := Label.new()
-	n_lbl.text = name
+	n_lbl.text = stat_name
 	n_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	n_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 	n_lbl.add_theme_font_size_override("font_size", 14)

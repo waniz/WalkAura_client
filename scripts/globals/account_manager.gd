@@ -92,8 +92,9 @@ func get_account_attrs(json_msg):
 
 	# Bulk-assign groups via set() to avoid 100+ individual property lookups.
 	# Each section iterates a dict of {Account_property: value}.
+	Account.str_stat = d.primary_attributes["str"]
 	_bulk_set(d.primary_attributes, [
-		"str", "agi", "vit", "int_stat", "spi", "luk",
+		"agi", "vit", "int_stat", "spi", "luk",
 		"str_exp", "agi_exp", "vit_exp", "int_exp", "spi_exp", "luk_exp",
 		"bonus_str", "bonus_agi", "bonus_vit", "bonus_int", "bonus_spi", "bonus_luk",
 	])

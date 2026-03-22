@@ -59,7 +59,7 @@ const ICON_KEY_MAP = {
 }
 
 const PRIMARY_KEYS = [
-	{"k":"str",      "n":"Strength",   "exp": "str_exp", "bonus": "bonus_str"},
+	{"k":"str_stat",      "n":"Strength",   "exp": "str_exp", "bonus": "bonus_str"},
 	{"k":"agi",      "n":"Agility",    "exp": "agi_exp", "bonus": "bonus_agi"},
 	{"k":"vit",      "n":"Vitality",   "exp": "vit_exp", "bonus": "bonus_vit"},
 	{"k":"int_stat", "n":"Intellect", "exp": "int_exp", "bonus": "bonus_int"},
@@ -260,7 +260,7 @@ func _ready() -> void:
 	var stats = Account.to_dict()
 	set_stats(stats)
 
-func _update_character_data(value):
+func _update_character_data(_value):
 	var stats = Account.to_dict()
 	set_stats(stats)
 
@@ -271,9 +271,9 @@ func set_stats(d: Dictionary) -> void:
 	# Primary cards (big numbers)
 	for entry in PRIMARY_KEYS:
 		var lvl = int(d.get(entry.k, 0))
-		var exp = int(d.get(entry.exp, 0))
+		var xp = int(d.get(entry.exp, 0))
 		var bonus = int(d.get(entry.bonus, 0))
-		var card = _make_mini_card_primary(entry.n, lvl, exp, bonus, Color.from_rgba8(64, 180, 255))
+		var card = _make_mini_card_primary(entry.n, lvl, xp, bonus, Color.from_rgba8(64, 180, 255))
 		primary_grid.add_child(card)
 
 	if _stats_list_vbox != null:
@@ -283,11 +283,11 @@ func set_stats(d: Dictionary) -> void:
 		_populate_professions(d)
 
 # ---------- UI Builders ----------
-func _make_mini_card_primary(name: String, lvl: int, exp: int, bonus: int, accent: Color) -> Control:
+func _make_mini_card_primary(stat_name: String, lvl: int, xp: int, bonus: int, accent: Color) -> Control:
 	# --- parse & split value into whole + fractional parts ---
-	var floor_exp: int = STATS_TOTAL_TO_LEVEL.get(str(lvl),     exp)
+	var floor_exp: int = STATS_TOTAL_TO_LEVEL.get(str(lvl),     xp)
 	var next_exp:  int = STATS_TOTAL_TO_LEVEL.get(str(lvl + 1), -1)
-	var lvl_current:  int = max(0, exp - floor_exp)
+	var lvl_current:  int = max(0, xp - floor_exp)
 	var lvl_progress: int = max(1, next_exp - floor_exp) if next_exp >= 0 else 1
 
 	var whole = int(lvl)
@@ -333,7 +333,7 @@ func _make_mini_card_primary(name: String, lvl: int, exp: int, bonus: int, accen
 		"Luck"     : "attributes_luck",
 	}
 
-	icon.texture = ItemDB.get_icon(icon_key.get(name))
+	icon.texture = ItemDB.get_icon(icon_key.get(stat_name))
 	icon_box.add_child(icon)
 
 	# --- first line: name + value ---
@@ -349,7 +349,7 @@ func _make_mini_card_primary(name: String, lvl: int, exp: int, bonus: int, accen
 	vb.add_child(hb)
 
 	var n_lbl := Label.new()
-	n_lbl.text = name
+	n_lbl.text = stat_name
 	n_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	n_lbl.add_theme_font_size_override("font_size", 18)
 	n_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
@@ -392,8 +392,8 @@ func _make_mini_card_primary(name: String, lvl: int, exp: int, bonus: int, accen
 	pb.add_child(pct_lbl)
 
 	return panel
-	
-func _make_mini_card(name: String, lvl: int, activity_exp: int, accent: Color) -> Control:
+
+func _make_mini_card(stat_name: String, lvl: int, activity_exp: int, accent: Color) -> Control:
 	# --- parse & split value into whole + fractional parts ---
 	var next_exp:  int = ACTIVITY_TOTAL_TO_LEVEL.get(str(lvl + 1), -1)
 	var lvl_current:  int = max(0, activity_exp)
@@ -436,7 +436,7 @@ func _make_mini_card(name: String, lvl: int, activity_exp: int, accent: Color) -
 		"Rift Explorer": "rift",
 	}
 
-	icon.texture = ItemDB.get_icon(icon_key.get(name))
+	icon.texture = ItemDB.get_icon(icon_key.get(stat_name))
 	main_hbox.add_child(icon)
 
 	# --- name (centered) + level + progress bar below ---
@@ -451,7 +451,7 @@ func _make_mini_card(name: String, lvl: int, activity_exp: int, accent: Color) -
 	vb.add_child(hb)
 
 	var n_lbl := Label.new()
-	n_lbl.text = name
+	n_lbl.text = stat_name
 	n_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	n_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	n_lbl.add_theme_font_size_override("font_size", 18)
@@ -660,7 +660,7 @@ func _make_row(name: String, value: String, percent_: String, accent: Color) -> 
 	hb.add_child(val_lbl)
 	return hb
 	
-func _style_section_card(card: PanelContainer, title: String, accent: Color) -> void:
+func _style_section_card(card: PanelContainer, title: String, _accent: Color) -> void:
 	var sb := StyleBoxFlat.new()
 	sb.bg_color     = Color(0.0, 0.0, 0.0, 0.06)
 	sb.border_color = Color(0.0, 0.0, 0.0, 0.20)
@@ -861,7 +861,7 @@ func _make_magic_group(title: String, keys: Array, d: Dictionary) -> Control:
 
 
 func _make_stat_header() -> Control:
-	var gold := Styler.COLOR_GOLD
+	var _gold := Styler.COLOR_GOLD
 	var panel := PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var style := StyleBoxFlat.new()

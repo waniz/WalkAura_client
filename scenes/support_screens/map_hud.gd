@@ -263,7 +263,6 @@ func _build_waypoints() -> void:
 		btn.position = map_texture.get_size() * pos_ratio - Vector2(36.0, 36.0)
 		_style_waypoint(btn)
 		var icon := TextureRect.new()
-		icon.layout_mode = 0
 		icon.offset_left = 4.0
 		icon.offset_top = 4.0
 		icon.offset_right = 68.0

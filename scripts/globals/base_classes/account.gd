@@ -6,7 +6,7 @@ var userid
 var username
 
 # primary parameters
-var str
+var str_stat
 var agi
 var vit
 var int_stat
@@ -197,13 +197,13 @@ func to_dict() -> Dictionary:
 	var out := {}
 	for p in get_property_list():
 		if p.usage & PROPERTY_USAGE_SCRIPT_VARIABLE != 0:
-			var name = p.name
+			var prop_name = p.name
 			# skip signals/constants/methods
-			if has_method(name):
+			if has_method(prop_name):
 				continue
-			if p.name == "raw_structures":
+			if prop_name == "raw_structures":
 				continue
-			out[name] = get(name)
+			out[prop_name] = get(prop_name)
 	return out
 
 

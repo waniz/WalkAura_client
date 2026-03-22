@@ -586,7 +586,7 @@ func _update_tooltip_position_to_point(global_point: Vector2) -> void:
 		# --- Joint layout: treat [compare | gap | primary] as one block ---
 		var cmp_size := _compare_tooltip.size if _compare_tooltip.size.x > 1 \
 						else _compare_tooltip.get_combined_minimum_size()
-		var total_w  := cmp_size.x + TOOLTIP_MARGIN + t_size.x
+		var _total_w  := cmp_size.x + TOOLTIP_MARGIN + t_size.x
 		var max_h    := maxf(t_size.y, cmp_size.y)
 
 		# Vertical: prefer below touch, flip above if overflow, then clamp
@@ -739,7 +739,7 @@ func _update_equipment_slot_visuals(slot_name: String) -> void:
 	if not _eq_slot_nodes.has(slot_name): return
 
 	var nodes = _eq_slot_nodes[slot_name]
-	var panel = nodes["panel"]
+	var _panel = nodes["panel"]
 	var icon  = nodes["icon"]
 	var lbl   = nodes.get("label")
 	var sb    = nodes.get("sb") as StyleBoxFlat
@@ -812,7 +812,7 @@ func _update_space_label() -> void:
 			occupied += 1
 	space_label.text = "Space %d / %d" % [occupied, _slots.size()]
 
-func _on_currency_update(server_json):
+func _on_currency_update(_server_json):
 	gold_label.text = " Gold: {0}".format([str(int(Account.gold))])
 
 func _on_tooltip_action_use(_item_uid, _qty: int) -> void:

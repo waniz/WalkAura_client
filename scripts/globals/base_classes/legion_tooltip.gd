@@ -154,7 +154,7 @@ func _setup_footer_area() -> void:
 	
 # --- Main Data Function ---
 func set_data(item_def: Dictionary, qty: int = 1, tooltip_source = "inventory",
-		slot_index = -1, slot_name = "", compare_def: Dictionary = {}) -> void:
+		_slot_index = -1, slot_name = "", compare_def: Dictionary = {}) -> void:
 	_def         = item_def
 	_compare_def = compare_def
 	_qty = qty
@@ -321,7 +321,7 @@ func _stat_arrow(my_val, their_val) -> int:
 	if a < b: return -1
 	return 0
 
-func _add_stat_row(text: String, color: Color, bold: bool = false, arrow: int = 0) -> void:
+func _add_stat_row(text: String, color: Color, _bold: bool = false, arrow: int = 0) -> void:
 	# 1. Create a horizontal row to hold spacer + text
 	var hbox = HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 0) # Tight spacing
@@ -496,7 +496,7 @@ func _on_fill_max_pressed():
 
 func _get_player_stat(stat_name: String) -> int:
 	match stat_name:
-		"Strength":  return int(Account.str)
+		"Strength":  return int(Account.str_stat)
 		"Agility":   return int(Account.agi)
 		"Intellect": return int(Account.int_stat)
 	return 0

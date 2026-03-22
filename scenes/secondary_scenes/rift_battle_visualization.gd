@@ -137,7 +137,7 @@ func _build_player_panel() -> Control:
 	var name_lbl := Label.new()
 	name_lbl.text = str(Account.username) if Account.username != null else "Hero"
 	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_lbl.autowrap_mode = 3
+	name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	Styler.style_parchment_label(name_lbl, Styler.COLOR_TEXT_DARK)
 	vbox.add_child(name_lbl)
 
@@ -216,7 +216,7 @@ func _build_enemy_panel(enemy_name: String) -> Control:
 	var name_lbl := Label.new()
 	name_lbl.text = enemy_name
 	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_lbl.autowrap_mode = 3
+	name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	Styler.style_parchment_label(name_lbl, Styler.COLOR_TEXT_DARK)
 	vbox.add_child(name_lbl)
 
