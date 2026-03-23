@@ -218,22 +218,24 @@ func _make_activity_card(entry: Dictionary) -> PanelContainer:
 
 	# Card container
 	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(0, 44)
 	var card_sb := StyleBoxFlat.new()
 	card_sb.bg_color     = Color(0.0, 0.0, 0.0, 0.06)
 	card_sb.border_color = Color(0.0, 0.0, 0.0, 0.20)
 	card_sb.set_border_width_all(1)
 	card_sb.set_corner_radius_all(5)
+	card_sb.content_margin_left = 8
+	card_sb.content_margin_right = 8
 	panel.add_theme_stylebox_override("panel", card_sb)
 	panel.set_meta("sb", card_sb)
 
 	var main_hbox := HBoxContainer.new()
-	main_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	main_hbox.alignment = BoxContainer.ALIGNMENT_BEGIN
+	main_hbox.add_theme_constant_override("separation", 10)
 	panel.add_child(main_hbox)
 
-	# Icon (aligned left)
+	# Icon
 	var icon := TextureRect.new()
-	icon.custom_minimum_size = Vector2(52, 52)
+	icon.custom_minimum_size = Vector2(40, 40)
 	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -241,13 +243,12 @@ func _make_activity_card(entry: Dictionary) -> PanelContainer:
 	icon.texture = ItemDB.get_icon(profession)
 	main_hbox.add_child(icon)
 
-	# Activity name (centered in remaining space)
+	# Activity name (left-aligned)
 	var n_lbl := Label.new()
 	n_lbl.text = activity_name
 	n_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	n_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	n_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	n_lbl.add_theme_font_size_override("font_size", 18)
+	n_lbl.add_theme_font_size_override("font_size", 16)
 	n_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 	n_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	main_hbox.add_child(n_lbl)
