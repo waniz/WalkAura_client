@@ -92,20 +92,33 @@ func _ready() -> void:
 	else:
 		update_location(player_pos_ratio)
 
-	# Hamburger menu button (bottom-right corner of minimap)
+	# Circular hamburger menu button — centered on minimap bottom-right corner
+	var btn_size := 32
 	_menu_btn = Button.new()
 	_menu_btn.text = "☰"
-	_menu_btn.custom_minimum_size = Vector2(36, 36)
-	Styler.style_button(_menu_btn, Color.from_rgba8(40, 42, 54, 220))
-	_menu_btn.add_theme_font_size_override("font_size", 20)
-	_menu_btn.add_theme_color_override("font_color", Color(1.0, 0.78, 0.26))  # gold
+	_menu_btn.custom_minimum_size = Vector2(btn_size, btn_size)
+	# Circular style
+	var circle_normal = StyleBoxFlat.new()
+	circle_normal.bg_color = Color.from_rgba8(40, 42, 54, 220)
+	circle_normal.set_corner_radius_all(btn_size / 2)
+	circle_normal.border_color = Color(1.0, 0.78, 0.26, 0.6)
+	circle_normal.set_border_width_all(2)
+	var circle_hover = circle_normal.duplicate()
+	circle_hover.bg_color = Color.from_rgba8(60, 62, 74, 230)
+	var circle_pressed = circle_normal.duplicate()
+	circle_pressed.bg_color = Color.from_rgba8(30, 32, 44, 240)
+	_menu_btn.add_theme_stylebox_override("normal", circle_normal)
+	_menu_btn.add_theme_stylebox_override("hover", circle_hover)
+	_menu_btn.add_theme_stylebox_override("pressed", circle_pressed)
+	_menu_btn.add_theme_font_size_override("font_size", 18)
+	_menu_btn.add_theme_color_override("font_color", Color(1.0, 0.78, 0.26))
 	_menu_btn.pressed.connect(_on_menu_btn_pressed)
 	add_child(_menu_btn)
-	# Position at bottom-right corner of minimap, overlapping slightly
+	# Center on minimap bottom-right corner
 	await get_tree().process_frame
 	_menu_btn.position = Vector2(
-		mini_map_frame.position.x + mini_map_frame.size.x - 36,
-		mini_map_frame.position.y + mini_map_frame.size.y - 36
+		mini_map_frame.position.x + mini_map_frame.size.x - btn_size / 2,
+		mini_map_frame.position.y + mini_map_frame.size.y - btn_size / 2
 	)
 
 
@@ -428,9 +441,14 @@ func _on_menu_btn_pressed() -> void:
 	_system_menu = SYSTEM_MENU_SCENE.instantiate()
 	_system_menu.setup(_menu_btn.global_position)
 	add_child(_system_menu)
+	_system_menu.settings_pressed.connect(_on_settings)
 	_system_menu.relogin_pressed.connect(_on_relogin)
 	_system_menu.exit_pressed.connect(_on_exit)
 	_system_menu.tree_exited.connect(func(): _system_menu = null, CONNECT_ONE_SHOT)
+
+
+func _on_settings() -> void:
+	pass  # TODO: open settings screen
 
 
 func _on_relogin() -> void:
