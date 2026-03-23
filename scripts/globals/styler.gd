@@ -51,18 +51,44 @@ const COLOR_PARCHMENT   = Color(0.95, 0.92, 0.84, 1.0) # Beige background
 const COLOR_TEXT_DARK   = Color(0.1, 0.1, 0.1, 1.0)    # Dark text
 var   COLOR_PANEL_DARK  = Color.from_rgba8(28,30,40,255)
 const COLOR_BORDER      = Color(0.2, 0.2, 0.2, 1.0)
-const COLOR_GOLD        = Color(0.8, 0.6, 0.0, 1.0)
+var   COLOR_GOLD        = Color.from_rgba8(255, 200, 66)  # Unified with COL_PRIMARY
 const COLOR_SLOT_BG     = Color(0.0, 0.0, 0.0, 0.15)   # Dark slot bg
 const COLOR_ACCENT      = Color(0.2, 0.2, 0.2, 1.0)
 const COLOR_CARD_BG     = Color(0.0, 0.0, 0.0, 0.05) # Faint inset for cards
 const COLOR_CARD_BORDER = Color(0.0, 0.0, 0.0, 0.15)
 
-var GOLD_COLOR = Color.from_rgba8(255,200,66)
-
-var MORPHEUS_FONT = load("res://assets/fonts/morpheus.ttf")
 var GROBOLT_FONT  = load("res://assets/fonts/grobolt.ttf")
 var JANDA_FONT    = load("res://assets/fonts/janda.ttf")
 var QUADRAT_FONT  = load("res://assets/fonts/quadrat_regular.ttf")
+
+# ------------------- Design constants -------------------
+# Semantic button colors
+const COLOR_BTN_PRIMARY    = Color.from_rgba8(64, 180, 255)     # Cyan — primary actions
+const COLOR_BTN_SECONDARY  = Color.from_rgba8(255, 200, 66)     # Gold — secondary actions
+const COLOR_BTN_DESTRUCTIVE = Color.from_rgba8(180, 60, 60)     # Red — stop/close/delete
+const COLOR_BTN_SUCCESS    = Color.from_rgba8(60, 130, 70)      # Green — start/confirm
+const COLOR_BTN_DISABLED   = Color.from_rgba8(70, 70, 70)       # Gray — disabled state
+
+# Semantic text colors
+const COLOR_TEXT_SUCCESS   = Color.from_rgba8(60, 200, 80)      # Green text
+const COLOR_TEXT_ERROR     = Color.from_rgba8(220, 80, 80)      # Red text
+const COLOR_TEXT_MUTED     = Color(0.4, 0.4, 0.4)              # Gray/secondary text
+
+# Font size scale
+const FONT_TITLE     := 24  # Modal titles, major headers
+const FONT_SECTION   := 22  # Section headers (talents, skills)
+const FONT_HEADING   := 18  # Sub-headers, activity names, stat names
+const FONT_BODY      := 15  # Default body text, labels, descriptions
+const FONT_SMALL     := 13  # Small labels, HUD text
+const FONT_CAPTION   := 11  # Captions, footnotes
+
+# Spacing scale (multiples of 4)
+const SPACING_XS := 4
+const SPACING_SM := 8
+const SPACING_MD := 12
+const SPACING_LG := 16
+const SPACING_XL := 20
+const SPACING_XXL := 24
 
 
 # ------------------- Styling helpers -------------------

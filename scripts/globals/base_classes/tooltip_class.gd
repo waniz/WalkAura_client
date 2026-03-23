@@ -48,7 +48,7 @@ func _ready() -> void:
 	margin_main.add_theme_constant_override("margin_left", 10)
 	margin_main.add_theme_constant_override("margin_top", 10)
 	margin_main.add_theme_constant_override("margin_bottom", 10)
-	margin_main.add_theme_constant_override("margin_rigt", 10)
+	margin_main.add_theme_constant_override("margin_right", 10)
 	root.add_child(margin_main)
 
 	_title = Label.new()
