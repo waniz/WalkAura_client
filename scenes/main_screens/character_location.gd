@@ -93,6 +93,13 @@ func _apply_visual_theme() -> void:
 	location_desc.add_theme_font_size_override("font_size", 12)
 	location_desc.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 
+	# Visual separation before activities
+	var desc_sep := HSeparator.new()
+	desc_sep.add_theme_constant_override("separation", 8)
+	var right_col = activities_header.get_parent()
+	right_col.add_child(desc_sep)
+	right_col.move_child(desc_sep, 0)
+
 	# Activities header
 	activities_header.add_theme_font_override("font", Styler.JANDA_FONT)
 	activities_header.add_theme_font_size_override("font_size", 16)

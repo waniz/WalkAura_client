@@ -218,10 +218,20 @@ func _build_ui() -> void:
 func _build_rift_card(cfg: Dictionary) -> PanelContainer:
 	var card := PanelContainer.new()
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var rift_id: int = cfg["id"]
+	var rift_accent: Color
+	if rift_id == 1:  # Ancient
+		rift_accent = Color.from_rgba8(64, 140, 220)
+	else:  # Infernal
+		rift_accent = Color.from_rgba8(200, 60, 60)
+
 	var _csb := StyleBoxFlat.new()
 	_csb.bg_color     = Color(0.0, 0.0, 0.0, 0.06)
-	_csb.border_color = Color(0.0, 0.0, 0.0, 0.20)
-	_csb.set_border_width_all(1)
+	_csb.border_color = rift_accent
+	_csb.border_width_left = 4
+	_csb.border_width_top = 1
+	_csb.border_width_right = 1
+	_csb.border_width_bottom = 1
 	_csb.set_corner_radius_all(5)
 	card.add_theme_stylebox_override("panel", _csb)
 
@@ -246,7 +256,9 @@ func _build_rift_card(cfg: Dictionary) -> PanelContainer:
 	var name_lbl := Label.new()
 	name_lbl.text = cfg["name"]
 	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	Styler.style_parchment_label(name_lbl, Styler.COLOR_TEXT_DARK)
+	name_lbl.add_theme_font_override("font", Styler.JANDA_FONT)
+	name_lbl.add_theme_font_size_override("font_size", 18)
+	name_lbl.add_theme_color_override("font_color", rift_accent)
 	vbox.add_child(name_lbl)
 
 	var req_lbl := Label.new()
@@ -263,7 +275,6 @@ func _build_rift_card(cfg: Dictionary) -> PanelContainer:
 
 	var rift_lvl: int = int(Account.rift_lvl) if Account.rift_lvl != null else 1
 	var start_btn := Button.new()
-	var rift_id: int = cfg["id"]
 	if rift_lvl < int(cfg["req_lvl"]):
 		start_btn.text = "LOCKED (Lvl %d)" % cfg["req_lvl"]
 		start_btn.disabled = true

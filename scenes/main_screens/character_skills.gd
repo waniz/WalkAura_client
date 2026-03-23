@@ -504,12 +504,28 @@ func _render_spellbook_lists() -> void:
 		lbl_descr.add_theme_font_size_override("font_size", 14)
 		vbox_info.add_child(lbl_descr)
 
-		var expl = " Mana: " + _fmt(skill_instance["mp_cost"]) + " Cast time: " + _fmt(float(skill_instance["cast_time"]) / 10) + "s" + " CD: " + _fmt(float(skill_instance["cooldown"]) / 10) + "s"
-		var lbl_mp_cost = Label.new()
-		lbl_mp_cost.text = expl
-		lbl_mp_cost.add_theme_color_override("font_color", Color(0.4, 0.4, 0.4))
-		lbl_mp_cost.add_theme_font_size_override("font_size", 12)
-		vbox_info.add_child(lbl_mp_cost)
+		var mp_hbox = HBoxContainer.new()
+		mp_hbox.add_theme_constant_override("separation", 8)
+		mp_hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		vbox_info.add_child(mp_hbox)
+
+		var lbl_mana = Label.new()
+		lbl_mana.text = "Mana: " + _fmt(skill_instance["mp_cost"])
+		lbl_mana.add_theme_color_override("font_color", Color.from_rgba8(64, 180, 255))
+		lbl_mana.add_theme_font_size_override("font_size", 14)
+		mp_hbox.add_child(lbl_mana)
+
+		var lbl_cast = Label.new()
+		lbl_cast.text = "Cast: " + _fmt(float(skill_instance["cast_time"]) / 10) + "s"
+		lbl_cast.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
+		lbl_cast.add_theme_font_size_override("font_size", 14)
+		mp_hbox.add_child(lbl_cast)
+
+		var lbl_cd = Label.new()
+		lbl_cd.text = "CD: " + _fmt(float(skill_instance["cooldown"]) / 10) + "s"
+		lbl_cd.add_theme_color_override("font_color", Styler.COLOR_GOLD)
+		lbl_cd.add_theme_font_size_override("font_size", 14)
+		mp_hbox.add_child(lbl_cd)
 
 		var effect = _parse_effects(skill_instance)
 		var lbl_effect = Label.new()

@@ -73,7 +73,7 @@ func _ready() -> void:
 		var tex: Texture2D = ItemDB.AVATARS[key]
 		var id: int = int(key)
 		var btn := Button.new()
-		btn.custom_minimum_size = Vector2(140, 160)
+		btn.custom_minimum_size = Vector2(160, 180)
 		btn.toggle_mode = false
 		btn.focus_mode = Control.FOCUS_NONE
 
@@ -95,7 +95,7 @@ func _ready() -> void:
 
 		var img := TextureRect.new()
 		img.texture = tex
-		img.custom_minimum_size = Vector2(96, 96)
+		img.custom_minimum_size = Vector2(112, 112)
 		img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		img.size_flags_horizontal = Control.SIZE_SHRINK_CENTER

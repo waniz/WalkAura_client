@@ -11,6 +11,10 @@ var _android_plugin = null
 
 
 func _ready() -> void:
+	if not OS.is_debug_build():
+		visible = false
+		set_process(false)
+		return
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	AccountManager.signal_UserStepLastTSReceived.connect(_on_step_counter_android_update)
 	

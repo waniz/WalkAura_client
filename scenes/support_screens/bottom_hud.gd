@@ -131,7 +131,7 @@ func _make_slot(idx: int) -> Dictionary:
 	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	lbl.add_theme_font_override("font", Styler.JANDA_FONT)
-	lbl.add_theme_font_size_override("font_size", 13)
+	lbl.add_theme_font_size_override("font_size", 15)
 	lbl.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 1.0))
 	lbl.add_theme_constant_override("outline_size", 2)
 	vbox.add_child(lbl)

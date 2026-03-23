@@ -780,6 +780,7 @@ func _populate_stats_list(d: Dictionary) -> void:
 	_clear(_stats_list_vbox)
 	match _current_stats_mode:
 		0:
+			_stats_list_vbox.add_child(_make_section_header("Offense"))
 			for i in range(OFFENSE_KEYS.size()):
 				var entry = OFFENSE_KEYS[i]
 				var p_key = entry.get("p", 0)
@@ -792,6 +793,7 @@ func _populate_stats_list(d: Dictionary) -> void:
 				_stats_list_vbox.add_child(_make_stat_row(entry.n, display, i, false))
 			_stats_list_vbox.add_child(_make_magic_group("Damage Amplifiers", MAGIC_DAMAGE_KEYS, d))
 		1:
+			_stats_list_vbox.add_child(_make_section_header("Defense"))
 			for i in range(DEFENSE_KEYS.size()):
 				var entry = DEFENSE_KEYS[i]
 				var p_key = entry.get("p", 0)
@@ -958,6 +960,20 @@ func _make_stat_row(stat_name: String, value: String, idx: int, show_icon: bool 
 	hb.add_child(val_lbl)
 
 	return panel
+
+
+func _make_section_header(title: String) -> Control:
+	var lbl := Label.new()
+	lbl.text = title
+	lbl.add_theme_font_override("font", Styler.JANDA_FONT)
+	lbl.add_theme_font_size_override("font_size", 16)
+	lbl.add_theme_color_override("font_color", Styler.COLOR_GOLD)
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_top", 6)
+	margin.add_theme_constant_override("margin_bottom", 2)
+	margin.add_theme_constant_override("margin_left", 10)
+	margin.add_child(lbl)
+	return margin
 
 
 # ── Professions Section ────────────────────────────────────────────────────────
