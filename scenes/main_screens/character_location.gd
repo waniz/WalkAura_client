@@ -176,37 +176,43 @@ func _build_activity_cards() -> void:
 		elif act_id in battle_ids:
 			battle_entries.append(entry)
 
-	var groups := []
-	if not gathering_entries.is_empty():
-		groups.append({"name": "Gathering", "entries": gathering_entries})
-	if not battle_entries.is_empty():
-		groups.append({"name": "Battle", "entries": battle_entries})
+	# Two-column layout: gathering (left) | battle (right)
+	var columns := HBoxContainer.new()
+	columns.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	columns.add_theme_constant_override("separation", 8)
+	activities_vbox.add_child(columns)
 
+	var groups := [
+		{"name": "Gathering", "entries": gathering_entries},
+		{"name": "Battle", "entries": battle_entries},
+	]
 	for group in groups:
-		# Group header panel
-		var grp_panel := PanelContainer.new()
-		grp_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var grp_sb := StyleBoxFlat.new()
-		grp_sb.bg_color     = Color(0.0, 0.0, 0.0, 0.10)
-		grp_sb.border_color = Color(0.0, 0.0, 0.0, 0.20)
-		grp_sb.set_border_width_all(1)
-		grp_sb.set_corner_radius_all(4)
-		grp_panel.add_theme_stylebox_override("panel", grp_sb)
+		var col_vbox := VBoxContainer.new()
+		col_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		col_vbox.add_theme_constant_override("separation", 4)
+		columns.add_child(col_vbox)
 
+		# Column header
 		var grp_lbl := Label.new()
 		grp_lbl.text = group.name.to_upper()
-		grp_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
+		grp_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		grp_lbl.add_theme_color_override("font_color", Styler.COLOR_GOLD)
 		grp_lbl.add_theme_font_size_override("font_size", 14)
 		grp_lbl.add_theme_font_override("font", Styler.JANDA_FONT)
-		grp_panel.add_child(grp_lbl)
-		activities_vbox.add_child(grp_panel)
+		col_vbox.add_child(grp_lbl)
 
-		# Mini-cards for each activity
-		for entry in group.entries:
-			var card := _make_activity_card(entry)
-			card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			activities_vbox.add_child(card)
-			_activity_cards[int(entry["id"])] = card
+		if group.entries.is_empty():
+			var empty_lbl := Label.new()
+			empty_lbl.text = "—"
+			empty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			empty_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+			col_vbox.add_child(empty_lbl)
+		else:
+			for entry in group.entries:
+				var card := _make_activity_card(entry)
+				card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				col_vbox.add_child(card)
+				_activity_cards[int(entry["id"])] = card
 
 	_highlight_active_card()
 
