@@ -63,15 +63,15 @@ var QUADRAT_FONT  = load("res://assets/fonts/quadrat_regular.ttf")
 
 # ------------------- Design constants -------------------
 # Semantic button colors
-const COLOR_BTN_PRIMARY    = Color.from_rgba8(64, 180, 255)     # Cyan — primary actions
-const COLOR_BTN_SECONDARY  = Color.from_rgba8(255, 200, 66)     # Gold — secondary actions
-const COLOR_BTN_DESTRUCTIVE = Color.from_rgba8(180, 60, 60)     # Red — stop/close/delete
-const COLOR_BTN_SUCCESS    = Color.from_rgba8(60, 130, 70)      # Green — start/confirm
-const COLOR_BTN_DISABLED   = Color.from_rgba8(70, 70, 70)       # Gray — disabled state
+var COLOR_BTN_PRIMARY    = Color.from_rgba8(64, 180, 255)     # Cyan — primary actions
+var COLOR_BTN_SECONDARY  = Color.from_rgba8(255, 200, 66)     # Gold — secondary actions
+var COLOR_BTN_DESTRUCTIVE = Color.from_rgba8(180, 60, 60)     # Red — stop/close/delete
+var COLOR_BTN_SUCCESS    = Color.from_rgba8(60, 130, 70)      # Green — start/confirm
+var COLOR_BTN_DISABLED   = Color.from_rgba8(70, 70, 70)       # Gray — disabled state
 
 # Semantic text colors
-const COLOR_TEXT_SUCCESS   = Color.from_rgba8(60, 200, 80)      # Green text
-const COLOR_TEXT_ERROR     = Color.from_rgba8(220, 80, 80)      # Red text
+var COLOR_TEXT_SUCCESS   = Color.from_rgba8(60, 200, 80)      # Green text
+var COLOR_TEXT_ERROR     = Color.from_rgba8(220, 80, 80)      # Red text
 const COLOR_TEXT_MUTED     = Color(0.4, 0.4, 0.4)              # Gray/secondary text
 
 # Font size scale
