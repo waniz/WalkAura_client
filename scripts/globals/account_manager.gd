@@ -178,6 +178,8 @@ func get_account_attrs(json_msg):
 	Account.vit_crit_soften = d.internal.vit_crit_soften
 	Account.spirit_healing_mult = d.internal.spirit_healing_mult
 
+	Account.active_buffs = d.get("active_buffs", {})
+
 	update_client_visuals()
 
 	signal_AccountDataReceived.emit(true)

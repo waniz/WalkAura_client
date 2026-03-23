@@ -186,6 +186,9 @@ var variance
 var vit_crit_soften
 var spirit_healing_mult
 
+# temporary buffs from elixirs/flasks
+var active_buffs: Dictionary = {}
+
 # structures to keep autoloaded
 var raw_structures = {
 	"all_server_skills": null,
