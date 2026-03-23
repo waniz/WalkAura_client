@@ -263,24 +263,24 @@ func _on_profession_info(data: Dictionary) -> void:
 	for child in _scroll_content.get_children():
 		child.queue_free()
 
-	if _profession_name == "herbalism":
-		_build_herbalism_content(data)
+	if _profession_name in ["herbalism", "mining", "woodcutting", "fishing"]:
+		_build_gathering_content(data)
 	elif _profession_name == "alchemy":
 		_build_alchemy_content(data)
 	elif _profession_name == "enchanting":
 		_build_enchanting_content(data)
 
 
-func _build_herbalism_content(data: Dictionary) -> void:
-	var herbs: Array = data.get("herbs", [])
+func _build_gathering_content(data: Dictionary) -> void:
+	var loot_items: Array = data.get("loot_table", [])
 	var req_skill: int = int(data.get("req_skill", 0))
 	var prof_lvl: int = int(data.get("level", 1))
 	var activity_name: String = data.get("activity_name", "")
-	var herb_loot_counts: Dictionary = data.get("herb_loot_counts", {})
+	var loot_counts: Dictionary = data.get("loot_counts", {})
 
 	if req_skill > prof_lvl:
 		var locked_lbl = Label.new()
-		locked_lbl.text = "Requires Herbalism Level %d" % req_skill
+		locked_lbl.text = "Requires Level %d" % req_skill
 		Styler.style_parchment_label(locked_lbl, Color.from_rgba8(200, 80, 80))
 		_scroll_content.add_child(locked_lbl)
 		return
@@ -341,6 +341,22 @@ func _build_herbalism_content(data: Dictionary) -> void:
 	Styler.style_parchment_label(spc_lbl, Styler.COLOR_TEXT_DARK)
 	left_vbox.add_child(spc_lbl)
 
+	# Overall stats separator
+	var overall_header = Label.new()
+	overall_header.text = "Overall"
+	Styler.style_parchment_label(overall_header, Styler.COLOR_GOLD)
+	left_vbox.add_child(overall_header)
+
+	var total_actions_lbl = Label.new()
+	total_actions_lbl.text = "Total Actions: %d" % int(data.get("total_profession_actions", 0))
+	Styler.style_parchment_label(total_actions_lbl, Styler.COLOR_TEXT_DARK)
+	left_vbox.add_child(total_actions_lbl)
+
+	var total_steps_lbl = Label.new()
+	total_steps_lbl.text = "Total Steps: %d" % int(data.get("total_profession_steps", 0))
+	Styler.style_parchment_label(total_steps_lbl, Styler.COLOR_TEXT_DARK)
+	left_vbox.add_child(total_steps_lbl)
+
 	# Right — Loot frame
 	var right_panel = PanelContainer.new()
 	right_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -366,19 +382,19 @@ func _build_herbalism_content(data: Dictionary) -> void:
 	Styler.style_parchment_label(loot_header, Styler.COLOR_GOLD)
 	right_vbox.add_child(loot_header)
 
-	if herbs.is_empty():
+	if loot_items.is_empty():
 		var empty_lbl = Label.new()
-		empty_lbl.text = "No herbs available."
+		empty_lbl.text = "No loot available."
 		Styler.style_parchment_label(empty_lbl, Styler.COLOR_TEXT_DARK)
 		right_vbox.add_child(empty_lbl)
 		return
 
-	for herb in herbs:
-		var row = _build_herb_row(herb, herb_loot_counts)
+	for item in loot_items:
+		var row = _build_loot_row(item, loot_counts)
 		right_vbox.add_child(row)
 
 
-func _build_herb_row(herb: Dictionary, loot_counts: Dictionary = {}) -> PanelContainer:
+func _build_loot_row(herb: Dictionary, loot_counts: Dictionary = {}) -> PanelContainer:
 	var panel = PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var sb = StyleBoxFlat.new()
