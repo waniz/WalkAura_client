@@ -41,6 +41,7 @@ const QUALITY_COLORS := {
 }
 
 var COL_PRIMARY  = Color.from_rgba8(255, 200, 66)
+var GOLD_COLOR   = COL_PRIMARY  # Alias for backward compatibility
 var COL_OFFENSE  = Color.from_rgba8(255, 120, 90)
 var COL_DEFENSE  = Color.from_rgba8(64, 180, 255)
 var COL_PANEL_BG = Color.from_rgba8(16, 18, 24, 220)
