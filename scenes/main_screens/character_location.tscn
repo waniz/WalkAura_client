@@ -24,32 +24,21 @@ theme_override_constants/separation = 8
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/Main_Panel"]
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/Main_Panel"]
 layout_mode = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_bottom = 8
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
 
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Main_Panel/MarginContainer"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="Left_Column" type="VBoxContainer" parent="VBoxContainer/Main_Panel/MarginContainer/HBoxContainer"]
+[node name="Content_VBox" type="VBoxContainer" parent="VBoxContainer/Main_Panel/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 1.0
-theme_override_constants/separation = 6
+theme_override_constants/separation = 8
 
-[node name="Location_Title" type="Label" parent="VBoxContainer/Main_Panel/MarginContainer/HBoxContainer/Left_Column"]
-layout_mode = 2
-text = "Location Name"
-
-[node name="Image_Frame" type="PanelContainer" parent="VBoxContainer/Main_Panel/MarginContainer/HBoxContainer/Left_Column"]
+[node name="Image_Frame" type="PanelContainer" parent="VBoxContainer/Main_Panel/ScrollContainer/Content_VBox"]
 layout_mode = 2
 
-[node name="LocationPicture" type="TextureRect" parent="VBoxContainer/Main_Panel/MarginContainer/HBoxContainer/Left_Column/Image_Frame"]
-custom_minimum_size = Vector2(0, 300)
+[node name="LocationPicture" type="TextureRect" parent="VBoxContainer/Main_Panel/ScrollContainer/Content_VBox/Image_Frame"]
+custom_minimum_size = Vector2(0, 180)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
@@ -57,27 +46,38 @@ texture = ExtResource("2_aaoyo")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Location_Desc" type="Label" parent="VBoxContainer/Main_Panel/MarginContainer/HBoxContainer/Left_Column"]
+[node name="Info_Margin" type="MarginContainer" parent="VBoxContainer/Main_Panel/ScrollContainer/Content_VBox"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_right = 10
+
+[node name="Info_VBox" type="VBoxContainer" parent="VBoxContainer/Main_Panel/ScrollContainer/Content_VBox/Info_Margin"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Location_Title" type="Label" parent="VBoxContainer/Main_Panel/ScrollContainer/Content_VBox/Info_Margin/Info_VBox"]
+layout_mode = 2
+text = "Location Name"
+
+[node name="Location_Desc" type="Label" parent="VBoxContainer/Main_Panel/ScrollContainer/Content_VBox/Info_Margin/Info_VBox"]
 layout_mode = 2
 autowrap_mode = 3
 text = "Location description."
 
-[node name="Right_Column" type="VBoxContainer" parent="VBoxContainer/Main_Panel/MarginContainer/HBoxContainer"]
+[node name="Activities_Margin" type="MarginContainer" parent="VBoxContainer/Main_Panel/ScrollContainer/Content_VBox"]
 layout_mode = 2
-size_flags_horizontal = 3
-size_flags_stretch_ratio = 1.0
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_right = 10
+
+[node name="Activities_VBox_Wrapper" type="VBoxContainer" parent="VBoxContainer/Main_Panel/ScrollContainer/Content_VBox/Activities_Margin"]
+layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="Activities_Header" type="Label" parent="VBoxContainer/Main_Panel/MarginContainer/HBoxContainer/Right_Column"]
+[node name="Activities_Header" type="Label" parent="VBoxContainer/Main_Panel/ScrollContainer/Content_VBox/Activities_Margin/Activities_VBox_Wrapper"]
 layout_mode = 2
 text = "Activities"
 
-[node name="Activities_Scroll" type="ScrollContainer" parent="VBoxContainer/Main_Panel/MarginContainer/HBoxContainer/Right_Column"]
-layout_mode = 2
-size_flags_vertical = 3
-horizontal_scroll_mode = 0
-
-[node name="Activities_VBox" type="VBoxContainer" parent="VBoxContainer/Main_Panel/MarginContainer/HBoxContainer/Right_Column/Activities_Scroll"]
+[node name="Activities_VBox" type="VBoxContainer" parent="VBoxContainer/Main_Panel/ScrollContainer/Content_VBox/Activities_Margin/Activities_VBox_Wrapper"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
@@ -90,8 +90,8 @@ size_flags_vertical = 0
 
 [node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/Status_Panel"]
 layout_mode = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_right = 8
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_right = 10
 theme_override_constants/margin_top = 8
 theme_override_constants/margin_bottom = 8
 

@@ -24,12 +24,12 @@ var _confirm_dialog: Control = null
 
 # --- Scene References ---
 @onready var main_panel: PanelContainer = $VBoxContainer/Main_Panel
-@onready var location_title: Label = $VBoxContainer/Main_Panel/MarginContainer/HBoxContainer/Left_Column/Location_Title
-@onready var image_frame: PanelContainer = $VBoxContainer/Main_Panel/MarginContainer/HBoxContainer/Left_Column/Image_Frame
-@onready var location_picture: TextureRect = $VBoxContainer/Main_Panel/MarginContainer/HBoxContainer/Left_Column/Image_Frame/LocationPicture
-@onready var location_desc: Label = $VBoxContainer/Main_Panel/MarginContainer/HBoxContainer/Left_Column/Location_Desc
-@onready var activities_header: Label = $VBoxContainer/Main_Panel/MarginContainer/HBoxContainer/Right_Column/Activities_Header
-@onready var activities_vbox: VBoxContainer = $VBoxContainer/Main_Panel/MarginContainer/HBoxContainer/Right_Column/Activities_Scroll/Activities_VBox
+@onready var location_title: Label = $VBoxContainer/Main_Panel/ScrollContainer/Content_VBox/Info_Margin/Info_VBox/Location_Title
+@onready var image_frame: PanelContainer = $VBoxContainer/Main_Panel/ScrollContainer/Content_VBox/Image_Frame
+@onready var location_picture: TextureRect = $VBoxContainer/Main_Panel/ScrollContainer/Content_VBox/Image_Frame/LocationPicture
+@onready var location_desc: Label = $VBoxContainer/Main_Panel/ScrollContainer/Content_VBox/Info_Margin/Info_VBox/Location_Desc
+@onready var activities_header: Label = $VBoxContainer/Main_Panel/ScrollContainer/Content_VBox/Activities_Margin/Activities_VBox_Wrapper/Activities_Header
+@onready var activities_vbox: VBoxContainer = $VBoxContainer/Main_Panel/ScrollContainer/Content_VBox/Activities_Margin/Activities_VBox_Wrapper/Activities_VBox
 
 @onready var status_panel: PanelContainer = $VBoxContainer/Status_Panel
 @onready var status_title: Label = $VBoxContainer/Status_Panel/MarginContainer/Status_VBox/Status_Title
@@ -89,16 +89,9 @@ func _apply_visual_theme() -> void:
 	location_title.add_theme_color_override("font_color", Styler.COLOR_GOLD)
 
 	# Location description
-	location_desc.add_theme_font_override("font", Styler.JANDA_FONT)
-	location_desc.add_theme_font_size_override("font_size", 12)
+	location_desc.add_theme_font_override("font", Styler.QUADRAT_FONT)
+	location_desc.add_theme_font_size_override("font_size", 14)
 	location_desc.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
-
-	# Visual separation before activities
-	var desc_sep := HSeparator.new()
-	desc_sep.add_theme_constant_override("separation", 8)
-	var right_col = activities_header.get_parent()
-	right_col.add_child(desc_sep)
-	right_col.move_child(desc_sep, 0)
 
 	# Activities header
 	activities_header.add_theme_font_override("font", Styler.JANDA_FONT)
@@ -113,8 +106,8 @@ func _apply_visual_theme() -> void:
 	Styler.style_mini_progress(status_xp_bar, Color.from_rgba8(80, 160, 255))
 
 	for lbl in [status_xp_label, status_steps_label, status_actions_label, status_progress_label]:
-		lbl.add_theme_font_override("font", Styler.JANDA_FONT)
-		lbl.add_theme_font_size_override("font_size", 12)
+		lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
+		lbl.add_theme_font_size_override("font_size", 14)
 		lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 
 	# Stop button
