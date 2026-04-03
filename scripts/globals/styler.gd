@@ -1,12 +1,12 @@
 extends Node
 
 # ------------------- Adaptive layout -------------------
-const TOP_HUD_HEIGHT := 195.0
-const BOTTOM_HUD_HEIGHT := 108.0
-const CONTENT_PAD_TOP := 16.0
-const CONTENT_PAD_BOTTOM := 8.0
-const CONTENT_MARGIN_H := 8.0
-const MODAL_MARGIN_H := 24.0
+const TOP_HUD_HEIGHT = 195.0
+const BOTTOM_HUD_HEIGHT = 108.0
+const CONTENT_PAD_TOP = 16.0
+const CONTENT_PAD_BOTTOM = 8.0
+const CONTENT_MARGIN_H = 8.0
+const MODAL_MARGIN_H = 24.0
 
 var content_top: float = 0.0
 var content_bottom: float = 0.0
@@ -30,7 +30,7 @@ func get_modal_offsets() -> Dictionary:
 	}
 
 
-const QUALITY_COLORS := {
+const QUALITY_COLORS = {
 	0: Color(0.62, 0.62, 0.62), # Poor
 	1: Color(1, 1, 1),          # Common
 	2: Color(0.12, 1, 0),       # Uncommon
@@ -70,26 +70,38 @@ var COLOR_BTN_DESTRUCTIVE = Color.from_rgba8(180, 60, 60)     # Red — stop/clo
 var COLOR_BTN_SUCCESS    = Color.from_rgba8(60, 130, 70)      # Green — start/confirm
 var COLOR_BTN_DISABLED   = Color.from_rgba8(70, 70, 70)       # Gray — disabled state
 
+# Blood magic
+var COL_BLOOD = Color.from_rgba8(140, 20, 40)           # Blood tab, blood school identity
+var COLOR_LEECH = Color.from_rgba8(180, 40, 40)          # Leech heal numbers in battle log
+
+# Elemental magic
+const COL_FIRE = Color(1.0, 0.5, 0.0)
+const COL_FROST = Color(0.3, 0.6, 1.0)
+const COL_HOLY = Color(1.0, 0.85, 0.3)
+const COL_UTILITY = Color(0.6, 0.8, 0.5)
+const COL_DARK = Color(0.5, 0.2, 0.7)
+const COL_ARCANE = Color(0.3, 0.7, 0.9)
+
 # Semantic text colors
 var COLOR_TEXT_SUCCESS   = Color.from_rgba8(60, 200, 80)      # Green text
 var COLOR_TEXT_ERROR     = Color.from_rgba8(220, 80, 80)      # Red text
 const COLOR_TEXT_MUTED     = Color(0.4, 0.4, 0.4)              # Gray/secondary text
 
 # Font size scale
-const FONT_TITLE     := 24  # Modal titles, major headers
-const FONT_SECTION   := 22  # Section headers (talents, skills)
-const FONT_HEADING   := 18  # Sub-headers, activity names, stat names
-const FONT_BODY      := 15  # Default body text, labels, descriptions
-const FONT_SMALL     := 13  # Small labels, HUD text
-const FONT_CAPTION   := 11  # Captions, footnotes
+const FONT_TITLE     = 24  # Modal titles, major headers
+const FONT_SECTION   = 22  # Section headers (talents, skills)
+const FONT_HEADING   = 18  # Sub-headers, activity names, stat names
+const FONT_BODY      = 15  # Default body text, labels, descriptions
+const FONT_SMALL     = 13  # Small labels, HUD text
+const FONT_CAPTION   = 11  # Captions, footnotes
 
 # Spacing scale (multiples of 4)
-const SPACING_XS := 4
-const SPACING_SM := 8
-const SPACING_MD := 12
-const SPACING_LG := 16
-const SPACING_XL := 20
-const SPACING_XXL := 24
+const SPACING_XS = 4
+const SPACING_SM = 8
+const SPACING_MD = 12
+const SPACING_LG = 16
+const SPACING_XL = 20
+const SPACING_XXL = 24
 
 
 # ------------------- Styling helpers -------------------
@@ -100,7 +112,7 @@ func style_parchment_label(lbl: Label, color: Color, font_size: int = 14) -> voi
 	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 
 func style_name_label(lbl: Label, gold: Color) -> void:
-	var ls := LabelSettings.new()
+	var ls = LabelSettings.new()
 	# font: replace with your font if you have one
 	# ls.font = preload("res://fonts/YourFont.ttf")
 	ls.font_size = 14
@@ -116,7 +128,7 @@ func style_name_label(lbl: Label, gold: Color) -> void:
 	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 
 func style_title(lbl: Label) -> void:
-	var ls := LabelSettings.new()
+	var ls = LabelSettings.new()
 	ls.font_size = 24
 	ls.font_color = Color.from_rgba8(255,215,128)
 	ls.outline_size = 3
@@ -142,7 +154,7 @@ func style_button(btn, base: Color) -> void:
 	normal.border_width_top = 1
 	normal.border_width_bottom = 1
 	# Hover
-	var hover := normal.duplicate()
+	var hover = normal.duplicate()
 	hover.bg_color = base.lightened(0.10)
 	hover.shadow_size = 6
 	# Pressed
@@ -166,7 +178,7 @@ func style_button(btn, base: Color) -> void:
 	btn.add_theme_color_override("font_pressed_color", Color.BLACK)
 	btn.add_theme_color_override("font_disabled_color", Color(0,0,0,0.6))
 	btn.add_theme_font_size_override("font_size", 18)
-	
+
 func style_button_small(btn, base: Color) -> void:
 	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	# Normal
@@ -184,7 +196,7 @@ func style_button_small(btn, base: Color) -> void:
 	normal.border_width_top = 1
 	normal.border_width_bottom = 1
 	# Hover
-	var hover := normal.duplicate()
+	var hover = normal.duplicate()
 	hover.bg_color = base.lightened(0.10)
 	hover.shadow_size = 5
 	# Pressed
@@ -211,14 +223,14 @@ func style_button_small(btn, base: Color) -> void:
 
 func wire_button_anim(btn: Button) -> void:
 	btn.mouse_entered.connect(func():
-		var t := btn.create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		var t = btn.create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		t.tween_property(btn, "scale", Vector2(1.03, 1.03), 0.12))
 	btn.mouse_exited.connect(func():
-		var t := btn.create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		var t = btn.create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		t.tween_property(btn, "scale", Vector2.ONE, 0.12))
 		
 func style_panel(p, bg: Color, border: Color) -> void:
-	var box := StyleBoxFlat.new()
+	var box = StyleBoxFlat.new()
 	box.bg_color = bg
 	box.border_color = border
 	box.border_width_left = 1
@@ -238,7 +250,7 @@ func style_panel(p, bg: Color, border: Color) -> void:
 	p.add_theme_stylebox_override("panel", box)
 	
 func style_panel_no_margins(p, bg: Color, border: Color) -> void:
-	var box := StyleBoxFlat.new()
+	var box = StyleBoxFlat.new()
 	box.bg_color = bg
 	box.border_color = border
 	box.border_width_left = 1
@@ -254,7 +266,7 @@ func style_panel_no_margins(p, bg: Color, border: Color) -> void:
 	p.add_theme_stylebox_override("panel", box)
 	
 func style_nameplate(panel: PanelContainer, bg: Color, border: Color) -> void:
-	var box := StyleBoxFlat.new()
+	var box = StyleBoxFlat.new()
 	box.bg_color = bg
 	# rounded corners
 	box.corner_radius_top_left = 10
@@ -276,11 +288,11 @@ func style_nameplate(panel: PanelContainer, bg: Color, border: Color) -> void:
 	box.content_margin_bottom = 6
 	panel.add_theme_stylebox_override("panel", box)
 
-func style_line_edit(le: LineEdit, secret := false) -> void:
+func style_line_edit(le: LineEdit, secret = false) -> void:
 	le.secret = secret
 	le.custom_minimum_size = Vector2(0, 36)
 	# background
-	var bg := StyleBoxFlat.new()
+	var bg = StyleBoxFlat.new()
 	bg.bg_color = Color.from_rgba8(28,30,40,255)
 	bg.border_color = Color.from_rgba8(255,255,255,25)
 	bg.border_width_left = 1
@@ -293,7 +305,7 @@ func style_line_edit(le: LineEdit, secret := false) -> void:
 	bg.corner_radius_bottom_right = 8
 	le.add_theme_stylebox_override("normal", bg)
 	# focus ring
-	var focus := bg.duplicate()
+	var focus = bg.duplicate()
 	focus.border_color = Color.from_rgba8(64,180,255,200)
 	focus.border_width_left = 2
 	focus.border_width_right = 2
@@ -328,7 +340,7 @@ func style_bar(bar: ProgressBar, fill_col: Color, bg_col: Color) -> void:
 
 func style_mini_progress(bar: ProgressBar, accent: Color) -> void:
 	# Track/background
-	var bg := StyleBoxFlat.new()
+	var bg = StyleBoxFlat.new()
 	bg.bg_color = Color.from_rgba8(28, 30, 40, 255)
 	bg.border_color = Color.from_rgba8(255, 255, 255, 30)
 	bg.border_width_left = 1
@@ -341,7 +353,7 @@ func style_mini_progress(bar: ProgressBar, accent: Color) -> void:
 	bg.corner_radius_bottom_right = 6
 
 	# Fill/foreground
-	var fill := StyleBoxFlat.new()
+	var fill = StyleBoxFlat.new()
 	fill.bg_color = accent
 	fill.shadow_color = Color(0, 0, 0, 0.20)
 	fill.shadow_size = 2
@@ -354,7 +366,7 @@ func style_mini_progress(bar: ProgressBar, accent: Color) -> void:
 	bar.add_theme_stylebox_override("fill", fill)
 
 func card_box() -> StyleBoxFlat:	
-	var box := StyleBoxFlat.new()
+	var box = StyleBoxFlat.new()
 	#box.bg_color = COLOR_PANEL_DARK
 	box.bg_color = COLOR_ACCENT
 	box.border_color = Styler.COL_PANEL_BR

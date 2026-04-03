@@ -45,14 +45,14 @@ func _ready() -> void:
 	_shield_overlay.offset_bottom =  1
 
 	# Transparent trough — only the filled portion is visible
-	var sh_bg := StyleBoxFlat.new()
+	var sh_bg = StyleBoxFlat.new()
 	sh_bg.bg_color = Color(0.0, 0.0, 0.0, 0.0)
 	for r in ["top_left", "top_right", "bottom_left", "bottom_right"]:
 		sh_bg.set("corner_radius_" + r, 10)
 	_shield_overlay.add_theme_stylebox_override("background", sh_bg)
 
 	# WoW mana-shield: bright icy blue, semi-transparent with a glow shadow
-	var sh_fill := StyleBoxFlat.new()
+	var sh_fill = StyleBoxFlat.new()
 	sh_fill.bg_color     = Color.from_rgba8(100, 200, 255, 190)
 	sh_fill.shadow_color = Color.from_rgba8(160, 230, 255, 120)
 	sh_fill.shadow_size  = 5
@@ -64,14 +64,14 @@ func _ready() -> void:
 	Styler.style_panel_no_margins(panel_container, Color.from_rgba8(16,18,24,220), Color.from_rgba8(255,255,255,30))
 
 	# ── Avatar border: dark frame matching the level badge border ─────────
-	var border_panel := Panel.new()
+	var border_panel = Panel.new()
 	border_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	border_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
 	border_panel.offset_left = -5
 	border_panel.offset_top = -5
 	border_panel.offset_right = 5
 	border_panel.offset_bottom = 5
-	var border_style := StyleBoxFlat.new()
+	var border_style = StyleBoxFlat.new()
 	border_style.bg_color = Color(0, 0, 0, 0)
 	border_style.border_color = Color.from_rgba8(60, 50, 40, 255)
 	border_style.set_border_width_all(5)
@@ -81,7 +81,7 @@ func _ready() -> void:
 	avatar.move_child(border_panel, 0)
 
 	# ── Level badge: dark panel with thick border ──────────────────────────
-	var badge_style := StyleBoxFlat.new()
+	var badge_style = StyleBoxFlat.new()
 	badge_style.bg_color = Color.from_rgba8(16, 18, 24, 255)
 	badge_style.border_color = Color.from_rgba8(60, 50, 40, 255)
 	badge_style.set_border_width_all(5)
@@ -124,6 +124,30 @@ func _on_avatar_gui_input(event: InputEvent) -> void:
 		SignalManager.signal_ShowAvatars.emit()
 
 
+## Apply magic-type colour to a cast bar's fill StyleBox.
+## Call this whenever a skill cast begins, passing the ProgressBar and the
+## skill_effect dictionary returned by the server.
+func apply_cast_bar_color(bar: ProgressBar, skill_effect: Dictionary) -> void:
+	# When setting up the cast bar for a skill
+	var bar_color = Color.WHITE
+	var magic_type = skill_effect.get("magic_type", "")
+	match magic_type:
+		"fire": bar_color = Styler.COL_FIRE
+		"frost": bar_color = Styler.COL_FROST
+		"blood": bar_color = Styler.COL_BLOOD
+		"holy": bar_color = Styler.COL_HOLY
+		"dark": bar_color = Styler.COL_DARK
+		"arcane": bar_color = Styler.COL_ARCANE
+	# Apply bar_color to the cast bar fill style
+	var fill = StyleBoxFlat.new()
+	fill.bg_color = bar_color
+	fill.shadow_color = bar_color.darkened(0.3)
+	fill.shadow_size = 3
+	for r in ["top_left", "top_right", "bottom_left", "bottom_right"]:
+		fill.set("corner_radius_" + r, 10)
+	bar.add_theme_stylebox_override("fill", fill)
+
+
 func _update_character_hud(_value):
 	# print("_update_character_hud: {0}".format([value]))
 	var av_tex = ItemDB.AVATARS.get(str(Account.avatar_id), ItemDB.AVATARS.get("0"))
@@ -152,7 +176,7 @@ func _update_character_hud(_value):
 		activity_label.text = ""
 	else:
 		panel_container.visible = true
-		var icon_key_overrides := {"Rift Explorer": "rift"}
+		var icon_key_overrides = {"Rift Explorer": "rift"}
 		var icon_key_name: String = icon_key_overrides.get(current_activity_name, current_activity_name.to_lower())
 		texture_rect.texture = ItemDB.get_icon(icon_key_name, null)
 		activity_label.text = current_activity_name

@@ -187,7 +187,7 @@ func set_data(item_def: Dictionary, qty: int=1, tooltip_source="inventory", slot
 		
 	# Stack count
 	if qty > 1:
-		var st := Label.new()
+		var st = Label.new()
 		st.text = "Stack: %d" % qty
 		st.modulate = Color(0.9, 0.9, 0.9, 0.9)
 		_lines.add_child(st)

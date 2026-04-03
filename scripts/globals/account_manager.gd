@@ -13,6 +13,10 @@ signal signal_AllSkillsReceived(data)
 signal signal_AccountSkillsReceived(data)
 
 signal signal_RiftFightsReceived(data)
+signal signal_RiftHistoryReceived(data)
+
+signal signal_TalentsConfigReceived(data)
+signal signal_TalentsDataReceived(data)
 
 
 func _ready() -> void:
@@ -48,6 +52,10 @@ func parse_message(message):
 		update_account_steps(json.data)
 	elif cmd == "activity_progress":
 		show_activity_progress(json.data)
+	elif cmd in ["steps_update_cheat", "steps_update_android"]:
+		var steps_amount = int(json.data.get("data", {}).get("steps", 0))
+		if steps_amount > 0:
+			SignalManager.signal_StepToastUpdate.emit(steps_amount, {}, {}, [])
 	elif cmd == "inventory":
 		update_inventory(json.data)
 	elif cmd == "all_skills_list":
@@ -56,10 +64,16 @@ func parse_message(message):
 		update_skills(json.data)
 	elif cmd == "rift_fights":
 		update_rift_fights(json.data)
+	elif cmd == "rift_history":
+		signal_RiftHistoryReceived.emit(json.data)
 	elif cmd == "disenchant_result":
 		handle_disenchant_result(json.data)
 	elif cmd == "profession_info":
 		handle_profession_info(json.data)
+	elif cmd == "talents_config":
+		signal_TalentsConfigReceived.emit(json.data.data)
+	elif cmd in ["talents_data", "talent_allocate", "talent_respec", "talent_points_earned"]:
+		signal_TalentsDataReceived.emit(json.data.data)
 	elif cmd.begins_with("error:"):
 		_handle_server_error(json.data)
 		
@@ -129,6 +143,16 @@ func get_account_attrs(json_msg):
 		"mana_flow_lvl", "mana_flow_xp",
 		"regenerative_steps_lvl", "regenerative_steps_xp",
 	])
+	Account.pyromaniac_lvl = int(d.passives.get("pyromaniac_lvl", 0))
+	Account.pyromaniac_xp = int(d.passives.get("pyromaniac_xp", 0))
+	Account.permafrost_lvl = int(d.passives.get("permafrost_lvl", 0))
+	Account.permafrost_xp = int(d.passives.get("permafrost_xp", 0))
+	Account.devotion_lvl = int(d.passives.get("devotion_lvl", 0))
+	Account.devotion_xp = int(d.passives.get("devotion_xp", 0))
+	Account.shadow_mastery_lvl = int(d.passives.get("shadow_mastery_lvl", 0))
+	Account.shadow_mastery_xp = int(d.passives.get("shadow_mastery_xp", 0))
+	Account.arcane_mastery_lvl = int(d.passives.get("arcane_mastery_lvl", 0))
+	Account.arcane_mastery_xp = int(d.passives.get("arcane_mastery_xp", 0))
 
 	var sa = d.secondary_attributes
 	_bulk_set(sa, [
@@ -172,6 +196,9 @@ func get_account_attrs(json_msg):
 		Account.set(key, int(st.get(key, 0)))
 
 	Account.rift_instance_id = str(st.get("rift_instance_id", ""))
+	Account.rift_pending_fight = bool(st.get("rift_pending_fight", false))
+	Account.rift_pending_monster = str(st.get("rift_pending_monster", ""))
+	Account.rift_pending_milestone = int(st.get("rift_pending_milestone", 0))
 	Account.crafting_recipe_id = str(st.get("crafting_recipe_id", ""))
 
 	Account.variance = d.internal.variance

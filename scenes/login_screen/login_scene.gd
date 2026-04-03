@@ -17,8 +17,8 @@ extends Control
 const CREATE_USER_UI = preload("uid://d1bmiemb8yjfl")
 var child: Node = null
 var status_login = false
-var _login_ok := false
-var _login_error := ""
+var _login_ok = false
+var _login_error = ""
 
 
 func _ready() -> void:
@@ -56,6 +56,9 @@ func _on_button_login_button_down() -> void:
 	status_label.text = ""
 	if username_login_edit.text.strip_edges() == "" or password_login_edit.text == "":
 		status_label.text = "Username and password are required"
+		return
+	if not ServerConnector._is_socket_open():
+		status_label.text = "Not connected to server"
 		return
 	button_login.disabled = true
 	_login_ok = false

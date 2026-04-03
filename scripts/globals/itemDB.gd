@@ -5,7 +5,7 @@ extends Node
 # and cached for subsequent lookups.  This avoids loading 200+ textures into RAM
 # at boot and reduces startup time / baseline memory on mobile.
 
-var _item_icon_paths := {
+var _item_icon_paths = {
 	# Equipment
 	# ===== Belts
 	"belt_0":            "res://assets/equipment/belts/belt_0.png",
@@ -125,10 +125,10 @@ var _item_icon_paths := {
 	"rucola":            "res://assets/professions/herbalism/herb_rucola.png",
 	"basilicum":         "res://assets/professions/herbalism/herb_basilicum.png",
 	"manaflower":        "res://assets/professions/herbalism/herb_manaflower.png",
-	# TODO: missing icon assets
+	"fadeleaf":          "res://assets/professions/herbalism/herb_fadeleaf.png",
 	"silverleaf":        "res://assets/professions/herbalism/herb_silverleaf.png",
 	"earthroot":         "res://assets/professions/herbalism/herb_earthroot.png",
-	"fadeleaf":          "res://assets/professions/herbalism/herb_fadeleaf.png",
+	# TODO: missing icon assets
 	"goldthorn":         "res://assets/professions/herbalism/herb_goldthorn.png",
 	"swampcap":          "res://assets/professions/herbalism/herb_swampcap.png",
 	"plaguebloom":       "res://assets/professions/herbalism/herb_plaguebloom.png",
@@ -198,9 +198,9 @@ var _item_icon_paths := {
 	"enc_soul_shard":    "res://assets/professions/enchanting/enc_soul_shard.jpg",
 	"void_crystal":      "res://assets/professions/enchanting/void_crystal.jpg",
 }
-var _item_icon_cache := {}
+var _item_icon_cache = {}
 
-var _icon_paths := {
+var _icon_paths = {
 	# global icons
 	"steps":                "res://assets/general_icons/steps.png",
 	"gold_coin":            "res://assets/general_icons/gold_coin.png",
@@ -244,33 +244,138 @@ var _icon_paths := {
 	"rift":                 "res://assets/general_icons/professions/rift.png",
 	"enchanting":           "res://assets/general_icons/professions/enchanting.png",
 
-	# talents
+	# talents — general
 	"thick_skin":           "res://assets/general_icons/passive_talents/thick_skin.png",
 	"brutal_strike":        "res://assets/general_icons/passive_talents/brutal_strike.png",
+	"brutal_finish":        "res://assets/general_icons/passive_talents/brutal_strike.png",
 	"guardian_shell":       "res://assets/general_icons/passive_talents/guardian_shell.png",
 	"evasion_training":     "res://assets/general_icons/passive_talents/evasion_training.png",
+	"magic_ward":           "res://assets/general_icons/passive_talents/magic_ward.png",
+	"mana_flow":            "res://assets/general_icons/passive_talents/mana_flow.png",
+	"regenerative_steps":   "res://assets/general_icons/passive_talents/regenerative_steps.png",
+	# TODO: missing passive talent icon assets
+	"second_wind":          "res://assets/general_icons/passive_talents/second_wind.png",
+	"fortitude":            "res://assets/general_icons/passive_talents/fortitude.png",
+	"battle_rhythm":        "res://assets/general_icons/passive_talents/battle_rhythm.png",
+	"gathering_wisdom":     "res://assets/general_icons/passive_talents/gathering_wisdom.png",
+	"step_momentum":        "res://assets/general_icons/passive_talents/step_momentum.png",
+	"alchemists_touch":     "res://assets/general_icons/passive_talents/alchemists_touch.png",
 
-	# skills
-	"buff_attack_up":       "res://assets/skills/buffs/buff_attack_up.png",
-	"buff_hp_up":           "res://assets/skills/buffs/buff_hp_up.png",
-	"buff_improved_shield": "res://assets/skills/buffs/buff_improved_shield.png",
+	# talents — class-specific (assets live in skills/<class>/ folders)
+	"pyromaniac":           "res://assets/skills/mage/pyromaniac.png",
+	"permafrost":           "res://assets/skills/mage/permafrost.png",
+	"devotion":             "res://assets/skills/paladin/devotion.png",
+	"shadow_mastery":       "res://assets/skills/dark/shadow_mastery.png",
+	"arcane_mastery":       "res://assets/skills/arcane/arcane_mastery.png",
+	"blood_pact":           "res://assets/skills/blood/blood_pact.png",
+
+	# resistance icons (reuse elemental icons for spell damage; blood needs its own)
+	# TODO: missing blood resistance icon asset
+	"blood_spell_damage":   "res://assets/general_icons/attributes/blood.png",
+
+	# HUD icons
+	# TODO: missing skills HUD button icon asset
+	"buttom_hud_skills":    "res://assets/general_icons/hud/buttom_hud_skills.png",
+
+	# default / fallback
+	# TODO: missing default bag icon asset
+	"default_bag":          "res://assets/general_icons/default_bag.png",
+
+	# ===== Skills — Buffs =====
+	"buff_attack_up":           "res://assets/skills/buffs/buff_attack_up.png",
+	"buff_hp_up":               "res://assets/skills/buffs/buff_hp_up.png",
+	"buff_improved_shield":     "res://assets/skills/buffs/buff_improved_shield.png",
 	"buff_shield_regeneration": "res://assets/skills/buffs/buff_shield_regeneration.png",
+	"buff_barrier":             "res://assets/skills/buffs/buff_barrier.png",
+	"buff_battle_fury":         "res://assets/skills/buffs/buff_battle_fury.png",
+	"buff_reflect":             "res://assets/skills/buffs/buff_reflect.png",
+	"buff_second_wind":         "res://assets/skills/buffs/buff_second_wind.png",
+	"buff_fortify":             "res://assets/skills/buffs/buff_fortify.png",
+	"buff_iron_skin":           "res://assets/skills/buffs/buff_iron_skin.png",
+	"buff_mana_surge":          "res://assets/skills/buffs/buff_mana_surge.png",
+	"buff_meditation":          "res://assets/skills/buffs/buff_meditation.png",
+	"buff_adrenaline_rush":     "res://assets/skills/buffs/buff_adrenaline_rush.png",
+	"buff_weaken":              "res://assets/skills/buffs/buff_weaken.png",
+	"buff_cripple":             "res://assets/skills/buffs/buff_cripple.png",
+	"buff_expose_weakness":     "res://assets/skills/buffs/buff_expose_weakness.png",
 
-	"mage_fireball":        "res://assets/skills/mage/mage_fireball.png",
-	"mage_frostshield":     "res://assets/skills/mage/mage_frostshield.png",
-	"mage_frostbolt":       "res://assets/skills/mage/mage_frostbolt.png",
-	"mage_pyroblast":       "res://assets/skills/mage/mage_pyroblast.png",
+	# ===== Skills — Mage =====
+	"mage_fireball":            "res://assets/skills/mage/mage_fireball.png",
+	"mage_frostshield":         "res://assets/skills/mage/mage_frostshield.png",
+	"mage_frostbolt":           "res://assets/skills/mage/mage_frostbolt.png",
+	"mage_pyroblast":           "res://assets/skills/mage/mage_pyroblast.png",
+	"mage_scorch":              "res://assets/skills/mage/mage_scorch.png",
+	"mage_meteor":              "res://assets/skills/mage/mage_meteor.png",
+	"mage_ignite":              "res://assets/skills/mage/mage_ignite.png",
+	"mage_combustion":          "res://assets/skills/mage/mage_combustion.png",
+	"mage_cauterize":           "res://assets/skills/mage/mage_cauterize.png",
+	"mage_ice_lance":           "res://assets/skills/mage/mage_ice_lance.png",
+	"mage_blizzard":            "res://assets/skills/mage/mage_blizzard.png",
+	"mage_glacial_spike":       "res://assets/skills/mage/mage_glacial_spike.png",
+	"mage_ice_barrier":         "res://assets/skills/mage/mage_ice_barrier.png",
+	"mage_icy_veins":           "res://assets/skills/mage/mage_icy_veins.png",
+	"mage_frost_nova":          "res://assets/skills/mage/mage_frost_nova.png",
+	"mage_arcane_intellect":    "res://assets/skills/mage/mage_arcane_intellect.png",
 
-	"paladin_minorheal":         "res://assets/skills/paladin/paladin_minorheal.png",
-	"paladin_regeneration":      "res://assets/skills/paladin/paladin_regeneration.png",
-	"paladin_crusader_strike":   "res://assets/skills/paladin/paladin_crusader_strike.png",
-	"paladin_holy_sword":        "res://assets/skills/paladin/paladin_holy_sword.png",
-	"paladin_hummer_of_justice": "res://assets/skills/paladin/paladin_hummer_of_justice.png",
-	"paladin_judgement":         "res://assets/skills/paladin/paladin_judgement.png",
-	"paladin_lay_of_hands":      "res://assets/skills/paladin/paladin_lay_of_hands.png",
-	"paladin_wrath":             "res://assets/skills/paladin/paladin_wrath.png",
+	# ===== Skills — Paladin =====
+	"paladin_minorheal":             "res://assets/skills/paladin/paladin_minorheal.png",
+	"paladin_regeneration":          "res://assets/skills/paladin/paladin_regeneration.png",
+	"paladin_crusader_strike":       "res://assets/skills/paladin/paladin_crusader_strike.png",
+	"paladin_holy_sword":            "res://assets/skills/paladin/paladin_holy_sword.png",
+	"paladin_hammer_of_justice":     "res://assets/skills/paladin/paladin_hammer_of_justice.png",
+	"paladin_judgement":             "res://assets/skills/paladin/paladin_judgement.png",
+	"paladin_lay_of_hands":          "res://assets/skills/paladin/paladin_lay_of_hands.png",
+	"paladin_wrath":                 "res://assets/skills/paladin/paladin_wrath.png",
+	"paladin_divine_shield":         "res://assets/skills/paladin/paladin_divine_shield.png",
+	"paladin_blessing_of_protection":"res://assets/skills/paladin/paladin_blessing_of_protection.png",
+	"paladin_consecration":          "res://assets/skills/paladin/paladin_consecration.png",
+	"paladin_seal_of_justice":       "res://assets/skills/paladin/paladin_seal_of_justice.png",
+	"paladin_beacon_of_light":       "res://assets/skills/paladin/paladin_beacon_of_light.png",
+	"paladin_repentance":            "res://assets/skills/paladin/paladin_repentance.png",
+
+	# ===== Skills — Dark =====
+	"dark_shadow_bolt":         "res://assets/skills/dark/dark_shadow_bolt.png",
+	"dark_shadow_strike":       "res://assets/skills/dark/dark_shadow_strike.png",
+	"dark_pulse":               "res://assets/skills/dark/dark_pulse.png",
+	"dark_void_blast":          "res://assets/skills/dark/dark_void_blast.png",
+	"dark_corruption":          "res://assets/skills/dark/dark_corruption.png",
+	"dark_curse_of_weakness":   "res://assets/skills/dark/dark_curse_of_weakness.png",
+	"dark_curse_of_shadows":    "res://assets/skills/dark/dark_curse_of_shadows.png",
+	"dark_soul_drain":          "res://assets/skills/dark/dark_soul_drain.png",
+	"dark_shadow_ward":         "res://assets/skills/dark/dark_shadow_ward.png",
+	"dark_mending":             "res://assets/skills/dark/dark_mending.png",
+	"dark_shadow_embrace":      "res://assets/skills/dark/dark_shadow_embrace.png",
+	"dark_void_armor":          "res://assets/skills/dark/dark_void_armor.png",
+
+	# ===== Skills — Arcane =====
+	"arcane_blast":             "res://assets/skills/arcane/arcane_blast.png",
+	"arcane_barrage":           "res://assets/skills/arcane/arcane_barrage.png",
+	"arcane_missiles":          "res://assets/skills/arcane/arcane_missiles.png",
+	"arcane_explosion":         "res://assets/skills/arcane/arcane_explosion.png",
+	"arcane_mana_burn":         "res://assets/skills/arcane/arcane_mana_burn.png",
+	"arcane_vulnerability":     "res://assets/skills/arcane/arcane_vulnerability.png",
+	"arcane_temporal_chains":   "res://assets/skills/arcane/arcane_temporal_chains.png",
+	"arcane_shield":            "res://assets/skills/arcane/arcane_shield.png",
+	"arcane_restoration":       "res://assets/skills/arcane/arcane_restoration.png",
+	"arcane_power":             "res://assets/skills/arcane/arcane_power.png",
+	"arcane_time_warp":         "res://assets/skills/arcane/arcane_time_warp.png",
+	"arcane_brilliance":        "res://assets/skills/arcane/arcane_brilliance.png",
+
+	# ===== Skills — Blood Magic =====
+	"blood_strike":             "res://assets/skills/blood/blood_strike.png",
+	"blood_heart_strike":       "res://assets/skills/blood/blood_heart_strike.png",
+	"blood_boil":               "res://assets/skills/blood/blood_boil.png",
+	"blood_death_strike":       "res://assets/skills/blood/blood_death_strike.png",
+	"blood_soul_reaper":        "res://assets/skills/blood/blood_soul_reaper.png",
+	"blood_vampiric_blood":     "res://assets/skills/blood/blood_vampiric_blood.png",
+	"blood_shield":             "res://assets/skills/blood/blood_shield.png",
+	"blood_death_pact":         "res://assets/skills/blood/blood_death_pact.png",
+	"blood_frenzy":             "res://assets/skills/blood/blood_frenzy.png",
+	"blood_crimson_fortitude":  "res://assets/skills/blood/blood_crimson_fortitude.png",
+	"blood_presence":           "res://assets/skills/blood/blood_presence.png",
+	"blood_plague":             "res://assets/skills/blood/blood_plague.png",
 }
-var _icon_cache := {}
+var _icon_cache = {}
 
 # Avatars are only 6 textures — keep them eagerly loaded (always needed)
 var AVATARS: Dictionary = {
@@ -344,7 +449,7 @@ var WAYPOINT_LOCATION_IDS: Dictionary = {
 	"starter_village": 1,
 	"ancient_forest":  2,
 	"dark_swamp":      3,
-	"mountains":       4,
+	"mountains":       4, 
 	"iron_mountain":   5,
 	"human_village":   6,
 	"tower":           7,

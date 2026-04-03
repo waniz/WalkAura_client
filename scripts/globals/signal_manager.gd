@@ -23,6 +23,8 @@ signal signal_StepsRequestLastTimestamp(is_requested)
 signal signal_StepsUpdatesCheats(amount)
 @warning_ignore("unused_signal")
 signal signal_StepsReceivedFromServer(amount)
+@warning_ignore("unused_signal")
+signal signal_StepToastUpdate(steps: int, loot: Dictionary, mapping: Dictionary, new_items: Array)
 
 # Inventory and equipment signals
 @warning_ignore("unused_signal")
@@ -67,6 +69,8 @@ signal signal_ShowRift
 signal signal_RequestRiftFights(rift_instance_id: String)
 @warning_ignore("unused_signal")
 signal signal_RequestRiftFightLog(rift_instance_id: String, fight_uid: String)
+@warning_ignore("unused_signal")
+signal signal_RequestRiftHistory
 
 # Profession signals
 @warning_ignore("unused_signal")
@@ -77,3 +81,9 @@ signal signal_RequestProfessionInfo(profession: String)
 signal signal_ProfessionInfoReceived(data: Dictionary)
 @warning_ignore("unused_signal")
 signal signal_StartCraftActivity(activity: int, activity_site: int, recipe_id: String)
+@warning_ignore("unused_signal")
+signal signal_TalentAllocate(talent_id: String)
+@warning_ignore("unused_signal")
+signal signal_TalentRespec()
+@warning_ignore("unused_signal")
+signal signal_TalentCheatPoints(points: int)

@@ -81,6 +81,16 @@ var mana_flow_lvl
 var mana_flow_xp
 var regenerative_steps_lvl
 var regenerative_steps_xp
+var pyromaniac_lvl: int = 0
+var pyromaniac_xp: int = 0
+var permafrost_lvl: int = 0
+var permafrost_xp: int = 0
+var devotion_lvl: int = 0
+var devotion_xp: int = 0
+var shadow_mastery_lvl: int = 0
+var shadow_mastery_xp: int = 0
+var arcane_mastery_lvl: int = 0
+var arcane_mastery_xp: int = 0
 
 # secondary parameters
 var atk
@@ -168,6 +178,9 @@ var rift_steps_max
 var rift_milestone_index
 var rift_total_milestones
 var rift_instance_id
+var rift_pending_fight: bool = false
+var rift_pending_monster: String = ""
+var rift_pending_milestone: int = 0
 var rift_lvl
 var rift_xp
 
@@ -197,7 +210,7 @@ var raw_structures = {
 
 func to_dict() -> Dictionary:
 	# export everything (flat), matching server keys
-	var out := {}
+	var out = {}
 	for p in get_property_list():
 		if p.usage & PROPERTY_USAGE_SCRIPT_VARIABLE != 0:
 			var prop_name = p.name

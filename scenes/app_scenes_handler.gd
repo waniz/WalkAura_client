@@ -1,34 +1,35 @@
 extends Control
 class_name AppScenesHandler
 
-@export var swipe_slop_px := 12.0
-@export var snap_threshold_px := 80.0
-@export var fling_velocity_px_s := 600.0
-@export var anim_time := 0.18
+@export var swipe_slop_px = 12.0
+@export var snap_threshold_px = 80.0
+@export var fling_velocity_px_s = 600.0
+@export var anim_time = 0.18
 
 var _track: HBoxContainer = null
-var _page := 0
-var _pages := 0
+var _page = 0
+var _pages = 0
 
-var _maybe_swipe := false       # pressed, but not sure it's a swipe yet
-var _swiping := false           # once true, we take over events
-var _start_pos := Vector2.ZERO
-var _last_x := 0.0
-var _last_t := 0.0
-var _velocity := 0.0
+var _maybe_swipe = false       # pressed, but not sure it's a swipe yet
+var _swiping = false           # once true, we take over events
+var _start_pos = Vector2.ZERO
+var _last_x = 0.0
+var _last_t = 0.0
+var _velocity = 0.0
 
 const ACTIVITY_PROGRESS_SCENE = preload("uid://bjvtquos2r8cj")
 const RIFT_SCENE = preload("uid://cdghj6jcvmuy5")
 const AVATARS_SCENE = preload("uid://dp38cogt60cii")
 const DISENCHANT_RESULT_SCENE = preload("res://scenes/support_screens/disenchant_result.tscn")
 const PROFESSION_DETAIL_SCENE = preload("res://scenes/secondary_scenes/profession_detail.tscn")
-const _SKIP_LAYOUT_NAMES := ["ProgressUpdate", "ProgressSteps", "GlobalHud", "DisenchantResult"]
+const _SKIP_LAYOUT_NAMES = ["ProgressUpdate", "ProgressSteps", "GlobalHud", "DisenchantResult"]
 var overlay = null
 var _rift_overlay = null
 var _avatars_overlay = null
 var _disenchant_overlay = null
 var _profession_overlay = null
 var _snap_tween: Tween = null
+var _first_progress_after_login: bool = true
 
 
 func _enter_tree() -> void:
@@ -48,7 +49,7 @@ func _ready() -> void:
 	clip_contents = true
 	mouse_filter = Control.MOUSE_FILTER_PASS
 
-	var to_move := get_children()
+	var to_move = get_children()
 	for n in to_move:
 		if n != _track:
 			if n.name == "ProgressSteps":
@@ -63,19 +64,42 @@ func _ready() -> void:
 # ------ Handle global update window ------
 func _show_progress_hud(payload):
 	var d: Dictionary = payload.get("data", {}).get("data", {})
-	var has_content: bool = (
-		int(d.get("xp_gained", 0))   != 0 or
-		int(d.get("steps_in", 0))    != 0 or
-		not d.get("loot_counts", {}).is_empty() or
-		not d.get("new_items", []).is_empty()
-	)
-	if not has_content:
+	var steps_in = int(d.get("steps_in", 0))
+	var has_fights = not d.get("milestone_fights", []).is_empty()
+	if steps_in == 0 and int(d.get("xp_gained", 0)) == 0 and not has_fights:
 		return
 
-	overlay = ACTIVITY_PROGRESS_SCENE.instantiate()
-	add_child(overlay)
-	overlay.apply_activity_progress(d)
-	overlay.tree_exited.connect(_on_child_closed, Object.CONNECT_ONE_SHOT)
+	# Rift pending_fight: don't interrupt the player with a loadout screen.
+	# Just show steps via the toast — the player will fight when they open the rift.
+	if d.get("pending_fight", false):
+		if steps_in > 0:
+			SignalManager.signal_StepToastUpdate.emit(steps_in, {}, {}, [])
+		return
+
+	# Big overlay triggers:
+	# - First update after login (AFK catch-up)
+	# - Rift milestone fights happened
+	# - Rift completed or died
+	# - Level up
+	var has_milestone_fights = not d.get("milestone_fights", []).is_empty()
+	var rift_complete = d.get("rift_complete", false)
+	var rift_died = d.get("rift_died", false)
+	var leveled_up = int(d.get("levels_gained", 0)) > 0
+	var is_big_update = has_milestone_fights or rift_complete or rift_died or leveled_up
+
+	if _first_progress_after_login or is_big_update:
+		_first_progress_after_login = false
+		overlay = ACTIVITY_PROGRESS_SCENE.instantiate()
+		add_child(overlay)
+		overlay.apply_activity_progress(d)
+		overlay.tree_exited.connect(_on_child_closed, Object.CONNECT_ONE_SHOT)
+	else:
+		# Gathering/crafting progress: route to the toast with steps + loot
+		_first_progress_after_login = false
+		var loot = d.get("loot_counts", {})
+		var mapping = d.get("mapping", {})
+		var new_items = d.get("new_items", [])
+		SignalManager.signal_StepToastUpdate.emit(steps_in, loot, mapping, new_items)
 	
 func _on_child_closed() -> void:
 	overlay = null
@@ -117,12 +141,12 @@ func _notification(what):
 		_snap_to(_page, 0.0)
 
 func _layout_pages() -> void:
-	var i := 0
+	var i = 0
 	for c in _track.get_children():
 		if c.name in _SKIP_LAYOUT_NAMES:
 			continue
 		if c is Control:
-			var cc := c as Control
+			var cc = c as Control
 			cc.custom_minimum_size = size
 			cc.set_deferred("size", size)
 			cc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -133,11 +157,11 @@ func _layout_pages() -> void:
 
 # ---------------------- INPUT ----------------------
 func _input(e: InputEvent) -> void:
-	var inside := get_global_rect().has_point(get_viewport().get_mouse_position())
+	var inside = get_global_rect().has_point(get_viewport().get_mouse_position())
 
 	# TOUCH
 	if e is InputEventScreenTouch:
-		var t := e as InputEventScreenTouch
+		var t = e as InputEventScreenTouch
 		if t.pressed and inside:
 			_maybe_swipe = true
 			_swiping = false
@@ -153,10 +177,10 @@ func _input(e: InputEvent) -> void:
 				# else: not swiping => let it pass as a normal tap
 
 	elif e is InputEventScreenDrag:
-		var d := e as InputEventScreenDrag
+		var d = e as InputEventScreenDrag
 		if _maybe_swipe and not _swiping:
-			var dx := d.position.x - _start_pos.x
-			var dy := d.position.y - _start_pos.y
+			var dx = d.position.x - _start_pos.x
+			var dy = d.position.y - _start_pos.y
 			if abs(dx) > swipe_slop_px and abs(dx) > abs(dy):
 				# We’re confident it’s a horizontal swipe → take over
 				_swiping = true
@@ -192,13 +216,13 @@ func _input(e: InputEvent) -> void:
 
 # ---------------------- SWIPE HELPERS ----------------------
 func _move_track(curr_x: float) -> void:
-	var dx := curr_x - _start_pos.x
-	var base := -_page * size.x
-	var target := base + dx
+	var dx = curr_x - _start_pos.x
+	var base = -_page * size.x
+	var target = base + dx
 
 	# rubber band at edges
-	var min_x := -_pages * size.x
-	var max_x := 0.0
+	var min_x = -_pages * size.x
+	var max_x = 0.0
 	if target < min_x:
 		target = lerpf(min_x, target, 0.5)
 	elif target > max_x:
@@ -206,7 +230,7 @@ func _move_track(curr_x: float) -> void:
 
 	_track.position.x = target
 
-	var now := Time.get_ticks_msec() / 1000.0
+	var now = Time.get_ticks_msec() / 1000.0
 	var dt = max(0.001, now - _last_t)
 	_velocity = (curr_x - _last_x) / dt
 	_last_x = curr_x
@@ -214,8 +238,8 @@ func _move_track(curr_x: float) -> void:
 
 func _end_swipe(end_x: float) -> void:
 	_maybe_swipe = false
-	var drag := end_x - _start_pos.x
-	var next := _page
+	var drag = end_x - _start_pos.x
+	var next = _page
 
 	if abs(_velocity) > fling_velocity_px_s:
 		if _velocity < 0.0: next += 1

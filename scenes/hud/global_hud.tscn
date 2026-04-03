@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://gmdl1jt3f2hv"]
 
 [ext_resource type="PackedScene" uid="uid://btkqrwpy7ojlt" path="res://scenes/support_screens/character_hud.tscn" id="1_8dy8u"]
-[ext_resource type="PackedScene" uid="uid://caj4vm4x2p0am" path="res://scenes/support_screens/cheat_panel.tscn" id="2_g1adc"]
 [ext_resource type="PackedScene" uid="uid://cvndrn0efp2w5" path="res://scenes/support_screens/debug_console.tscn" id="3_8dy8u"]
 [ext_resource type="PackedScene" uid="uid://c4op53aa1ck2j" path="res://scenes/support_screens/bottom_hud.tscn" id="4_8dy8u"]
 [ext_resource type="PackedScene" uid="uid://duiqfqme733ph" path="res://scenes/support_screens/map_hud.tscn" id="5_6fgtd"]
@@ -10,20 +9,6 @@
 layer = 100
 
 [node name="CharacterHUD" parent="." unique_id=1522707177 instance=ExtResource("1_8dy8u")]
-
-[node name="CheatPanel" parent="." unique_id=318179305 instance=ExtResource("2_g1adc")]
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -224.0
-offset_top = -49.0
-offset_right = -224.0
-offset_bottom = -49.0
-grow_horizontal = 0
-grow_vertical = 0
-size_flags_vertical = 0
 
 [node name="DebugConsole" parent="." unique_id=617442190 instance=ExtResource("3_8dy8u")]
 visible = false

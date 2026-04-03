@@ -1,15 +1,15 @@
 extends Control
 
-const ACTIVITY_HERBALISM   := 1
-const ACTIVITY_ALCHEMY     := 2
-const ACTIVITY_HUNTING     := 3
-const ACTIVITY_MINING      := 4
-const ACTIVITY_WOODCUTTING := 5
-const ACTIVITY_FISHING     := 6
-const ACTIVITY_RIFT        := 7
-const ACTIVITY_TRAVEL      := 8
+const ACTIVITY_HERBALISM   = 1
+const ACTIVITY_ALCHEMY     = 2
+const ACTIVITY_HUNTING     = 3
+const ACTIVITY_MINING      = 4
+const ACTIVITY_WOODCUTTING = 5
+const ACTIVITY_FISHING     = 6
+const ACTIVITY_RIFT        = 7
+const ACTIVITY_TRAVEL      = 8
 
-const ACTIVITY_PROF_NAME := {
+const ACTIVITY_PROF_NAME = {
 	ACTIVITY_HERBALISM:   "herbalism",
 	ACTIVITY_ALCHEMY:     "alchemy",
 	ACTIVITY_HUNTING:     "hunting",
@@ -76,7 +76,7 @@ func _apply_visual_theme() -> void:
 	Styler._apply_parchment_style(status_panel)
 
 	# Image frame border
-	var img_sb := StyleBoxFlat.new()
+	var img_sb = StyleBoxFlat.new()
 	img_sb.bg_color     = Color(0.0, 0.0, 0.0, 0.04)
 	img_sb.border_color = Color(0.0, 0.0, 0.0, 0.25)
 	img_sb.set_border_width_all(1)
@@ -122,13 +122,13 @@ func _on_account_data_received(_value) -> void:
 
 
 func _refresh() -> void:
-	var loc := int(Account.location)
+	var loc = int(Account.location)
 
 	# Only rebuild cards + location visuals when the location actually changes
 	if loc != _last_built_location:
 		_last_built_location = loc
 
-		var path := "res://assets/background/locations/location_%d.png" % loc
+		var path = "res://assets/background/locations/location_%d.png" % loc
 		if ResourceLoader.exists(path):
 			location_picture.texture = load(path)
 
@@ -170,30 +170,30 @@ func _build_activity_cards() -> void:
 	var gathering_entries: Array = []
 	var battle_entries: Array = []
 	for entry in site_entries:
-		var act_id := int(entry["id"])
+		var act_id = int(entry["id"])
 		if act_id in gathering_ids:
 			gathering_entries.append(entry)
 		elif act_id in battle_ids:
 			battle_entries.append(entry)
 
 	# Two-column layout: gathering (left) | battle (right)
-	var columns := HBoxContainer.new()
+	var columns = HBoxContainer.new()
 	columns.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	columns.add_theme_constant_override("separation", 8)
 	activities_vbox.add_child(columns)
 
-	var groups := [
+	var groups = [
 		{"name": "Gathering", "entries": gathering_entries},
 		{"name": "Battle", "entries": battle_entries},
 	]
 	for group in groups:
-		var col_vbox := VBoxContainer.new()
+		var col_vbox = VBoxContainer.new()
 		col_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		col_vbox.add_theme_constant_override("separation", 4)
 		columns.add_child(col_vbox)
 
 		# Column header
-		var grp_lbl := Label.new()
+		var grp_lbl = Label.new()
 		grp_lbl.text = group.name.to_upper()
 		grp_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		grp_lbl.add_theme_color_override("font_color", Styler.COLOR_GOLD)
@@ -202,14 +202,14 @@ func _build_activity_cards() -> void:
 		col_vbox.add_child(grp_lbl)
 
 		if group.entries.is_empty():
-			var empty_lbl := Label.new()
+			var empty_lbl = Label.new()
 			empty_lbl.text = "—"
 			empty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			empty_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
 			col_vbox.add_child(empty_lbl)
 		else:
 			for entry in group.entries:
-				var card := _make_activity_card(entry)
+				var card = _make_activity_card(entry)
 				card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 				col_vbox.add_child(card)
 				_activity_cards[int(entry["id"])] = card
@@ -218,14 +218,14 @@ func _build_activity_cards() -> void:
 
 
 func _make_activity_card(entry: Dictionary) -> PanelContainer:
-	var activity_id := int(entry["id"])
+	var activity_id = int(entry["id"])
 	var activity_name: String = entry.get("name", "")
 	var profession: String = entry.get("profession", "")
 
 	# Card container
-	var panel := PanelContainer.new()
+	var panel = PanelContainer.new()
 	panel.custom_minimum_size = Vector2(0, 44)
-	var card_sb := StyleBoxFlat.new()
+	var card_sb = StyleBoxFlat.new()
 	card_sb.bg_color     = Color(0.0, 0.0, 0.0, 0.06)
 	card_sb.border_color = Color(0.0, 0.0, 0.0, 0.20)
 	card_sb.set_border_width_all(1)
@@ -235,12 +235,12 @@ func _make_activity_card(entry: Dictionary) -> PanelContainer:
 	panel.add_theme_stylebox_override("panel", card_sb)
 	panel.set_meta("sb", card_sb)
 
-	var main_hbox := HBoxContainer.new()
+	var main_hbox = HBoxContainer.new()
 	main_hbox.add_theme_constant_override("separation", 10)
 	panel.add_child(main_hbox)
 
 	# Icon
-	var icon := TextureRect.new()
+	var icon = TextureRect.new()
 	icon.custom_minimum_size = Vector2(40, 40)
 	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -250,7 +250,7 @@ func _make_activity_card(entry: Dictionary) -> PanelContainer:
 	main_hbox.add_child(icon)
 
 	# Activity name (left-aligned)
-	var n_lbl := Label.new()
+	var n_lbl = Label.new()
 	n_lbl.text = activity_name
 	n_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	n_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -273,6 +273,11 @@ func _on_activity_card_clicked(activity_id: int) -> void:
 		return
 	var activity_name: String = GameTextEn.activities_texts.get(activity_id, "Activity")
 	var text: String
+	if activity_id == ACTIVITY_RIFT:
+		# Rift browser opens without changing the current activity;
+		# the actual activity switch happens when the player clicks ENTER RIFT
+		SignalManager.signal_ShowRift.emit()
+		return
 	if Account.activity:
 		var current_name: String = GameTextEn.activities_texts.get(Account.activity, "Activity")
 		text = "Stop %s and Start %s?" % [current_name, activity_name]
@@ -282,10 +287,7 @@ func _on_activity_card_clicked(activity_id: int) -> void:
 	_confirm_dialog.setup(text)
 	add_child(_confirm_dialog)
 	_confirm_dialog.confirmed.connect(func():
-		if activity_id == ACTIVITY_RIFT:
-			SignalManager.signal_ShowRift.emit()
-		else:
-			SignalManager.signal_UserActivity.emit(activity_id, Account.location, "start")
+		SignalManager.signal_UserActivity.emit(activity_id, Account.location, "start")
 	)
 	_confirm_dialog.tree_exited.connect(func(): _confirm_dialog = null, CONNECT_ONE_SHOT)
 
@@ -351,7 +353,7 @@ func _update_status_panel() -> void:
 		if Account.travel_steps_max > 0:
 			status_xp_bar.max_value = Account.travel_steps_max
 			status_xp_bar.value = Account.travel_steps
-			var pct := int(round(float(Account.travel_steps) / float(Account.travel_steps_max) * 100.0))
+			var pct = int(round(float(Account.travel_steps) / float(Account.travel_steps_max) * 100.0))
 			status_xp_label.text = "%d / %d steps (%d%%)" % [Account.travel_steps, Account.travel_steps_max, pct]
 		else:
 			status_xp_bar.value = 0
@@ -380,10 +382,10 @@ func _update_status_panel() -> void:
 	status_title.text = "%s — Level %d" % [display_name, lvl]
 
 	# Use last activity progress data, or compute from account profession XP
-	var xp_into := _last_xp_into
-	var xp_to_next := _last_xp_to_next
+	var xp_into = _last_xp_into
+	var xp_to_next = _last_xp_to_next
 	if xp_to_next <= 0:
-		var total_xp := int(Account.get(prof + "_xp"))
+		var total_xp = int(Account.get(prof + "_xp"))
 		var floor_xp: int = ACTIVITY_TOTAL_TO_LEVEL.get(str(lvl), total_xp)
 		var next_xp: int = ACTIVITY_TOTAL_TO_LEVEL.get(str(lvl + 1), -1)
 		if next_xp >= 0:
@@ -393,7 +395,7 @@ func _update_status_panel() -> void:
 	if xp_to_next > 0:
 		status_xp_bar.max_value = xp_to_next
 		status_xp_bar.value = xp_into
-		var pct := int(round(float(xp_into) / float(xp_to_next) * 100.0))
+		var pct = int(round(float(xp_into) / float(xp_to_next) * 100.0))
 		status_xp_label.text = "%d / %d XP (%d%%)" % [xp_into, xp_to_next, pct]
 	else:
 		status_xp_bar.value = status_xp_bar.max_value

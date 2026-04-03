@@ -41,7 +41,7 @@ class_name Inventory extends Control
 @export var slot_padding: int = 5
  
 @export_group("Equipment Settings")
-@export var slot_size_eq: Vector2i = Vector2i(64, 64)
+@export var slot_size_eq: Vector2i = Vector2i(76, 76)
 @export var slot_padding_eq: int = 10
 
 @export_group("Behavior")
@@ -176,7 +176,6 @@ func _input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseMotion or event is InputEventScreenDrag:
 		_last_pointer_pos = event.position
-		_update_tooltip_position_to_point(_last_pointer_pos)
 		return
 	# Skip the same frame the tooltip opened. gui_input (which opens the tooltip)
 	# fires AFTER _input for the same event, so any second event batched in the
@@ -299,11 +298,11 @@ func _build_inventory_grid() -> void:
 	_grid.add_theme_constant_override("v_separation", slot_padding)
 
 	# Compute adaptive slot size so the row fills the full panel width
-	var available_width := item_container.size.x
+	var available_width = item_container.size.x
 	if available_width <= 0:
 		available_width = item_container.get_parent().size.x
-	var total_padding := slot_padding * (columns - 1)
-	var adaptive_size := int(max(32, (available_width - total_padding) / columns))
+	var total_padding = slot_padding * (columns - 1)
+	var adaptive_size = int(max(32, (available_width - total_padding) / columns))
 
 	_slots.resize(columns * rows)
 	for i in range(columns * rows):
@@ -354,7 +353,7 @@ func _create_inventory_slot_node(index: int, adaptive_size: int = 50) -> Control
 	icon.offset_left = 4; icon.offset_top = 4; icon.offset_right = -4; icon.offset_bottom = -4
 	btn.add_child(icon)
 	
-	var count := Label.new()
+	var count = Label.new()
 	count.name = "Count"
 	count.add_theme_font_size_override("font_size", 14)
 	count.add_theme_color_override("font_color", Color.WHITE)
@@ -384,26 +383,26 @@ func _build_equipment_ui() -> void:
 		col_right.add_child(_create_equipment_slot_node(s))
 
 func _create_equipment_slot_node(slot_name: String) -> Control:
-	var wrapper := VBoxContainer.new()
+	var wrapper = VBoxContainer.new()
 	wrapper.name = slot_name
 	wrapper.add_theme_constant_override("separation", 2)
 
-	var panel := PanelContainer.new()
+	var panel = PanelContainer.new()
 	panel.custom_minimum_size = Vector2(slot_size_eq)
-	var sb := StyleBoxFlat.new()
+	var sb = StyleBoxFlat.new()
 	sb.bg_color = Color(0.08, 0.08, 0.1, 0.4)
 	sb.border_width_bottom = 2; sb.border_width_top = 2; sb.border_width_left = 2; sb.border_width_right = 2
 	sb.border_color = Color(0.25, 0.25, 0.3)
 	sb.set_corner_radius_all(8)
 	panel.add_theme_stylebox_override("panel", sb)
 
-	var btn := Button.new()
+	var btn = Button.new()
 	btn.flat = true
 	btn.set_anchors_preset(Control.PRESET_FULL_RECT)
 	btn.gui_input.connect(func(e): _handle_slot_input(e, btn, "equipment", -1, slot_name))
 	panel.add_child(btn)
 
-	var icon := TextureRect.new()
+	var icon = TextureRect.new()
 	icon.name = "Icon"
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -414,10 +413,10 @@ func _create_equipment_slot_node(slot_name: String) -> Control:
 
 	wrapper.add_child(panel)
 
-	var lbl := Label.new()
+	var lbl = Label.new()
 	lbl.text = SLOT_DISPLAY_NAMES.get(slot_name, slot_name)
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl.add_theme_font_size_override("font_size", 10)
+	lbl.add_theme_font_size_override("font_size", 13)
 	lbl.add_theme_color_override("font_color", Color(0.55, 0.55, 0.55))
 	wrapper.add_child(lbl)
 
@@ -481,8 +480,6 @@ func _handle_slot_input(event: InputEvent, btn: Control, source: String, index: 
 
 	elif event is InputEventScreenDrag:
 		_last_pointer_pos = btn.get_global_rect().position + event.position
-		if _tooltip_visible:
-			_update_tooltip_position_to_point(event.position)
 
 func _show_tooltip(source: String, index: int, slot_name: String) -> void:
 	_ensure_tooltip_instance()
@@ -499,7 +496,7 @@ func _show_tooltip(source: String, index: int, slot_name: String) -> void:
 		item_def = _item_defs.get(item_data["id"], {})
 		_active_tooltip_index = index
 
-		var compare_def := _get_equipped_def_for_slot(str(item_def.get("slot_type", "")))
+		var compare_def = _get_equipped_def_for_slot(str(item_def.get("slot_type", "")))
 		_tooltip.set_data(item_def, item_data.get("qty", 1), source, index, slot_name, compare_def)
 
 		if not compare_def.is_empty():
@@ -544,6 +541,10 @@ func _ensure_tooltip_instance() -> void:
 	_tooltip.z_index = 100 # Ensure on top
 	add_child(_tooltip)
 	SignalManager.signal_UseItem.connect(_on_tooltip_action_use)
+	SignalManager.signal_EquipItem.connect(func(_uid, _s): _hide_tooltip())
+	SignalManager.signal_UnequipItem.connect(func(_s): _hide_tooltip())
+	SignalManager.signal_SellItem.connect(func(_uid): _hide_tooltip())
+	SignalManager.signal_DisenchantItem.connect(func(_uid): _hide_tooltip())
 
 func _ensure_compare_tooltip() -> void:
 	if _compare_tooltip: return
@@ -553,7 +554,7 @@ func _ensure_compare_tooltip() -> void:
 	add_child(_compare_tooltip)
 
 func _get_equipped_def_for_slot(slot_type: String) -> Dictionary:
-	var s := slot_type.to_lower()
+	var s = slot_type.to_lower()
 	if s == "" or s == "none" or s == "null" or s == "<null>" or s == "misc":
 		return {}
 	var candidates: Array
@@ -574,31 +575,31 @@ func _get_equipped_def_for_slot(slot_type: String) -> Dictionary:
 func _update_tooltip_position_to_point(global_point: Vector2) -> void:
 	if not _tooltip or not _tooltip.visible: return
 
-	var vp_size      := get_viewport().get_visible_rect().size
-	var left_limit   := TOOLTIP_MARGIN
-	var top_limit    := TOOLTIP_MARGIN
-	var right_limit  := vp_size.x - TOOLTIP_MARGIN
-	var bottom_limit := vp_size.y - BOTTOM_HUD_HEIGHT - TOOLTIP_MARGIN
+	var vp_size      = get_viewport().get_visible_rect().size
+	var left_limit   = TOOLTIP_MARGIN
+	var top_limit    = TOOLTIP_MARGIN
+	var right_limit  = vp_size.x - TOOLTIP_MARGIN
+	var bottom_limit = vp_size.y - BOTTOM_HUD_HEIGHT - TOOLTIP_MARGIN
 
-	var t_size := _tooltip.size if _tooltip.size.x > 1 else _tooltip.get_combined_minimum_size()
+	var t_size = _tooltip.size if _tooltip.size.x > 1 else _tooltip.get_combined_minimum_size()
 
 	if _compare_tooltip and _compare_tooltip.visible:
 		# --- Joint layout: treat [compare | gap | primary] as one block ---
-		var cmp_size := _compare_tooltip.size if _compare_tooltip.size.x > 1 \
+		var cmp_size = _compare_tooltip.size if _compare_tooltip.size.x > 1 \
 						else _compare_tooltip.get_combined_minimum_size()
-		var _total_w  := cmp_size.x + TOOLTIP_MARGIN + t_size.x
-		var max_h    := maxf(t_size.y, cmp_size.y)
+		var _total_w  = cmp_size.x + TOOLTIP_MARGIN + t_size.x
+		var max_h    = maxf(t_size.y, cmp_size.y)
 
 		# Vertical: prefer below touch, flip above if overflow, then clamp
-		var y := global_point.y + TOOLTIP_MARGIN
+		var y = global_point.y + TOOLTIP_MARGIN
 		if y + max_h > bottom_limit:
 			y = global_point.y - max_h - TOOLTIP_MARGIN
 		y = clamp(y, top_limit, maxf(top_limit, bottom_limit - max_h))
 
 		# Horizontal: place compare to left and primary to right of touch point.
 		# Try: primary starts at touch + margin, compare is to its left.
-		var primary_x := global_point.x + TOOLTIP_MARGIN
-		var compare_x := primary_x - cmp_size.x - TOOLTIP_MARGIN
+		var primary_x = global_point.x + TOOLTIP_MARGIN
+		var compare_x = primary_x - cmp_size.x - TOOLTIP_MARGIN
 
 		# If the block extends past the right edge, shift left so primary fits
 		if primary_x + t_size.x > right_limit:
@@ -607,7 +608,7 @@ func _update_tooltip_position_to_point(global_point: Vector2) -> void:
 
 		# If compare went off the left edge, shift the whole block right
 		if compare_x < left_limit:
-			var shift := left_limit - compare_x
+			var shift = left_limit - compare_x
 			compare_x  += shift
 			primary_x  += shift
 
@@ -619,7 +620,7 @@ func _update_tooltip_position_to_point(global_point: Vector2) -> void:
 		_tooltip.global_position         = Vector2(primary_x, y)
 	else:
 		# --- Single tooltip layout ---
-		var pos := global_point
+		var pos = global_point
 
 		# Horizontal: prefer right of touch, flip left if overflow
 		if pos.x + t_size.x + TOOLTIP_MARGIN > right_limit:
@@ -651,7 +652,7 @@ func _style_main_interface() -> void:
 
 	equipment_panel.add_theme_stylebox_override("panel", transparent_sb)
 
-	var inv_sb := StyleBoxFlat.new()
+	var inv_sb = StyleBoxFlat.new()
 	inv_sb.bg_color     = Color(0.06, 0.07, 0.10, 0.75)
 	inv_sb.border_color = Color.from_rgba8(255, 200, 66, 55)
 	inv_sb.border_width_bottom = 1; inv_sb.border_width_top  = 1
@@ -659,7 +660,7 @@ func _style_main_interface() -> void:
 	inv_sb.set_corner_radius_all(8)
 	inventory_panel.add_theme_stylebox_override("panel", inv_sb)
 
-	var grid_sb := StyleBoxFlat.new()
+	var grid_sb = StyleBoxFlat.new()
 	grid_sb.bg_color     = Color(0.04, 0.04, 0.07, 0.85)
 	grid_sb.border_color = Color(0, 0, 0, 0.3)
 	grid_sb.border_width_bottom = 1; grid_sb.border_width_top  = 1
@@ -806,7 +807,7 @@ func _on_request_inventory(server_json) -> void:
 		_update_equipment_slot_visuals(slot_name)
 
 func _update_space_label() -> void:
-	var occupied := 0
+	var occupied = 0
 	for s in _slots:
 		if s != null:
 			occupied += 1
@@ -831,7 +832,7 @@ func _on_btn_tab_gear_pressed() -> void:
 
 func _set_gear_tab_active(active_btn: Button) -> void:
 	for btn in [btn_tab_inventory, btn_tab_gear]:
-		var sb := btn.get_theme_stylebox("normal") as StyleBoxFlat
+		var sb = btn.get_theme_stylebox("normal") as StyleBoxFlat
 		if sb:
 			sb.bg_color = Color.from_rgba8(64, 180, 255) if btn == active_btn else Color.from_rgba8(60, 60, 70)
 
@@ -847,7 +848,7 @@ func _on_btn_split_currency_pressed() -> void:
 
 func _set_split_button_active(active_btn: Button) -> void:
 	for btn in [btn_split_items, btn_split_currency]:
-		var sb := btn.get_theme_stylebox("normal") as StyleBoxFlat
+		var sb = btn.get_theme_stylebox("normal") as StyleBoxFlat
 		if sb:
 			sb.bg_color = Color.from_rgba8(255, 200, 66) if btn == active_btn else Color.from_rgba8(90, 90, 90)
 
@@ -865,7 +866,7 @@ func _on_btn_loot_only_pressed() -> void:
 
 func _set_filter(filter: String) -> void:
 	_active_filter = filter
-	var filter_btns := {
+	var filter_btns = {
 		"all": btn_all,
 		"equipment": btn_gear_only,
 		"consumable": btn_consumable_only,
@@ -873,7 +874,7 @@ func _set_filter(filter: String) -> void:
 	}
 	for key in filter_btns:
 		var btn = filter_btns[key]
-		var sb := btn.get_theme_stylebox("normal") as StyleBoxFlat
+		var sb = btn.get_theme_stylebox("normal") as StyleBoxFlat
 		if sb:
 			sb.bg_color = Color.from_rgba8(255, 200, 66) if key == filter else Color.from_rgba8(90, 90, 90)
 	_sort_and_compact()

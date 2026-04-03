@@ -722,6 +722,7 @@ func _on_activity_progress(data: Dictionary) -> void:
 
 func _on_account_data(_ok) -> void:
 	_update_craft_progress()
+	SignalManager.signal_RequestProfessionInfo.emit(_profession_name)
 
 
 func _update_craft_progress() -> void:

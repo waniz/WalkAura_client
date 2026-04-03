@@ -28,8 +28,8 @@ func _ready() -> void:
 
 func _on_button_createuser_button_down() -> void:
 	rich_text_label.text = ""
-	var username := username_edit.text.strip_edges()
-	var password := password_edit.text
+	var username = username_edit.text.strip_edges()
+	var password = password_edit.text
 	if username == "" or password == "":
 		Styler.style_name_label(rich_text_label, Color.from_rgba8(255, 10, 10, 220))
 		rich_text_label.text = "Username and password are required"

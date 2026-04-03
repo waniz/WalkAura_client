@@ -1,13 +1,21 @@
 extends Control
 
 # Mirrors server RIFT_LOCATION_TABLE
-const RIFTS := [
-	{"id": 1, "name": "Ancient Rift", "req_lvl": 1, "total_milestones": 8, "total_steps": 5000},
-	{"id": 2, "name": "Infernal Rift", "req_lvl": 5, "total_milestones": 10, "total_steps": 8000},
+const RIFTS = [
+	{"id": 1, "name": "Ancient Rift", "req_lvl": 1, "total_milestones": 8, "total_steps": 5000,
+	 "monsters": ["Rift Guardian", "Rift Sentinel", "Rift Overlord", "Rift Guardian",
+				  "Rift Sentinel", "Rift Overlord", "Rift Guardian", "Rift Overlord"]},
+	{"id": 2, "name": "Infernal Rift", "req_lvl": 5, "total_milestones": 10, "total_steps": 8000,
+	 "monsters": ["Rift Sentinel", "Rift Overlord", "Rift Sentinel", "Rift Overlord",
+				  "Rift Sentinel", "Rift Overlord", "Rift Sentinel", "Rift Overlord",
+				  "Rift Sentinel", "Rift Overlord"]},
 ]
 
 const BATTLE_VIS    = preload("res://scenes/secondary_scenes/rift_battle_visualization.gd")
 const FIGHT_LOG_VIS = preload("res://scenes/secondary_scenes/rift_fight_log_viewer.gd")
+const LOADOUT_SCREEN = preload("res://scenes/secondary_scenes/rift_loadout_screen.gd")
+const COMPLETION_SCREEN = preload("res://scenes/secondary_scenes/rift_completion_screen.gd")
+const HISTORY_SCREEN = preload("res://scenes/secondary_scenes/rift_history_screen.gd")
 
 var _selection_container: VBoxContainer
 var _active_container: VBoxContainer
@@ -15,19 +23,21 @@ var _rift_name_label: Label
 var _rift_lvl_label: Label
 var _progress_bar: ProgressBar
 var _steps_label: Label
-var _milestone_row: HBoxContainer
+var _milestone_row: VBoxContainer
 var _fight_list: VBoxContainer
 var _battle_log_btn: Button
 var _cached_fights: Array = []
 var _battle_log_overlay: Control = null
 var _pending_fight_request: Dictionary = {}
 var _last_rift_instance_id: String = ""
-
-
+var _pause_btn: Button
+var _exit_btn: Button
+var _resume_btn: Button
 func _ready() -> void:
 	_build_ui()
 	AccountManager.signal_AccountDataReceived.connect(_on_account_data)
 	AccountManager.signal_RiftFightsReceived.connect(_on_rift_fights_received)
+	AccountManager.signal_ActivityProgressReceived.connect(_on_activity_progress)
 	_refresh()
 
 
@@ -40,16 +50,16 @@ func _build_ui() -> void:
 	mouse_filter = MOUSE_FILTER_STOP
 
 	# Dark semi-transparent background
-	var bg := ColorRect.new()
+	var bg = ColorRect.new()
 	bg.color = Color(0, 0, 0, 0.75)
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_PASS
 	add_child(bg)
 
 	# Main panel — inset to clear the top CharacterHUD (~154 px) and bottom CanvasLayer HUD (~97 px)
-	var panel := PanelContainer.new()
+	var panel = PanelContainer.new()
 	panel.set_anchors_preset(Control.PRESET_FULL_RECT)
-	var mo := Styler.get_modal_offsets()
+	var mo = Styler.get_modal_offsets()
 	panel.offset_left = mo["left"]
 	panel.offset_right = mo["right"]
 	panel.offset_top = mo["top"]
@@ -57,23 +67,23 @@ func _build_ui() -> void:
 	Styler._apply_parchment_style(panel)
 	add_child(panel)
 
-	var margin := MarginContainer.new()
+	var margin = MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 16)
 	margin.add_theme_constant_override("margin_right", 16)
 	margin.add_theme_constant_override("margin_top", 14)
 	margin.add_theme_constant_override("margin_bottom", 14)
 	panel.add_child(margin)
 
-	var root_vbox := VBoxContainer.new()
+	var root_vbox = VBoxContainer.new()
 	root_vbox.add_theme_constant_override("separation", 10)
 	margin.add_child(root_vbox)
 
 	# --- Header ---
-	var header := HBoxContainer.new()
+	var header = HBoxContainer.new()
 	header.add_theme_constant_override("separation", 12)
 	root_vbox.add_child(header)
 
-	var title := Label.new()
+	var title = Label.new()
 	title.text = "RIFT"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
@@ -81,23 +91,23 @@ func _build_ui() -> void:
 	title.add_theme_font_override("font", Styler.JANDA_FONT)
 	header.add_child(title)
 
-	var close_btn := Button.new()
+	var close_btn = Button.new()
 	close_btn.text = "X"
 	Styler.style_button_small(close_btn, Color.from_rgba8(180, 60, 60))
 	close_btn.custom_minimum_size = Vector2(44, 44)
 	close_btn.pressed.connect(queue_free)
 	header.add_child(close_btn)
 
-	var sep := HSeparator.new()
+	var sep = HSeparator.new()
 	root_vbox.add_child(sep)
 
 	# Scrollable content area
-	var scroll := ScrollContainer.new()
+	var scroll = ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	root_vbox.add_child(scroll)
 
-	var content_vbox := VBoxContainer.new()
+	var content_vbox = VBoxContainer.new()
 	content_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	content_vbox.add_theme_constant_override("separation", 12)
 	scroll.add_child(content_vbox)
@@ -107,17 +117,25 @@ func _build_ui() -> void:
 	_selection_container.add_theme_constant_override("separation", 10)
 	content_vbox.add_child(_selection_container)
 
-	var sel_title := Label.new()
+	var sel_title = Label.new()
 	sel_title.text = "Choose a Rift to Enter:"
-	Styler.style_parchment_label(sel_title, Styler.COLOR_GOLD)
+	Styler.style_parchment_label(sel_title, Styler.COLOR_TEXT_DARK)
+	sel_title.add_theme_font_size_override("font_size", 18)
 	_selection_container.add_child(sel_title)
 
-	var cards_hbox := HBoxContainer.new()
+	var cards_hbox = HBoxContainer.new()
 	cards_hbox.add_theme_constant_override("separation", 10)
 	_selection_container.add_child(cards_hbox)
 
 	for rift_cfg in RIFTS:
 		cards_hbox.add_child(_build_rift_card(rift_cfg))
+
+	var history_btn = Button.new()
+	history_btn.text = "RIFT HISTORY"
+	history_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	Styler.style_button(history_btn, Color.from_rgba8(100, 80, 160))
+	history_btn.pressed.connect(_on_history_pressed)
+	_selection_container.add_child(history_btn)
 
 	# --- Active Rift Container ---
 	_active_container = VBoxContainer.new()
@@ -131,18 +149,18 @@ func _build_ui() -> void:
 	_active_container.add_child(_rift_name_label)
 
 	_rift_lvl_label = Label.new()
-	Styler.style_parchment_label(_rift_lvl_label, Styler.COLOR_GOLD)
+	Styler.style_parchment_label(_rift_lvl_label, Styler.COLOR_TEXT_DARK)
 	_active_container.add_child(_rift_lvl_label)
 
 	# Progress bar — transparent track on parchment
 	_progress_bar = ProgressBar.new()
 	_progress_bar.custom_minimum_size = Vector2(0, 32)
 	_progress_bar.show_percentage = false
-	var _pb_bg := StyleBoxFlat.new()
+	var _pb_bg = StyleBoxFlat.new()
 	_pb_bg.bg_color = Color(0.0, 0.0, 0.0, 0.2)
 	_pb_bg.set_corner_radius_all(10)
 	_progress_bar.add_theme_stylebox_override("background", _pb_bg)
-	var _pb_fill := StyleBoxFlat.new()
+	var _pb_fill = StyleBoxFlat.new()
 	_pb_fill.bg_color = Color.from_rgba8(80, 200, 120)
 	_pb_fill.shadow_color = Color(0, 0, 0, 0.25)
 	_pb_fill.shadow_size = 3
@@ -150,10 +168,9 @@ func _build_ui() -> void:
 	_progress_bar.add_theme_stylebox_override("fill", _pb_fill)
 	_active_container.add_child(_progress_bar)
 
-	# Milestone marker row (colored blocks, one per milestone)
-	_milestone_row = HBoxContainer.new()
-	_milestone_row.custom_minimum_size = Vector2(0, 18)
-	_milestone_row.add_theme_constant_override("separation", 3)
+	# Milestone list (vertical with monster names)
+	_milestone_row = VBoxContainer.new()
+	_milestone_row.add_theme_constant_override("separation", 2)
 	_active_container.add_child(_milestone_row)
 
 	_steps_label = Label.new()
@@ -161,19 +178,22 @@ func _build_ui() -> void:
 	_active_container.add_child(_steps_label)
 
 	# Fight history header row
-	var fight_header_row := HBoxContainer.new()
+	var fight_header_row = HBoxContainer.new()
 	fight_header_row.add_theme_constant_override("separation", 10)
 	_active_container.add_child(fight_header_row)
 
-	var fight_title := Label.new()
+	var fight_title = Label.new()
 	fight_title.text = "Fight History:"
 	fight_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	Styler.style_parchment_label(fight_title, Styler.COLOR_TEXT_DARK)
 	fight_header_row.add_child(fight_title)
 
-	var refresh_btn := Button.new()
+	var refresh_btn = Button.new()
 	refresh_btn.text = "Refresh"
 	Styler.style_button_small(refresh_btn, Color.from_rgba8(60, 100, 160))
+	refresh_btn.add_theme_color_override("font_color", Color.WHITE)
+	refresh_btn.add_theme_color_override("font_hover_color", Color.WHITE)
+	refresh_btn.add_theme_color_override("font_pressed_color", Color.WHITE)
 	refresh_btn.pressed.connect(_on_refresh_fights_pressed)
 	fight_header_row.add_child(refresh_btn)
 
@@ -181,10 +201,14 @@ func _build_ui() -> void:
 	_battle_log_btn.text = "Battle Log"
 	_battle_log_btn.disabled = true
 	Styler.style_button_small(_battle_log_btn, Color.from_rgba8(100, 60, 180))
+	_battle_log_btn.add_theme_color_override("font_color", Color.WHITE)
+	_battle_log_btn.add_theme_color_override("font_hover_color", Color.WHITE)
+	_battle_log_btn.add_theme_color_override("font_pressed_color", Color.WHITE)
+	_battle_log_btn.add_theme_color_override("font_disabled_color", Color(1, 1, 1, 0.5))
 	_battle_log_btn.pressed.connect(_on_battle_log_pressed)
 	fight_header_row.add_child(_battle_log_btn)
 
-	var fight_scroll := ScrollContainer.new()
+	var fight_scroll = ScrollContainer.new()
 	fight_scroll.custom_minimum_size = Vector2(0, 160)
 	fight_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_active_container.add_child(fight_scroll)
@@ -195,28 +219,36 @@ func _build_ui() -> void:
 	fight_scroll.add_child(_fight_list)
 
 	# Action buttons row
-	var action_row := HBoxContainer.new()
+	var action_row = HBoxContainer.new()
 	action_row.add_theme_constant_override("separation", 10)
 	action_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_active_container.add_child(action_row)
 
-	var pause_btn := Button.new()
-	pause_btn.text = "PAUSE RIFT"
-	pause_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	Styler.style_button(pause_btn, Color.from_rgba8(200, 140, 40))
-	pause_btn.pressed.connect(_on_pause_pressed)
-	action_row.add_child(pause_btn)
+	_resume_btn = Button.new()
+	_resume_btn.text = "RESUME RIFT"
+	_resume_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	Styler.style_button(_resume_btn, Color.from_rgba8(60, 160, 80))
+	_resume_btn.pressed.connect(_on_resume_pressed)
+	_resume_btn.visible = false
+	action_row.add_child(_resume_btn)
 
-	var exit_btn := Button.new()
-	exit_btn.text = "EXIT RIFT"
-	exit_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	Styler.style_button(exit_btn, Color.from_rgba8(180, 60, 60))
-	exit_btn.pressed.connect(_on_stop_pressed)
-	action_row.add_child(exit_btn)
+	_pause_btn = Button.new()
+	_pause_btn.text = "PAUSE RIFT"
+	_pause_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	Styler.style_button(_pause_btn, Color.from_rgba8(200, 140, 40))
+	_pause_btn.pressed.connect(_on_pause_pressed)
+	action_row.add_child(_pause_btn)
+
+	_exit_btn = Button.new()
+	_exit_btn.text = "EXIT RIFT"
+	_exit_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	Styler.style_button(_exit_btn, Color.from_rgba8(180, 60, 60))
+	_exit_btn.pressed.connect(_on_stop_pressed)
+	action_row.add_child(_exit_btn)
 
 
 func _build_rift_card(cfg: Dictionary) -> PanelContainer:
-	var card := PanelContainer.new()
+	var card = PanelContainer.new()
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var rift_id: int = cfg["id"]
 	var rift_accent: Color
@@ -225,7 +257,7 @@ func _build_rift_card(cfg: Dictionary) -> PanelContainer:
 	else:  # Infernal
 		rift_accent = Color.from_rgba8(200, 60, 60)
 
-	var _csb := StyleBoxFlat.new()
+	var _csb = StyleBoxFlat.new()
 	_csb.bg_color     = Color(0.0, 0.0, 0.0, 0.06)
 	_csb.border_color = rift_accent
 	_csb.border_width_left = 4
@@ -235,53 +267,58 @@ func _build_rift_card(cfg: Dictionary) -> PanelContainer:
 	_csb.set_corner_radius_all(5)
 	card.add_theme_stylebox_override("panel", _csb)
 
-	var margin := MarginContainer.new()
+	var margin = MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 10)
 	margin.add_theme_constant_override("margin_right", 10)
 	margin.add_theme_constant_override("margin_top", 10)
 	margin.add_theme_constant_override("margin_bottom", 10)
 	card.add_child(margin)
 
-	var vbox := VBoxContainer.new()
+	var vbox = VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 8)
 	margin.add_child(vbox)
 
 	# Image placeholder
-	var placeholder := ColorRect.new()
+	var placeholder = ColorRect.new()
 	placeholder.custom_minimum_size = Vector2(0, 140)
 	placeholder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	placeholder.color = Color(0.0, 0.0, 0.0, 0.08)
 	vbox.add_child(placeholder)
 
-	var name_lbl := Label.new()
+	var name_lbl = Label.new()
 	name_lbl.text = cfg["name"]
 	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_lbl.add_theme_font_override("font", Styler.JANDA_FONT)
+	name_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	name_lbl.add_theme_font_size_override("font_size", 18)
 	name_lbl.add_theme_color_override("font_color", rift_accent)
 	vbox.add_child(name_lbl)
 
-	var req_lbl := Label.new()
+	var req_lbl = Label.new()
 	req_lbl.text = "Req: Rift Lvl %d" % cfg["req_lvl"]
 	req_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	Styler.style_parchment_label(req_lbl, Styler.COLOR_TEXT_DARK)
 	vbox.add_child(req_lbl)
 
-	var info_lbl := Label.new()
+	var info_lbl = Label.new()
 	info_lbl.text = "%d steps / %d milestones" % [cfg["total_steps"], cfg["total_milestones"]]
 	info_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	Styler.style_parchment_label(info_lbl, Styler.COLOR_TEXT_DARK)
 	vbox.add_child(info_lbl)
 
 	var rift_lvl: int = int(Account.rift_lvl) if Account.rift_lvl != null else 1
-	var start_btn := Button.new()
+	var start_btn = Button.new()
 	if rift_lvl < int(cfg["req_lvl"]):
 		start_btn.text = "LOCKED (Lvl %d)" % cfg["req_lvl"]
 		start_btn.disabled = true
 		Styler.style_button(start_btn, Color.from_rgba8(70, 70, 70))
+		start_btn.add_theme_color_override("font_color", Color.WHITE)
+		start_btn.add_theme_color_override("font_disabled_color", Color(1, 1, 1, 0.5))
 	else:
 		start_btn.text = "ENTER RIFT"
 		Styler.style_button(start_btn, Color.from_rgba8(60, 130, 70))
+		start_btn.add_theme_color_override("font_color", Color.WHITE)
+		start_btn.add_theme_color_override("font_hover_color", Color.WHITE)
+		start_btn.add_theme_color_override("font_pressed_color", Color.WHITE)
 		start_btn.pressed.connect(func(): _on_start_rift(rift_id))
 	vbox.add_child(start_btn)
 
@@ -290,7 +327,7 @@ func _build_rift_card(cfg: Dictionary) -> PanelContainer:
 
 func _refresh() -> void:
 	var rift_id: int = int(Account.rift_id) if Account.rift_id != null else 0
-	var is_in_rift := rift_id > 0
+	var is_in_rift = rift_id > 0
 	_selection_container.visible = not is_in_rift
 	_active_container.visible = is_in_rift
 
@@ -309,7 +346,7 @@ func _refresh() -> void:
 
 func _refresh_active_view() -> void:
 	var rift_id: int = int(Account.rift_id) if Account.rift_id != null else 0
-	var rift_name := ""
+	var rift_name = ""
 	for cfg in RIFTS:
 		if cfg["id"] == rift_id:
 			rift_name = cfg["name"]
@@ -324,24 +361,71 @@ func _refresh_active_view() -> void:
 	var m_idx: int     = int(Account.rift_milestone_index)  if Account.rift_milestone_index  != null else 0
 	var total_m: int   = int(Account.rift_total_milestones) if Account.rift_total_milestones != null else 8
 
-	# Cumulative progress across all milestones so the bar never resets mid-rift
-	var step_size: int   = max(1, max_steps)
-	var total_done: int  = m_idx * step_size + steps
-	var total_max: int   = total_m * step_size
-
-	_progress_bar.max_value = max(1, total_max)
-	_progress_bar.value     = total_done
+	# Progress bar shows cumulative steps toward total rift steps
+	_progress_bar.max_value = max(1, max_steps)
+	_progress_bar.value     = steps
 	_steps_label.text = "Steps: %d / %d   Milestones: %d / %d" % [steps, max_steps, m_idx, total_m]
 
-	# Rebuild milestone marker row
+	# Rebuild milestone list with monster names
 	for child in _milestone_row.get_children():
 		child.queue_free()
+
+	# Find the monster roster for this rift
+	var monsters: Array = []
+	for cfg in RIFTS:
+		if cfg["id"] == rift_id:
+			monsters = cfg.get("monsters", [])
+			break
+
 	for i in range(total_m):
-		var marker := ColorRect.new()
-		marker.custom_minimum_size = Vector2(0, 16)
-		marker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		marker.color = Color.from_rgba8(60, 160, 80, 220) if i < m_idx else Color(0.0, 0.0, 0.0, 0.18)
-		_milestone_row.add_child(marker)
+		var row = HBoxContainer.new()
+		row.add_theme_constant_override("separation", 6)
+		_milestone_row.add_child(row)
+
+		# Status indicator
+		var dot = Label.new()
+		if i < m_idx:
+			dot.text = "  ✓ "
+			dot.add_theme_color_override("font_color", Color.from_rgba8(60, 200, 100))
+		elif i == m_idx:
+			dot.text = "  ► "
+			dot.add_theme_color_override("font_color", Color.from_rgba8(50, 100, 200))
+		else:
+			dot.text = "  · "
+			dot.add_theme_color_override("font_color", Color.from_rgba8(120, 120, 120))
+		dot.add_theme_font_size_override("font_size", 14)
+		row.add_child(dot)
+
+		# Monster name
+		var name_lbl = Label.new()
+		var monster_name: String = monsters[i] if i < monsters.size() else "Unknown"
+		if i == total_m - 1:
+			monster_name = "BOSS: " + monster_name
+		name_lbl.text = "#%d %s" % [i + 1, monster_name]
+		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		if i < m_idx:
+			Styler.style_parchment_label(name_lbl, Color.from_rgba8(60, 200, 100))
+		elif i == m_idx:
+			Styler.style_parchment_label(name_lbl, Color.from_rgba8(50, 100, 200))
+		else:
+			Styler.style_parchment_label(name_lbl, Color.from_rgba8(120, 120, 120))
+		row.add_child(name_lbl)
+
+		# Show a small fight button on the current milestone if a fight is pending
+		if i == m_idx and Account.rift_pending_fight:
+			var fight_btn = Button.new()
+			fight_btn.text = "⚔"
+			fight_btn.custom_minimum_size = Vector2(36, 28)
+			Styler.style_button_small(fight_btn, Color.from_rgba8(200, 50, 50))
+			fight_btn.add_theme_color_override("font_color", Color.WHITE)
+			fight_btn.add_theme_font_size_override("font_size", 16)
+			fight_btn.pressed.connect(_on_quick_fight_pressed)
+			row.add_child(fight_btn)
+
+	# Toggle pause/resume buttons based on activity state
+	var is_paused = rift_id > 0 and int(Account.activity) != 7
+	_resume_btn.visible = is_paused
+	_pause_btn.visible = not is_paused
 
 
 func _on_account_data(_ok) -> void:
@@ -352,9 +436,29 @@ func _on_start_rift(rift_id: int) -> void:
 	SignalManager.signal_UserActivity.emit(7, rift_id, "start")
 
 
+func _on_quick_fight_pressed() -> void:
+	# Send confirm_fight directly, same as the loadout screen's FIGHT button
+	var skill_ids: Array = []
+	var player_skills = Account.raw_structures.account_skills if Account.raw_structures.account_skills != null else {}
+	if player_skills is Dictionary:
+		for slot in player_skills:
+			var skill = player_skills[slot]
+			if skill is Dictionary:
+				skill_ids.append(int(skill.get("skill_id", 0)))
+	ServerConnector.send_message({
+		"cmd": "confirm_fight",
+		"payload": {"skill_loadout": skill_ids}
+	})
+
+
 func _on_pause_pressed() -> void:
 	var rift_id: int = int(Account.rift_id) if Account.rift_id != null else 0
 	SignalManager.signal_UserActivity.emit(7, rift_id, "pause")
+
+
+func _on_resume_pressed() -> void:
+	var rift_id: int = int(Account.rift_id) if Account.rift_id != null else 0
+	SignalManager.signal_UserActivity.emit(7, rift_id, "start")
 
 
 func _on_stop_pressed() -> void:
@@ -381,12 +485,34 @@ func _on_battle_log_pressed() -> void:
 
 
 func _on_fight_row_pressed(fight: Dictionary) -> void:
-	var instance_id := str(Account.rift_instance_id) if Account.rift_instance_id != null else ""
-	var fight_uid   := str(fight.get("fight_uid", ""))
+	var instance_id = str(Account.rift_instance_id) if Account.rift_instance_id != null else ""
+	var fight_uid   = str(fight.get("fight_uid", ""))
 	if instance_id.is_empty() or fight_uid.is_empty():
 		return
 	_pending_fight_request = fight
 	SignalManager.signal_RequestRiftFightLog.emit(instance_id, fight_uid)
+
+
+func _on_activity_progress(data: Dictionary) -> void:
+	var d: Dictionary = data.get("data", {}).get("data", data)
+
+	# Pending fight: just refresh the view so the ⚔ button shows on the milestone.
+	# The player decides when to fight.
+	if d.get("pending_fight", false):
+		_refresh()
+		return
+
+	# Auto-refresh fight list and milestone view when a fight completes
+	var milestone_fights = d.get("milestone_fights", [])
+	if milestone_fights != null and not milestone_fights.is_empty():
+		_on_refresh_fights_pressed()
+		_refresh()
+
+	# Show completion screen if rift is complete
+	if d.get("rift_complete", false):
+		var completion = COMPLETION_SCREEN.new()
+		completion.completion_data = data
+		add_child(completion)
 
 
 func _on_rift_fights_received(data) -> void:
@@ -397,7 +523,7 @@ func _on_rift_fights_received(data) -> void:
 	_cached_fights = fights if fights != null else []
 	_battle_log_btn.disabled = _cached_fights.is_empty()
 	if fights == null or fights.is_empty():
-		var empty_lbl := Label.new()
+		var empty_lbl = Label.new()
 		empty_lbl.text = "No fights yet."
 		Styler.style_parchment_label(empty_lbl, Color.from_rgba8(150, 150, 150))
 		_fight_list.add_child(empty_lbl)
@@ -409,13 +535,22 @@ func _on_rift_fights_received(data) -> void:
 		var result: bool = fight.get("result", false)
 		var hp_before: int = int(fight.get("player_hp_before", 0))
 		var hp_after: int = int(fight.get("player_hp_after", 0))
-		var result_color := Color.from_rgba8(100, 220, 100) if result else Color.from_rgba8(220, 80, 80)
+		var result_color = Color.from_rgba8(100, 220, 100) if result else Color.from_rgba8(220, 80, 80)
 
-		var row := Button.new()
-		row.text = "#%d: %s  %s  HP: %d→%d" % [
+		var loot_counts = fight.get("loot_counts", {})
+		var loot_text = ""
+		if loot_counts != null and loot_counts is Dictionary and not loot_counts.is_empty():
+			var total_items: int = 0
+			for v in loot_counts.values():
+				total_items += int(v)
+			loot_text = "  Loot: %d" % total_items
+
+		var row = Button.new()
+		row.text = "#%d: %s  %s  HP: %d→%d%s" % [
 			m_idx + 1, monster_id,
 			"WIN" if result else "LOSS",
 			hp_before, hp_after,
+			loot_text,
 		]
 		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -426,8 +561,13 @@ func _on_rift_fights_received(data) -> void:
 
 	var fight_log = data.get("data", {}).get("fight_log")
 	if fight_log != null and not _pending_fight_request.is_empty():
-		var viewer := FIGHT_LOG_VIS.new()
+		var viewer = FIGHT_LOG_VIS.new()
 		viewer.fight_meta = _pending_fight_request
 		viewer.fight_log  = fight_log
 		viewer.tree_exited.connect(func(): _pending_fight_request = {}, CONNECT_ONE_SHOT)
 		add_child(viewer)
+
+
+func _on_history_pressed() -> void:
+	var screen = HISTORY_SCREEN.new()
+	add_child(screen)

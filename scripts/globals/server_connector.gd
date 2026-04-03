@@ -1,6 +1,6 @@
 extends Node
 
-var socket := WebSocketPeer.new()
+var socket = WebSocketPeer.new()
 signal server_connector_message_bus(message: String)
 
 var cryptoUtil = UserCrypto.new()
@@ -15,8 +15,8 @@ var _saved_password: String = ""
 var _was_authenticated: bool = false
 
 # Part B: Heartbeat constants and state
-const HEARTBEAT_INTERVAL := 15.0
-const HEARTBEAT_TIMEOUT := 10.0
+const HEARTBEAT_INTERVAL = 15.0
+const HEARTBEAT_TIMEOUT = 10.0
 var _heartbeat_timer: float = 0.0
 var _heartbeat_pending: bool = false
 var _heartbeat_timeout_timer: float = 0.0
@@ -53,10 +53,14 @@ func _ready() -> void:
 
 	SignalManager.signal_RequestRiftFights.connect(_on_request_rift_fights)
 	SignalManager.signal_RequestRiftFightLog.connect(_on_request_rift_fight_log)
+	SignalManager.signal_RequestRiftHistory.connect(_on_request_rift_history)
 	SignalManager.signal_TravelRequest.connect(_on_travel_request)
 	SignalManager.signal_AvatarChanged.connect(_on_avatar_changed)
 	SignalManager.signal_RequestProfessionInfo.connect(_on_request_profession_info)
 	SignalManager.signal_StartCraftActivity.connect(_on_start_craft_activity)
+	SignalManager.signal_TalentAllocate.connect(_on_talent_allocate_request)
+	SignalManager.signal_TalentRespec.connect(_on_talent_respec_request)
+	SignalManager.signal_TalentCheatPoints.connect(_on_talent_cheat_points_request)
 
 
 func connect_to_server() -> void:
@@ -163,7 +167,7 @@ func _hide_reconnect_overlay() -> void:
 		_reconnect_overlay = null
 
 # Part D: Auto-login after reconnect
-var _auto_login_ok := false
+var _auto_login_ok = false
 
 func _auto_login() -> void:
 	if _auto_login_in_progress:
@@ -199,8 +203,21 @@ func clear_credentials() -> void:
 
 # ################################
 # """Signal compilator section"""
+
+func _is_socket_open() -> bool:
+	return socket.get_ready_state() == WebSocketPeer.STATE_OPEN
+
+func send_message(data: Dictionary) -> void:
+	if not _is_socket_open():
+		server_connector_message_bus.emit("[Client] ERROR: Not connected to server")
+		return
+	socket.send_text(JSON.stringify(data))
+
 func _on_user_creating(user, password) -> void:
-	var payload := {
+	if not _is_socket_open():
+		server_connector_message_bus.emit("[Client] ERROR: Not connected to server")
+		return
+	var payload = {
 		"cmd": "create_user",
 		"payload": {
 			"username": user,
@@ -212,12 +229,15 @@ func _on_user_creating(user, password) -> void:
 	server_connector_message_bus.emit("[Client] Requesting user creating...")
 
 func _on_user_login(user, password) -> void:
+	if not _is_socket_open():
+		server_connector_message_bus.emit("[Client] ERROR: Not connected to server")
+		return
 	# Part A: Save credentials on login
 	_saved_username = user
 	_saved_password = password
 	_was_authenticated = true
 
-	var payload := {
+	var payload = {
 		"cmd": "login_user",
 		"payload": {
 			"username": user,
@@ -229,7 +249,7 @@ func _on_user_login(user, password) -> void:
 	server_connector_message_bus.emit("[Client] Requesting login...")
 
 func _on_user_activity(activity, activity_site, action) -> void:
-	var payload := {
+	var payload = {
 		"cmd": "activity",
 		"payload": {
 			"activity": activity,
@@ -242,7 +262,7 @@ func _on_user_activity(activity, activity_site, action) -> void:
 	server_connector_message_bus.emit("[Client] Requesting activity: {0}, action: {1}".format([activity, action]))
 
 func _on_step_counter_cheat_update(amount) -> void:
-	var payload := {
+	var payload = {
 		"cmd": "steps_update_cheat",
 		"payload": {
 			"amount": amount,
@@ -256,7 +276,7 @@ func _on_step_counter_android_request_last_ts(is_requested) -> void:
 	if not is_requested:
 		return
 
-	var payload := {
+	var payload = {
 		"cmd": "steps_request_last_ts",
 		"payload": {
 			"data": true,
@@ -267,7 +287,7 @@ func _on_step_counter_android_request_last_ts(is_requested) -> void:
 	server_connector_message_bus.emit("[Client] Sending android steps request last ts")
 
 func _on_step_counter_android_update(data) -> void:
-	var payload := {
+	var payload = {
 		"cmd": "steps_update_android",
 		"payload": {
 			"data": data,
@@ -278,7 +298,7 @@ func _on_step_counter_android_update(data) -> void:
 	server_connector_message_bus.emit("[Client] Sending android steps to server")
 
 func _on_inventory_request(action) -> void:
-	var payload := {
+	var payload = {
 		"cmd": "inventory",
 		"payload": {
 			"action": action,
@@ -289,7 +309,7 @@ func _on_inventory_request(action) -> void:
 	server_connector_message_bus.emit("[Client] Request Inventory: {0}".format([action]))
 
 func _on_useitem_request(item_to_use, qty: int) -> void:
-	var payload := {
+	var payload = {
 		"cmd": "inventory",
 		"payload": {
 			"action": "use_item",
@@ -302,7 +322,7 @@ func _on_useitem_request(item_to_use, qty: int) -> void:
 	server_connector_message_bus.emit("[Client] Request to Use item: {0} x{1}".format([item_to_use, qty]))
 
 func _on_equip_request(item_to_equip, slot_type) -> void:
-	var payload := {
+	var payload = {
 		"cmd": "inventory",
 		"payload": {
 			"action": "equip",
@@ -315,7 +335,7 @@ func _on_equip_request(item_to_equip, slot_type) -> void:
 	server_connector_message_bus.emit("[Client] Request to Equip item: {0} for slot: {1}".format([item_to_equip, slot_type]))
 
 func _on_unequip_request(_slot_name) -> void:
-	var payload := {
+	var payload = {
 		"cmd": "inventory",
 		"payload": {
 			"action": "unequip",
@@ -327,7 +347,7 @@ func _on_unequip_request(_slot_name) -> void:
 	server_connector_message_bus.emit("[Client] Request to Unequip item from slot: {0}".format([_slot_name]))
 
 func _on_sell_item_request(item_to_sell) -> void:
-	var payload := {
+	var payload = {
 		"cmd": "inventory",
 		"payload": {
 			"action": "sell",
@@ -339,7 +359,7 @@ func _on_sell_item_request(item_to_sell) -> void:
 	server_connector_message_bus.emit("[Client] Request to Sell item {0}".format([item_to_sell]))
 
 func _on_disenchant_item_request(item_uid: String) -> void:
-	var payload := {
+	var payload = {
 		"cmd": "inventory",
 		"payload": {
 			"action": "disenchant",
@@ -350,7 +370,7 @@ func _on_disenchant_item_request(item_uid: String) -> void:
 	server_connector_message_bus.emit("[Client] Request to Disenchant item %s" % item_uid)
 
 func _on_sell_items_request(item_uids: Array) -> void:
-	var payload := {
+	var payload = {
 		"cmd": "inventory",
 		"payload": {
 			"action": "sell_batch",
@@ -361,7 +381,7 @@ func _on_sell_items_request(item_uids: Array) -> void:
 	server_connector_message_bus.emit("[Client] Request to Sell %d items" % item_uids.size())
 
 func _on_equip_skill_request(idx, skill_id):
-	var payload := {
+	var payload = {
 		"cmd": "skills",
 		"payload": {
 			"action": "equip",
@@ -374,7 +394,7 @@ func _on_equip_skill_request(idx, skill_id):
 	server_connector_message_bus.emit("[Client] Request to Equip skill {0}".format([skill_id]))
 
 func _on_unequip_skill_request(idx):
-	var payload := {
+	var payload = {
 		"cmd": "skills",
 		"payload": {
 			"action": "unequip",
@@ -386,7 +406,7 @@ func _on_unequip_skill_request(idx):
 	server_connector_message_bus.emit("[Client] Request to Unequip skill from {0}".format([idx]))
 
 func _on_request_rift_fights(rift_instance_id: String) -> void:
-	var payload := {
+	var payload = {
 		"cmd": "rift_fights",
 		"payload": {
 			"rift_instance_id": rift_instance_id,
@@ -396,8 +416,12 @@ func _on_request_rift_fights(rift_instance_id: String) -> void:
 	socket.send_text(server_request)
 	server_connector_message_bus.emit("[Client] Requesting rift fights for: {0}".format([rift_instance_id]))
 
+func _on_request_rift_history() -> void:
+	socket.send_text(JSON.stringify({"cmd": "rift_history", "payload": {}}))
+	server_connector_message_bus.emit("[Client] Requesting rift history")
+
 func _on_request_rift_fight_log(rift_instance_id: String, fight_uid: String) -> void:
-	var payload := {
+	var payload = {
 		"cmd": "rift_fights",
 		"payload": {"rift_instance_id": rift_instance_id, "fight_uid": fight_uid},
 	}
@@ -405,7 +429,7 @@ func _on_request_rift_fight_log(rift_instance_id: String, fight_uid: String) -> 
 	server_connector_message_bus.emit("[Client] Requesting fight log for fight: {0}".format([fight_uid]))
 
 func _on_travel_request(location_id: int) -> void:
-	var payload := {
+	var payload = {
 		"cmd": "travel",
 		"payload": {"location": location_id},
 	}
@@ -413,12 +437,12 @@ func _on_travel_request(location_id: int) -> void:
 	server_connector_message_bus.emit("[Client] Requesting travel to location: %d" % location_id)
 
 func _on_avatar_changed(avatar_id: int) -> void:
-	var payload := {"cmd": "set_avatar", "payload": {"avatar_id": avatar_id}}
+	var payload = {"cmd": "set_avatar", "payload": {"avatar_id": avatar_id}}
 	socket.send_text(JSON.stringify(payload))
 	server_connector_message_bus.emit("[Client] Set avatar: " + str(avatar_id))
 
 func _on_request_profession_info(profession: String) -> void:
-	var payload := {
+	var payload = {
 		"cmd": "profession_info",
 		"payload": {"profession": profession},
 	}
@@ -426,7 +450,7 @@ func _on_request_profession_info(profession: String) -> void:
 	server_connector_message_bus.emit("[Client] Requesting profession info: %s" % profession)
 
 func _on_start_craft_activity(activity: int, activity_site: int, recipe_id: String) -> void:
-	var payload := {
+	var payload = {
 		"cmd": "activity",
 		"payload": {
 			"activity": activity,
@@ -437,3 +461,18 @@ func _on_start_craft_activity(activity: int, activity_site: int, recipe_id: Stri
 	}
 	socket.send_text(JSON.stringify(payload))
 	server_connector_message_bus.emit("[Client] Starting craft: %s" % recipe_id)
+
+func _on_talent_allocate_request(talent_id: String) -> void:
+	var payload = {"cmd": "talents", "payload": {"action": "allocate", "talent_id": talent_id}}
+	socket.send_text(JSON.stringify(payload))
+	server_connector_message_bus.emit("[Client] Allocating talent point: %s" % talent_id)
+
+func _on_talent_respec_request() -> void:
+	var payload = {"cmd": "talents", "payload": {"action": "respec"}}
+	socket.send_text(JSON.stringify(payload))
+	server_connector_message_bus.emit("[Client] Requesting talent respec")
+
+func _on_talent_cheat_points_request(points: int) -> void:
+	var payload = {"cmd": "talents", "payload": {"action": "cheat_points", "points": points}}
+	socket.send_text(JSON.stringify(payload))
+	server_connector_message_bus.emit("[Client] Cheat: adding %d talent points" % points)

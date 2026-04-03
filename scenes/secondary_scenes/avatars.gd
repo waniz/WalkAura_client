@@ -8,16 +8,16 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 
 	# Dark background
-	var bg := ColorRect.new()
+	var bg = ColorRect.new()
 	bg.color = Color(0, 0, 0, 0.6)
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_PASS
 	add_child(bg)
 
 	# Panel — inset to clear the HUDs (mirrors rift.gd offsets)
-	var panel := PanelContainer.new()
+	var panel = PanelContainer.new()
 	panel.set_anchors_preset(Control.PRESET_FULL_RECT)
-	var mo := Styler.get_modal_offsets()
+	var mo = Styler.get_modal_offsets()
 	panel.offset_left = mo["left"]
 	panel.offset_right = mo["right"]
 	panel.offset_top = mo["top"]
@@ -25,21 +25,21 @@ func _ready() -> void:
 	Styler._apply_parchment_style(panel)
 	add_child(panel)
 
-	var margin := MarginContainer.new()
+	var margin = MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 16)
 	margin.add_theme_constant_override("margin_right", 16)
 	margin.add_theme_constant_override("margin_top", 12)
 	margin.add_theme_constant_override("margin_bottom", 16)
 	panel.add_child(margin)
 
-	var vbox := VBoxContainer.new()
+	var vbox = VBoxContainer.new()
 	margin.add_child(vbox)
 
 	# Header row
-	var header_hbox := HBoxContainer.new()
+	var header_hbox = HBoxContainer.new()
 	vbox.add_child(header_hbox)
 
-	var title := Label.new()
+	var title = Label.new()
 	title.text = "Choose Avatar"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.add_theme_font_override("font", Styler.JANDA_FONT)
@@ -47,22 +47,22 @@ func _ready() -> void:
 	title.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 	header_hbox.add_child(title)
 
-	var close_btn := Button.new()
+	var close_btn = Button.new()
 	close_btn.text = "X"
 	close_btn.custom_minimum_size = Vector2(40, 40)
 	Styler.style_button_small(close_btn, Color.from_rgba8(180, 60, 60))
 	close_btn.pressed.connect(queue_free)
 	header_hbox.add_child(close_btn)
 
-	var sep := HSeparator.new()
+	var sep = HSeparator.new()
 	vbox.add_child(sep)
 
-	var scroll := ScrollContainer.new()
+	var scroll = ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	vbox.add_child(scroll)
 
-	var grid := GridContainer.new()
+	var grid = GridContainer.new()
 	grid.columns = 3
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	grid.add_theme_constant_override("h_separation", 12)
@@ -72,13 +72,13 @@ func _ready() -> void:
 	for key in ItemDB.AVATARS.keys():
 		var tex: Texture2D = ItemDB.AVATARS[key]
 		var id: int = int(key)
-		var btn := Button.new()
+		var btn = Button.new()
 		btn.custom_minimum_size = Vector2(160, 180)
 		btn.toggle_mode = false
 		btn.focus_mode = Control.FOCUS_NONE
 
 		var is_selected: bool = (id == Account.avatar_id)
-		var sb := StyleBoxFlat.new()
+		var sb = StyleBoxFlat.new()
 		sb.bg_color = Color(0, 0, 0, 0.05)
 		sb.set_corner_radius_all(8)
 		sb.border_color = Styler.COLOR_GOLD if is_selected else Color(0, 0, 0, 0.2)
@@ -87,13 +87,13 @@ func _ready() -> void:
 		btn.add_theme_stylebox_override("hover", sb)
 		btn.add_theme_stylebox_override("pressed", sb)
 
-		var btn_vbox := VBoxContainer.new()
+		var btn_vbox = VBoxContainer.new()
 		btn_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 		btn_vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
 		btn_vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		btn.add_child(btn_vbox)
 
-		var img := TextureRect.new()
+		var img = TextureRect.new()
 		img.texture = tex
 		img.custom_minimum_size = Vector2(112, 112)
 		img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -102,7 +102,7 @@ func _ready() -> void:
 		img.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		btn_vbox.add_child(img)
 
-		var lbl := Label.new()
+		var lbl = Label.new()
 		lbl.text = GameTextEn.avatar_names.get(key, "Avatar " + key)
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lbl.add_theme_font_size_override("font_size", 14)

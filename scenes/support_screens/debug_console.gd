@@ -42,8 +42,8 @@ func _on_clear() -> void:
 
 func _trim_head(n: int) -> void:
 	# Efficient-ish: rebuild from tail
-	var text := log_output.get_parsed_text()         # current bbcode text
-	var lines := text.split("\n")
+	var text = log_output.get_parsed_text()         # current bbcode text
+	var lines = text.split("\n")
 	if lines.size() <= n: return
 	lines = lines.slice(n, lines.size())
 	log_output.clear()

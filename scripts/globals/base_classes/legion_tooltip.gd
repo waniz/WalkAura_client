@@ -41,7 +41,7 @@ var _compare_def: Dictionary = {}
 
 
 func _ready() -> void:
-	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	mouse_filter = Control.MOUSE_FILTER_STOP
 	
 	# 1. Panel Style (Parchment look)
 	var sb = StyleBoxFlat.new()
@@ -276,15 +276,15 @@ func _rebuild_footer(item_def: Dictionary) -> void:
 	# Attribute requirements (green if met, red if not)
 	var reqs = item_def.get("requirements", {})
 	if not reqs.is_empty():
-		var req_header := _create_label_simple(Color.BLACK)
+		var req_header = _create_label_simple(Color.BLACK)
 		req_header.text = "Requirements:"
 		_footer_container.add_child(req_header)
 		for stat_name in reqs:
 			var required_val: int = int(reqs[stat_name])
 			var player_val: int = _get_player_stat(stat_name)
 			var met: bool = player_val >= required_val
-			var color := Color(0.15, 0.65, 0.15) if met else Color(0.85, 0.15, 0.15)
-			var l := _create_label_simple(color)
+			var color = Color(0.15, 0.65, 0.15) if met else Color(0.85, 0.15, 0.15)
+			var l = _create_label_simple(color)
 			l.text = "  %s: %d  (you: %d)" % [stat_name, required_val, player_val]
 			_footer_container.add_child(l)
 
@@ -315,8 +315,8 @@ func _add_section_header(text: String) -> void:
 	_stats_container.add_child(l)
 
 func _stat_arrow(my_val, their_val) -> int:
-	var a := float(str(my_val))
-	var b := float(str(their_val))
+	var a = float(str(my_val))
+	var b = float(str(their_val))
 	if a > b: return  1
 	if a < b: return -1
 	return 0
@@ -341,7 +341,7 @@ func _add_stat_row(text: String, color: Color, _bold: bool = false, arrow: int =
 
 	# 4. Optional comparison arrow
 	if arrow != 0:
-		var al := Label.new()
+		var al = Label.new()
 		al.text = " ▲" if arrow > 0 else " ▼"
 		al.add_theme_color_override("font_color",
 			Color(0.1, 0.75, 0.1) if arrow > 0 else Color(0.85, 0.15, 0.15))
@@ -371,7 +371,7 @@ func _create_button(text: String, color: Color) -> Button:
 
 func _update_buttons_state() -> void:
 	_btn_use.visible = _can_use()
-	var _fill_qty := _calc_fill_qty()
+	var _fill_qty = _calc_fill_qty()
 	_btn_fill_max.visible = _can_use() and _fill_qty > 1
 	if _btn_fill_max.visible:
 		_btn_fill_max.text = "Fill to Max (%d)" % _fill_qty
@@ -379,13 +379,19 @@ func _update_buttons_state() -> void:
 		_btn_fill_max.pressed.connect(_on_fill_max_pressed)
 	_btn_sell.visible = (_source == "inventory")
 	_btn_equip_slot2.visible = false # default
-	
+
+	# Disconnect all equip-related signals before reconnecting to avoid stale handlers
+	if _btn_equip.pressed.is_connected(_on_equip_pressed):
+		_btn_equip.pressed.disconnect(_on_equip_pressed)
+	if _btn_equip.pressed.is_connected(_on_unequip_pressed):
+		_btn_equip.pressed.disconnect(_on_unequip_pressed)
+	if _btn_equip_slot2.pressed.is_connected(_on_equip_pressed_slot2):
+		_btn_equip_slot2.pressed.disconnect(_on_equip_pressed_slot2)
+
 	if _source == "equipment":
 		_btn_equip.text = "Unequip"
 		_btn_equip.visible = true
-		#_btn_equip.disconnect("pressed", _on_equip_pressed)
-		if not _btn_equip.pressed.is_connected(_on_unequip_pressed):
-			_btn_equip.pressed.connect(_on_unequip_pressed)
+		_btn_equip.pressed.connect(_on_unequip_pressed)
 	else:
 		_btn_equip.text = "Equip"
 		_btn_equip.visible = _can_equip()
@@ -396,16 +402,11 @@ func _update_buttons_state() -> void:
 			_btn_equip_slot2.text = "Equip (Right)"
 			_btn_equip.visible = true
 			_btn_equip_slot2.visible = true
-			
-			# Reconnect signals cleanly
-			if not _btn_equip.pressed.is_connected(_on_equip_pressed):
-				_btn_equip.pressed.connect(_on_equip_pressed)
-			if not _btn_equip_slot2.pressed.is_connected(_on_equip_pressed_slot2):
-				_btn_equip_slot2.pressed.connect(_on_equip_pressed_slot2)
+			_btn_equip.pressed.connect(_on_equip_pressed)
+			_btn_equip_slot2.pressed.connect(_on_equip_pressed_slot2)
 		else:
-			if not _btn_equip.pressed.is_connected(_on_equip_pressed):
-				_btn_equip.pressed.connect(_on_equip_pressed)
-				
+			_btn_equip.pressed.connect(_on_equip_pressed)
+
 		# add connection for "use" case
 		if not _btn_use.pressed.is_connected(_on_use_pressed):
 			_btn_use.pressed.connect(_on_use_pressed)
@@ -465,23 +466,29 @@ func _can_equip() -> bool:
 # --- Signal Handlers ---
 func _on_use_pressed():
 	SignalManager.signal_UseItem.emit(_def["item_uid"], 1)
-	
+	visible = false
+
 func _on_sell_pressed():
 	SignalManager.signal_SellItem.emit(_def["item_uid"])
+	visible = false
 
 func _on_disenchant_pressed():
 	SignalManager.signal_DisenchantItem.emit(_def["item_uid"])
+	visible = false
 
-func _on_unequip_pressed(): 
+func _on_unequip_pressed():
 	SignalManager.signal_UnequipItem.emit(_slot_name)
+	visible = false
 
-func _on_equip_pressed(): 
+func _on_equip_pressed():
 	var s = _resolve_slot(false)
 	SignalManager.signal_EquipItem.emit(_def["item_uid"], s)
+	visible = false
 
-func _on_equip_pressed_slot2(): 
+func _on_equip_pressed_slot2():
 	var s = _resolve_slot(true)
 	SignalManager.signal_EquipItem.emit(_def["item_uid"], s)
+	visible = false
 
 func _resolve_slot(is_second: bool) -> String:
 	var s = str(_def.get("slot_type", ""))
@@ -490,7 +497,7 @@ func _resolve_slot(is_second: bool) -> String:
 	return s
 
 func _on_fill_max_pressed():
-	var qty := _calc_fill_qty()
+	var qty = _calc_fill_qty()
 	if qty > 0:
 		SignalManager.signal_UseItem.emit(_def["item_uid"], qty)
 
@@ -505,13 +512,13 @@ func _calc_fill_qty() -> int:
 	var attrs: Dictionary = _def.get("primary_attributes", {})
 	var stack: int = _qty
 	if attrs.has("Recovery HP"):
-		var recovery := int(attrs["Recovery HP"])
+		var recovery = int(attrs["Recovery HP"])
 		var deficit = Account.hp_max - Account.hp
 		if deficit <= 0 or recovery <= 0:
 			return 0
 		return min(ceili(float(deficit) / float(recovery)), stack)
 	if attrs.has("Recovery Mana"):
-		var recovery := int(attrs["Recovery Mana"])
+		var recovery = int(attrs["Recovery Mana"])
 		var deficit = Account.mp_max - Account.mp
 		if deficit <= 0 or recovery <= 0:
 			return 0
