@@ -1,7 +1,8 @@
 extends Node
 
-signal signal_LoginResult(result)
+signal signal_LoginResult(ok: bool, error: String)
 signal signal_AccountDataReceived(result)
+signal signal_CreateUserResult(ok: bool, error: String)
 
 signal signal_LoginParamsReceived(data)
 signal signal_UserStepLastTSReceived(data)
@@ -12,6 +13,10 @@ signal signal_AllSkillsReceived(data)
 signal signal_AccountSkillsReceived(data)
 
 signal signal_RiftFightsReceived(data)
+signal signal_RiftHistoryReceived(data)
+
+signal signal_TalentsConfigReceived(data)
+signal signal_TalentsDataReceived(data)
 
 
 func _ready() -> void:
@@ -34,36 +39,63 @@ func parse_message(message):
 		return
 
 	# router
-	if json.data.cmd == "login_user":
+	var cmd: String = json.data.cmd
+	if cmd == "login_user":
 		check_login_result(json.data)
-	elif json.data.cmd == "login_params":
+	elif cmd == "create_user":
+		signal_CreateUserResult.emit(true, "")
+	elif cmd == "login_params":
 		get_login_params(json.data)
-	elif json.data.cmd == "account_attributes":
+	elif cmd == "account_attributes":
 		get_account_attrs(json.data)
-	elif json.data.cmd == "_handle_user_steps_last_ts":
+	elif cmd == "_handle_user_steps_last_ts":
 		update_account_steps(json.data)
-	elif json.data.cmd == "activity_progress":
+	elif cmd == "activity_progress":
 		show_activity_progress(json.data)
-	elif json.data.cmd == "inventory":
+	elif cmd in ["steps_update_cheat", "steps_update_android"]:
+		var steps_amount = int(json.data.get("data", {}).get("steps", 0))
+		if steps_amount > 0:
+			SignalManager.signal_StepToastUpdate.emit(steps_amount, {}, {}, [])
+	elif cmd == "inventory":
 		update_inventory(json.data)
-	elif json.data.cmd == "all_skills_list":
+	elif cmd == "all_skills_list":
 		update_game_skills(json.data)
-	elif json.data.cmd == "skills_update":
+	elif cmd == "skills_update":
 		update_skills(json.data)
-	elif json.data.cmd == "rift_fights":
+	elif cmd == "rift_fights":
 		update_rift_fights(json.data)
-	elif json.data.cmd == "disenchant_result":
+	elif cmd == "rift_history":
+		signal_RiftHistoryReceived.emit(json.data)
+	elif cmd == "disenchant_result":
 		handle_disenchant_result(json.data)
-	elif json.data.cmd == "profession_info":
+	elif cmd == "profession_info":
 		handle_profession_info(json.data)
+	elif cmd == "talents_config":
+		signal_TalentsConfigReceived.emit(json.data.data)
+	elif cmd in ["talents_data", "talent_allocate", "talent_respec", "talent_points_earned"]:
+		signal_TalentsDataReceived.emit(json.data.data)
+	elif cmd.begins_with("error:"):
+		_handle_server_error(json.data)
 		
 
 # router handlers
 func check_login_result(json_msg):
 	if json_msg.ok == true:
-		signal_LoginResult.emit(true)
+		signal_LoginResult.emit(true, "")
 	else:
-		signal_LoginResult.emit(false)
+		var err: String = json_msg.get("error", "unknown")
+		signal_LoginResult.emit(false, err)
+		signal_AccountDataReceived.emit(true)
+
+
+func _handle_server_error(json_msg) -> void:
+	var data = json_msg.get("data", {})
+	var code: String = data.get("code", "")
+	var message: String = data.get("message", "Unknown error")
+	if code == "create_user_failed" or (code == "bad_request" and "password_hash" in message):
+		signal_CreateUserResult.emit(false, message)
+	elif code == "login_failed" or (code == "bad_request" and "password are" in message):
+		signal_LoginResult.emit(false, message)
 		signal_AccountDataReceived.emit(true)
 		
 func get_login_params(data):
@@ -74,8 +106,9 @@ func get_account_attrs(json_msg):
 
 	# Bulk-assign groups via set() to avoid 100+ individual property lookups.
 	# Each section iterates a dict of {Account_property: value}.
+	Account.str_stat = d.primary_attributes["str"]
 	_bulk_set(d.primary_attributes, [
-		"str", "agi", "vit", "int_stat", "spi", "luk",
+		"agi", "vit", "int_stat", "spi", "luk",
 		"str_exp", "agi_exp", "vit_exp", "int_exp", "spi_exp", "luk_exp",
 		"bonus_str", "bonus_agi", "bonus_vit", "bonus_int", "bonus_spi", "bonus_luk",
 	])
@@ -110,6 +143,16 @@ func get_account_attrs(json_msg):
 		"mana_flow_lvl", "mana_flow_xp",
 		"regenerative_steps_lvl", "regenerative_steps_xp",
 	])
+	Account.pyromaniac_lvl = int(d.passives.get("pyromaniac_lvl", 0))
+	Account.pyromaniac_xp = int(d.passives.get("pyromaniac_xp", 0))
+	Account.permafrost_lvl = int(d.passives.get("permafrost_lvl", 0))
+	Account.permafrost_xp = int(d.passives.get("permafrost_xp", 0))
+	Account.devotion_lvl = int(d.passives.get("devotion_lvl", 0))
+	Account.devotion_xp = int(d.passives.get("devotion_xp", 0))
+	Account.shadow_mastery_lvl = int(d.passives.get("shadow_mastery_lvl", 0))
+	Account.shadow_mastery_xp = int(d.passives.get("shadow_mastery_xp", 0))
+	Account.arcane_mastery_lvl = int(d.passives.get("arcane_mastery_lvl", 0))
+	Account.arcane_mastery_xp = int(d.passives.get("arcane_mastery_xp", 0))
 
 	var sa = d.secondary_attributes
 	_bulk_set(sa, [
@@ -153,11 +196,16 @@ func get_account_attrs(json_msg):
 		Account.set(key, int(st.get(key, 0)))
 
 	Account.rift_instance_id = str(st.get("rift_instance_id", ""))
+	Account.rift_pending_fight = bool(st.get("rift_pending_fight", false))
+	Account.rift_pending_monster = str(st.get("rift_pending_monster", ""))
+	Account.rift_pending_milestone = int(st.get("rift_pending_milestone", 0))
 	Account.crafting_recipe_id = str(st.get("crafting_recipe_id", ""))
 
 	Account.variance = d.internal.variance
 	Account.vit_crit_soften = d.internal.vit_crit_soften
 	Account.spirit_healing_mult = d.internal.spirit_healing_mult
+
+	Account.active_buffs = d.get("active_buffs", {})
 
 	update_client_visuals()
 

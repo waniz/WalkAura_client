@@ -5,7 +5,7 @@ extends Node2D
 var _plugin_name = "GodotAndroidPlugin"
 var _android_plugin = null
 
-var socket := WebSocketPeer.new()
+var socket = WebSocketPeer.new()
 @export var websocket_url = "ws://91.98.164.230:8888/ws"
 
 
@@ -47,7 +47,7 @@ func _process(_delta: float) -> void:
 func _total_steps_retrieved(json_text: String) -> void:
 	var data = JSON.parse_string(json_text)
 	
-	var lines := PackedStringArray()
+	var lines = PackedStringArray()
 	for i in data.size():
 		var e: Dictionary = data[i]
 		lines.append(

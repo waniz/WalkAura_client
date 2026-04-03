@@ -51,15 +51,17 @@ const ICON_KEY_MAP = {
 	"Frost Spell Damage":      "frost_spell_damage",
 	"Arcane Spell Damage":     "arcane_spell_damage",
 	"Dark Spell Damage":       "dark_spell_damage",
+	"Blood Spell Damage":      "blood_spell_damage",
 	"Holy Resistance":         "holy_spell_damage",
 	"Fire Resistance":         "fire_spell_damage",
 	"Frost Resistance":        "frost_spell_damage",
 	"Arcane Resistance":       "arcane_spell_damage",
 	"Dark Resistance":         "dark_spell_damage",
+	"Blood Resistance":        "blood_spell_damage",
 }
 
 const PRIMARY_KEYS = [
-	{"k":"str",      "n":"Strength",   "exp": "str_exp", "bonus": "bonus_str"},
+	{"k":"str_stat",      "n":"Strength",   "exp": "str_exp", "bonus": "bonus_str"},
 	{"k":"agi",      "n":"Agility",    "exp": "agi_exp", "bonus": "bonus_agi"},
 	{"k":"vit",      "n":"Vitality",   "exp": "vit_exp", "bonus": "bonus_vit"},
 	{"k":"int_stat", "n":"Intellect", "exp": "int_exp", "bonus": "bonus_int"},
@@ -93,6 +95,7 @@ const MAGIC_DAMAGE_KEYS = [
 	{"k":"frost_spell_dmg_rating",   "n":"Frost Spell Damage",   "p": "frost_spell_dmg"},
 	{"k":"arcane_spell_dmg_rating",  "n":"Arcane Spell Damage",  "p": "arcane_spell_dmg"},
 	{"k":"dark_spell_dmg_rating",    "n":"Dark Spell Damage",    "p": "dark_spell_dmg"},
+	{"k":"blood_spell_dmg_rating",  "n":"Blood Spell Damage",  "p": "blood_spell_dmg"},
 ]
 
 const MAGIC_RESIST_KEYS = [
@@ -101,6 +104,7 @@ const MAGIC_RESIST_KEYS = [
 	{"k":"frost_resist_rating",  "n":"Frost Resistance",  "p": "frost_resist"},
 	{"k":"arcane_resist_rating", "n":"Arcane Resistance", "p": "arcane_resist"},
 	{"k":"dark_resist_rating",   "n":"Dark Resistance",   "p": "dark_resist"},
+	{"k":"blood_resist_rating",     "n":"Blood Resistance",    "p": "blood_resist"},
 ]
 
 const SUSTAIN_KEYS = [
@@ -228,7 +232,7 @@ var ACTIVITY_TOTAL_TO_LEVEL = {1: 0}
 
 var _stats_mode_buttons: Array = []
 var _stats_list_vbox: VBoxContainer = null
-var _current_stats_mode := 0       # 0=Offensive, 1=Defensive, 2=Steps, 3=Magic
+var _current_stats_mode = 0       # 0=Offensive, 1=Defensive, 2=Steps, 3=Magic
 var _last_stats_dict: Dictionary = {}
 var _professions_vbox: VBoxContainer = null
 
@@ -260,7 +264,7 @@ func _ready() -> void:
 	var stats = Account.to_dict()
 	set_stats(stats)
 
-func _update_character_data(value):
+func _update_character_data(_value):
 	var stats = Account.to_dict()
 	set_stats(stats)
 
@@ -271,9 +275,9 @@ func set_stats(d: Dictionary) -> void:
 	# Primary cards (big numbers)
 	for entry in PRIMARY_KEYS:
 		var lvl = int(d.get(entry.k, 0))
-		var exp = int(d.get(entry.exp, 0))
+		var xp = int(d.get(entry.exp, 0))
 		var bonus = int(d.get(entry.bonus, 0))
-		var card = _make_mini_card_primary(entry.n, lvl, exp, bonus, Color.from_rgba8(64, 180, 255))
+		var card = _make_mini_card_primary(entry.n, lvl, xp, bonus, Color.from_rgba8(64, 180, 255))
 		primary_grid.add_child(card)
 
 	if _stats_list_vbox != null:
@@ -283,11 +287,11 @@ func set_stats(d: Dictionary) -> void:
 		_populate_professions(d)
 
 # ---------- UI Builders ----------
-func _make_mini_card_primary(name: String, lvl: int, exp: int, bonus: int, accent: Color) -> Control:
+func _make_mini_card_primary(stat_name: String, lvl: int, xp: int, bonus: int, accent: Color) -> Control:
 	# --- parse & split value into whole + fractional parts ---
-	var floor_exp: int = STATS_TOTAL_TO_LEVEL.get(str(lvl),     exp)
+	var floor_exp: int = STATS_TOTAL_TO_LEVEL.get(str(lvl),     xp)
 	var next_exp:  int = STATS_TOTAL_TO_LEVEL.get(str(lvl + 1), -1)
-	var lvl_current:  int = max(0, exp - floor_exp)
+	var lvl_current:  int = max(0, xp - floor_exp)
 	var lvl_progress: int = max(1, next_exp - floor_exp) if next_exp >= 0 else 1
 
 	var whole = int(lvl)
@@ -295,9 +299,9 @@ func _make_mini_card_primary(name: String, lvl: int, exp: int, bonus: int, accen
 	var pct   = int(round(frac * 100.0))   # 0 .. 100
 
 	# --- card container ---
-	var panel := PanelContainer.new()
+	var panel = PanelContainer.new()
 	panel.custom_minimum_size = Vector2(150, 60)
-	var _sb := StyleBoxFlat.new()
+	var _sb = StyleBoxFlat.new()
 	_sb.bg_color     = Color(0.0, 0.0, 0.0, 0.06)
 	_sb.border_color = Color(0.0, 0.0, 0.0, 0.20)
 	_sb.set_border_width_all(1)
@@ -305,13 +309,13 @@ func _make_mini_card_primary(name: String, lvl: int, exp: int, bonus: int, accen
 	_sb.set_content_margin_all(10)
 	panel.add_theme_stylebox_override("panel", _sb)
 
-	var main_hbox := HBoxContainer.new()
+	var main_hbox = HBoxContainer.new()
 	main_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	main_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	panel.add_child(main_hbox)
 
 	# --- icon position ---
-	var icon_box := VBoxContainer.new()
+	var icon_box = VBoxContainer.new()
 	icon_box.custom_minimum_size.x = 46
 	icon_box.size_flags_vertical   = Control.SIZE_EXPAND_FILL
 	main_hbox.add_child(icon_box)
@@ -333,30 +337,30 @@ func _make_mini_card_primary(name: String, lvl: int, exp: int, bonus: int, accen
 		"Luck"     : "attributes_luck",
 	}
 
-	icon.texture = ItemDB.get_icon(icon_key.get(name))
+	icon.texture = ItemDB.get_icon(icon_key.get(stat_name))
 	icon_box.add_child(icon)
 
 	# --- first line: name + value ---
-	var vb := VBoxContainer.new()
+	var vb = VBoxContainer.new()
 	vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vb.size_flags_vertical   = Control.SIZE_EXPAND_FILL
 	main_hbox.add_child(vb)
 
-	var hb := HBoxContainer.new()
+	var hb = HBoxContainer.new()
 	hb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	hb.alignment = BoxContainer.ALIGNMENT_CENTER
 	vb.add_child(hb)
 
-	var n_lbl := Label.new()
-	n_lbl.text = name
+	var n_lbl = Label.new()
+	n_lbl.text = stat_name
 	n_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	n_lbl.add_theme_font_size_override("font_size", 18)
 	n_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	n_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 	hb.add_child(n_lbl)
 
-	var v_lbl := Label.new()
+	var v_lbl = Label.new()
 	v_lbl.text = str(whole) + " + " + str(bonus)
 	v_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	v_lbl.add_theme_font_size_override("font_size", 18)
@@ -365,23 +369,23 @@ func _make_mini_card_primary(name: String, lvl: int, exp: int, bonus: int, accen
 	hb.add_child(v_lbl)
 
 	# --- second line: fractional progress bar (0..100) ---
-	var pb := ProgressBar.new()
+	var pb = ProgressBar.new()
 	pb.min_value = 0
 	pb.max_value = 100
 	pb.value = pct
 	pb.show_percentage = false
 	pb.custom_minimum_size = Vector2(0, 18)
-	var _pb_bg := StyleBoxFlat.new()
+	var _pb_bg = StyleBoxFlat.new()
 	_pb_bg.bg_color = Color(0, 0, 0, 0.2)
 	_pb_bg.set_corner_radius_all(4)
 	pb.add_theme_stylebox_override("background", _pb_bg)
-	var _pb_fill := StyleBoxFlat.new()
+	var _pb_fill = StyleBoxFlat.new()
 	_pb_fill.bg_color = accent
 	_pb_fill.set_corner_radius_all(4)
 	pb.add_theme_stylebox_override("fill", _pb_fill)
 	vb.add_child(pb)
 
-	var pct_lbl := Label.new()
+	var pct_lbl = Label.new()
 	pct_lbl.text = str(pct) + "%"
 	pct_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	pct_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -392,8 +396,8 @@ func _make_mini_card_primary(name: String, lvl: int, exp: int, bonus: int, accen
 	pb.add_child(pct_lbl)
 
 	return panel
-	
-func _make_mini_card(name: String, lvl: int, activity_exp: int, accent: Color) -> Control:
+
+func _make_mini_card(stat_name: String, lvl: int, activity_exp: int, accent: Color) -> Control:
 	# --- parse & split value into whole + fractional parts ---
 	var next_exp:  int = ACTIVITY_TOTAL_TO_LEVEL.get(str(lvl + 1), -1)
 	var lvl_current:  int = max(0, activity_exp)
@@ -404,15 +408,15 @@ func _make_mini_card(name: String, lvl: int, activity_exp: int, accent: Color) -
 	var pct   = int(round(frac * 100.0))   # 0 .. 100
 
 	# --- card container ---
-	var panel := PanelContainer.new()
-	var _sb := StyleBoxFlat.new()
+	var panel = PanelContainer.new()
+	var _sb = StyleBoxFlat.new()
 	_sb.bg_color     = Color(0.0, 0.0, 0.0, 0.06)
 	_sb.border_color = Color(0.0, 0.0, 0.0, 0.20)
 	_sb.set_border_width_all(1)
 	_sb.set_corner_radius_all(5)
 	panel.add_theme_stylebox_override("panel", _sb)
 
-	var main_hbox := HBoxContainer.new()
+	var main_hbox = HBoxContainer.new()
 	main_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	panel.add_child(main_hbox)
 
@@ -436,22 +440,22 @@ func _make_mini_card(name: String, lvl: int, activity_exp: int, accent: Color) -
 		"Rift Explorer": "rift",
 	}
 
-	icon.texture = ItemDB.get_icon(icon_key.get(name))
+	icon.texture = ItemDB.get_icon(icon_key.get(stat_name))
 	main_hbox.add_child(icon)
 
 	# --- name (centered) + level + progress bar below ---
-	var vb := VBoxContainer.new()
+	var vb = VBoxContainer.new()
 	vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vb.size_flags_vertical   = Control.SIZE_EXPAND_FILL
 	main_hbox.add_child(vb)
 
-	var hb := HBoxContainer.new()
+	var hb = HBoxContainer.new()
 	hb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hb.alignment = BoxContainer.ALIGNMENT_CENTER
 	vb.add_child(hb)
 
-	var n_lbl := Label.new()
-	n_lbl.text = name
+	var n_lbl = Label.new()
+	n_lbl.text = stat_name
 	n_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	n_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	n_lbl.add_theme_font_size_override("font_size", 18)
@@ -459,7 +463,7 @@ func _make_mini_card(name: String, lvl: int, activity_exp: int, accent: Color) -
 	n_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	hb.add_child(n_lbl)
 
-	var v_lbl := Label.new()
+	var v_lbl = Label.new()
 	v_lbl.text = str(whole)
 	v_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	v_lbl.add_theme_font_size_override("font_size", 22)
@@ -468,23 +472,23 @@ func _make_mini_card(name: String, lvl: int, activity_exp: int, accent: Color) -
 	hb.add_child(v_lbl)
 
 	# --- second line: fractional progress bar (0..100) ---
-	var pb := ProgressBar.new()
+	var pb = ProgressBar.new()
 	pb.min_value = 0
 	pb.max_value = 100
 	pb.value = pct
 	pb.show_percentage = false
 	pb.custom_minimum_size = Vector2(0, 18)
-	var _pb_bg := StyleBoxFlat.new()
+	var _pb_bg = StyleBoxFlat.new()
 	_pb_bg.bg_color = Color(0, 0, 0, 0.2)
 	_pb_bg.set_corner_radius_all(4)
 	pb.add_theme_stylebox_override("background", _pb_bg)
-	var _pb_fill := StyleBoxFlat.new()
+	var _pb_fill = StyleBoxFlat.new()
 	_pb_fill.bg_color = accent
 	_pb_fill.set_corner_radius_all(4)
 	pb.add_theme_stylebox_override("fill", _pb_fill)
 	vb.add_child(pb)
 
-	var pct_lbl := Label.new()
+	var pct_lbl = Label.new()
 	pct_lbl.text = str(pct) + "%"
 	pct_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	pct_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -495,7 +499,7 @@ func _make_mini_card(name: String, lvl: int, activity_exp: int, accent: Color) -
 	pb.add_child(pct_lbl)
 
 	# Click handler — open profession detail overlay
-	var prof_key_map := {
+	var prof_key_map = {
 		"Herbalism":     "herbalism",
 		"Alchemy":       "alchemy",
 		"Enchanting":    "enchanting",
@@ -505,8 +509,8 @@ func _make_mini_card(name: String, lvl: int, activity_exp: int, accent: Color) -
 		"Fishing":       "fishing",
 		"Rift Explorer": "rift",
 	}
-	var prof_key: String = prof_key_map.get(name, "")
-	if prof_key in ["herbalism", "alchemy"]:
+	var prof_key: String = prof_key_map.get(stat_name, "")
+	if prof_key in ["herbalism", "alchemy", "enchanting", "mining", "woodcutting", "fishing"]:
 		panel.mouse_filter = Control.MOUSE_FILTER_STOP
 		panel.gui_input.connect(func(event: InputEvent):
 			if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
@@ -515,33 +519,33 @@ func _make_mini_card(name: String, lvl: int, activity_exp: int, accent: Color) -
 
 	return panel
 
-func _make_steps_card(name: String, value_in: String, accent: Color) -> Control:
+func _make_steps_card(label_text: String, value_in: String, accent: Color) -> Control:
 	var v: int = int(value_in)
-	
+
 	# --- card container ---
-	var panel := PanelContainer.new()
+	var panel = PanelContainer.new()
 	panel.custom_minimum_size = Vector2(120, 60)
 	panel.add_theme_stylebox_override("panel", Styler.card_box())
-	
-	var vb := VBoxContainer.new()
+
+	var vb = VBoxContainer.new()
 	vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vb.size_flags_vertical   = Control.SIZE_EXPAND_FILL
 	panel.add_child(vb)
-	
+
 	# --- first line: name + value ---
-	var hb := HBoxContainer.new()
+	var hb = HBoxContainer.new()
 	hb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hb.alignment = BoxContainer.ALIGNMENT_CENTER
 	vb.add_child(hb)
-		
-	var n_lbl := Label.new()
-	n_lbl.text = name
+
+	var n_lbl = Label.new()
+	n_lbl.text = label_text
 	n_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	n_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 0.85))
 	n_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	hb.add_child(n_lbl)
 
-	var v_lbl := Label.new()
+	var v_lbl = Label.new()
 	v_lbl.text = str(v)
 	v_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	v_lbl.add_theme_font_size_override("font_size", 16)
@@ -551,20 +555,20 @@ func _make_steps_card(name: String, value_in: String, accent: Color) -> Control:
 
 	return panel
 
-func _make_steps_card_with_icon(name: String, value_in: String, accent: Color) -> Control:
+func _make_steps_card_with_icon(label_text: String, value_in: String, accent: Color) -> Control:
 	var v: int = int(value_in)
 	
 	# --- card container ---
-	var panel := PanelContainer.new()
+	var panel = PanelContainer.new()
 	panel.custom_minimum_size = Vector2(120, 60)
 	panel.add_theme_stylebox_override("panel", Styler.card_box())
 	
-	var vb := VBoxContainer.new()
+	var vb = VBoxContainer.new()
 	vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vb.size_flags_vertical   = Control.SIZE_EXPAND_FILL
 	panel.add_child(vb)
 	
-	var hb := HBoxContainer.new()
+	var hb = HBoxContainer.new()
 	hb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hb.alignment = BoxContainer.ALIGNMENT_CENTER
 	vb.add_child(hb)
@@ -580,14 +584,14 @@ func _make_steps_card_with_icon(name: String, value_in: String, accent: Color) -
 	icon.texture = ItemDB.get_icon("steps")
 	hb.add_child(icon)
 	
-	var n_lbl := Label.new()
-	n_lbl.text = name
+	var n_lbl = Label.new()
+	n_lbl.text = label_text
 	n_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	n_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 0.85))
 	n_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	hb.add_child(n_lbl)
-		
-	var v_lbl := Label.new()
+
+	var v_lbl = Label.new()
 	v_lbl.text = str(v)
 	v_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	v_lbl.add_theme_font_size_override("font_size", 20)
@@ -597,8 +601,8 @@ func _make_steps_card_with_icon(name: String, value_in: String, accent: Color) -
 
 	return panel
 
-func _make_row(name: String, value: String, percent_: String, accent: Color) -> Control:
-	var hb := HBoxContainer.new()
+func _make_row(label_text: String, value: String, percent_: String, accent: Color) -> Control:
+	var hb = HBoxContainer.new()
 	hb.custom_minimum_size = Vector2(36, 36)
 	hb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	
@@ -636,17 +640,17 @@ func _make_row(name: String, value: String, percent_: String, accent: Color) -> 
 		"Versatility Rating": "versatility",
 	}
 
-	icon.texture = ItemDB.get_icon(icon_key.get(name))
+	icon.texture = ItemDB.get_icon(icon_key.get(label_text))
 	hb.add_child(icon)
 
-	var name_lbl := Label.new()
-	name_lbl.text = name
+	var name_lbl = Label.new()
+	name_lbl.text = label_text
 	name_lbl.add_theme_font_size_override("font_size", 14)
 	name_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
-	var val_lbl := Label.new()
-	if percent_ and name not in ["Physical ATK", "Magic ATK"]:
+	var val_lbl = Label.new()
+	if percent_ and label_text not in ["Physical ATK", "Magic ATK"]:
 		val_lbl.text = value + " ({0}%)".format([float(percent_) * 100])
 	else:
 		val_lbl.text = value
@@ -660,19 +664,19 @@ func _make_row(name: String, value: String, percent_: String, accent: Color) -> 
 	hb.add_child(val_lbl)
 	return hb
 	
-func _style_section_card(card: PanelContainer, title: String, accent: Color) -> void:
-	var sb := StyleBoxFlat.new()
+func _style_section_card(card: PanelContainer, title: String, _accent: Color) -> void:
+	var sb = StyleBoxFlat.new()
 	sb.bg_color     = Color(0.0, 0.0, 0.0, 0.06)
 	sb.border_color = Color(0.0, 0.0, 0.0, 0.20)
 	sb.set_border_width_all(1)
 	sb.set_corner_radius_all(5)
 	card.add_theme_stylebox_override("panel", sb)
 	if card.get_child_count() > 0 and card.get_child(0) is GridContainer:
-		var grid := card.get_child(0)
-		var vb := VBoxContainer.new()
+		var grid = card.get_child(0)
+		var vb = VBoxContainer.new()
 		card.remove_child(grid)
 		card.add_child(vb)
-		var hdr := Label.new()
+		var hdr = Label.new()
 		hdr.text = title
 		hdr.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 		hdr.add_theme_font_size_override("font_size", 22)
@@ -722,7 +726,7 @@ func _on_btn_tab_professions_pressed() -> void:
 
 func _set_profile_tab_active(active_btn: Button) -> void:
 	for btn in [btn_tab_attributes, btn_tab_professions]:
-		var sb := btn.get_theme_stylebox("normal") as StyleBoxFlat
+		var sb = btn.get_theme_stylebox("normal") as StyleBoxFlat
 		if sb:
 			sb.bg_color = Color.from_rgba8(64, 180, 255) if btn == active_btn else Color.from_rgba8(60, 60, 70)
 
@@ -730,27 +734,27 @@ func _set_profile_tab_active(active_btn: Button) -> void:
 # ── Stats Dropdown Section ───────────────────────────────────────────────────
 
 func _build_stats_dropdown_section() -> void:
-	var btn_row := HBoxContainer.new()
+	var btn_row = HBoxContainer.new()
 	btn_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_row.add_theme_constant_override("separation", 4)
 	_attr_vbox.add_child(btn_row)
 
-	var labels := ["⚔ Offensive", "🛡 Defensive", "👟 Steps", "💚 Sustain"]
+	var labels = ["⚔ Offensive", "🛡 Defensive", "👟 Steps", "💚 Sustain"]
 	for i in labels.size():
-		var btn := Button.new()
+		var btn = Button.new()
 		btn.text = labels[i]
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		btn.custom_minimum_size = Vector2(0, 44)
 		btn.add_theme_font_size_override("font_size", 18)
 		Styler.style_button_small(btn, Color.from_rgba8(255, 200, 66))
-		var idx := i
+		var idx = i
 		btn.pressed.connect(func(): _set_stats_mode(idx))
 		btn_row.add_child(btn)
 		_stats_mode_buttons.append(btn)
 
 	_set_stats_mode_highlight(_current_stats_mode)
 
-	var scroll := ScrollContainer.new()
+	var scroll = ScrollContainer.new()
 	scroll.size_flags_horizontal  = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical    = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -771,7 +775,7 @@ func _set_stats_mode(idx: int) -> void:
 func _set_stats_mode_highlight(active_idx: int) -> void:
 	for i in _stats_mode_buttons.size():
 		var btn = _stats_mode_buttons[i]
-		var sb := btn.get_theme_stylebox("normal") as StyleBoxFlat
+		var sb = btn.get_theme_stylebox("normal") as StyleBoxFlat
 		if sb:
 			sb.bg_color = Color.from_rgba8(255, 200, 66) if i == active_idx else Color.from_rgba8(90, 90, 90)
 
@@ -780,6 +784,7 @@ func _populate_stats_list(d: Dictionary) -> void:
 	_clear(_stats_list_vbox)
 	match _current_stats_mode:
 		0:
+			_stats_list_vbox.add_child(_make_section_header("Offense"))
 			for i in range(OFFENSE_KEYS.size()):
 				var entry = OFFENSE_KEYS[i]
 				var p_key = entry.get("p", 0)
@@ -792,6 +797,7 @@ func _populate_stats_list(d: Dictionary) -> void:
 				_stats_list_vbox.add_child(_make_stat_row(entry.n, display, i, false))
 			_stats_list_vbox.add_child(_make_magic_group("Damage Amplifiers", MAGIC_DAMAGE_KEYS, d))
 		1:
+			_stats_list_vbox.add_child(_make_section_header("Defense"))
 			for i in range(DEFENSE_KEYS.size()):
 				var entry = DEFENSE_KEYS[i]
 				var p_key = entry.get("p", 0)
@@ -821,9 +827,9 @@ func _populate_stats_list(d: Dictionary) -> void:
 
 
 func _make_magic_group(title: String, keys: Array, d: Dictionary) -> Control:
-	var frame := PanelContainer.new()
+	var frame = PanelContainer.new()
 	frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var sb := StyleBoxFlat.new()
+	var sb = StyleBoxFlat.new()
 	sb.bg_color     = Color(0.0, 0.0, 0.0, 0.06)
 	sb.border_color = Color(0.0, 0.0, 0.0, 0.25)
 	sb.set_border_width_all(1)
@@ -834,12 +840,12 @@ func _make_magic_group(title: String, keys: Array, d: Dictionary) -> Control:
 	sb.content_margin_bottom = 4
 	frame.add_theme_stylebox_override("panel", sb)
 
-	var vb := VBoxContainer.new()
+	var vb = VBoxContainer.new()
 	vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vb.add_theme_constant_override("separation", 1)
 	frame.add_child(vb)
 
-	var hdr := Label.new()
+	var hdr = Label.new()
 	hdr.text = title
 	hdr.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 	hdr.add_theme_font_size_override("font_size", 16)
@@ -861,32 +867,32 @@ func _make_magic_group(title: String, keys: Array, d: Dictionary) -> Control:
 
 
 func _make_stat_header() -> Control:
-	var gold := Styler.COLOR_GOLD
-	var panel := PanelContainer.new()
+	var _gold = Styler.COLOR_GOLD
+	var panel = PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var style := StyleBoxFlat.new()
+	var style = StyleBoxFlat.new()
 	style.bg_color     = Color(0.0, 0.0, 0.0, 0.15)
 	style.border_color = Color(0.0, 0.0, 0.0, 0.20)
 	style.set_border_width_all(1)
 	panel.add_theme_stylebox_override("panel", style)
 
-	var margin := MarginContainer.new()
+	var margin = MarginContainer.new()
 	margin.add_theme_constant_override("margin_left",   10)
 	margin.add_theme_constant_override("margin_right",  10)
 	margin.add_theme_constant_override("margin_top",     6)
 	margin.add_theme_constant_override("margin_bottom",  6)
 	panel.add_child(margin)
 
-	var hb := HBoxContainer.new()
+	var hb = HBoxContainer.new()
 	hb.add_theme_constant_override("separation", 8)
 	margin.add_child(hb)
 
-	var spacer := Control.new()
+	var spacer = Control.new()
 	spacer.custom_minimum_size = Vector2(28, 0)
 	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hb.add_child(spacer)
 
-	var type_lbl := Label.new()
+	var type_lbl = Label.new()
 	type_lbl.text = "Type"
 	type_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	type_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
@@ -894,7 +900,7 @@ func _make_stat_header() -> Control:
 	type_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	hb.add_child(type_lbl)
 
-	var amt_lbl := Label.new()
+	var amt_lbl = Label.new()
 	amt_lbl.text = "Amount"
 	amt_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	amt_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
@@ -906,30 +912,30 @@ func _make_stat_header() -> Control:
 
 
 func _make_stat_row(stat_name: String, value: String, idx: int, show_icon: bool = true) -> Control:
-	var row_dark  := Color(0.0, 0.0, 0.0, 0.04)
-	var row_light := Color(0.0, 0.0, 0.0, 0.09)
-	var panel := PanelContainer.new()
+	var row_dark  = Color(0.0, 0.0, 0.0, 0.04)
+	var row_light = Color(0.0, 0.0, 0.0, 0.09)
+	var panel = PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	panel.tooltip_text = STAT_TOOLTIPS.get(stat_name, "")
-	var style := StyleBoxFlat.new()
+	var style = StyleBoxFlat.new()
 	style.bg_color     = row_dark if idx % 2 == 0 else row_light
 	style.border_color = Color(0.0, 0.0, 0.0, 0.08)
 	style.set_border_width_all(1)
 	panel.add_theme_stylebox_override("panel", style)
 
-	var margin := MarginContainer.new()
+	var margin = MarginContainer.new()
 	margin.add_theme_constant_override("margin_left",   10)
 	margin.add_theme_constant_override("margin_right",  10)
 	margin.add_theme_constant_override("margin_top",     5)
 	margin.add_theme_constant_override("margin_bottom",  5)
 	panel.add_child(margin)
 
-	var hb := HBoxContainer.new()
+	var hb = HBoxContainer.new()
 	hb.add_theme_constant_override("separation", 8)
 	margin.add_child(hb)
 
 	if show_icon:
-		var icon := TextureRect.new()
+		var icon = TextureRect.new()
 		icon.custom_minimum_size = Vector2(28, 28)
 		icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		icon.mouse_filter  = Control.MOUSE_FILTER_IGNORE
@@ -941,7 +947,7 @@ func _make_stat_row(stat_name: String, value: String, idx: int, show_icon: bool 
 			icon.texture = icon_tex
 		hb.add_child(icon)
 
-	var name_lbl := Label.new()
+	var name_lbl = Label.new()
 	name_lbl.text = stat_name
 	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_lbl.add_theme_font_size_override("font_size", 16)
@@ -949,7 +955,7 @@ func _make_stat_row(stat_name: String, value: String, idx: int, show_icon: bool 
 	name_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	hb.add_child(name_lbl)
 
-	var val_lbl := Label.new()
+	var val_lbl = Label.new()
 	val_lbl.text = value
 	val_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	val_lbl.add_theme_font_size_override("font_size", 16)
@@ -960,10 +966,24 @@ func _make_stat_row(stat_name: String, value: String, idx: int, show_icon: bool 
 	return panel
 
 
+func _make_section_header(title: String) -> Control:
+	var lbl = Label.new()
+	lbl.text = title
+	lbl.add_theme_font_override("font", Styler.JANDA_FONT)
+	lbl.add_theme_font_size_override("font_size", 16)
+	lbl.add_theme_color_override("font_color", Styler.COLOR_GOLD)
+	var margin = MarginContainer.new()
+	margin.add_theme_constant_override("margin_top", 6)
+	margin.add_theme_constant_override("margin_bottom", 2)
+	margin.add_theme_constant_override("margin_left", 10)
+	margin.add_child(lbl)
+	return margin
+
+
 # ── Professions Section ────────────────────────────────────────────────────────
 
 func _build_professions_section() -> void:
-	var sb := StyleBoxFlat.new()
+	var sb = StyleBoxFlat.new()
 	sb.bg_color     = Color(0.0, 0.0, 0.0, 0.06)
 	sb.border_color = Color(0.0, 0.0, 0.0, 0.20)
 	sb.set_border_width_all(1)
@@ -973,14 +993,14 @@ func _build_professions_section() -> void:
 	for c in professions_card.get_children():
 		c.queue_free()
 
-	var margin := MarginContainer.new()
+	var margin = MarginContainer.new()
 	margin.add_theme_constant_override("margin_left",   8)
 	margin.add_theme_constant_override("margin_right",  8)
 	margin.add_theme_constant_override("margin_top",    8)
 	margin.add_theme_constant_override("margin_bottom", 8)
 	professions_card.add_child(margin)
 
-	var outer_vb := VBoxContainer.new()
+	var outer_vb = VBoxContainer.new()
 	outer_vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	outer_vb.add_theme_constant_override("separation", 8)
 	margin.add_child(outer_vb)
@@ -992,9 +1012,9 @@ func _populate_professions(d: Dictionary) -> void:
 	_clear(_professions_vbox)
 	for group in PROFESSION_GROUPS:
 		# Group frame (like _make_magic_group)
-		var frame := PanelContainer.new()
+		var frame = PanelContainer.new()
 		frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var sb := StyleBoxFlat.new()
+		var sb = StyleBoxFlat.new()
 		sb.bg_color     = Color(0.0, 0.0, 0.0, 0.06)
 		sb.border_color = Color(0.0, 0.0, 0.0, 0.25)
 		sb.set_border_width_all(1)
@@ -1005,13 +1025,13 @@ func _populate_professions(d: Dictionary) -> void:
 		sb.content_margin_bottom = 4
 		frame.add_theme_stylebox_override("panel", sb)
 
-		var frame_vb := VBoxContainer.new()
+		var frame_vb = VBoxContainer.new()
 		frame_vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		frame_vb.add_theme_constant_override("separation", 6)
 		frame.add_child(frame_vb)
 
 		# Group title
-		var hdr := Label.new()
+		var hdr = Label.new()
 		hdr.text = group.name
 		hdr.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 		hdr.add_theme_font_size_override("font_size", 16)
@@ -1021,7 +1041,7 @@ func _populate_professions(d: Dictionary) -> void:
 		# Rows of 2 cards
 		var entries = group.entries
 		for row_start in range(0, entries.size(), 2):
-			var row := HBoxContainer.new()
+			var row = HBoxContainer.new()
 			row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			row.add_theme_constant_override("separation", 6)
 			frame_vb.add_child(row)
@@ -1037,7 +1057,7 @@ func _populate_professions(d: Dictionary) -> void:
 				card2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 				row.add_child(card2)
 			else:
-				var _pad := Control.new()
+				var _pad = Control.new()
 				_pad.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 				_pad.mouse_filter = Control.MOUSE_FILTER_IGNORE
 				row.add_child(_pad)

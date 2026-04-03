@@ -1,6 +1,6 @@
-[gd_scene format=3 uid="uid://caj4vm4x2p0am"]
+[gd_scene format=3 uid="uid://dcqdmrkdrjygn"]
 
-[ext_resource type="Script" uid="uid://c52l0p0hcwbar" path="res://scenes/support_screens/cheat_panel.gd" id="1_fmce2"]
+[ext_resource type="Script" path="res://scenes/support_screens/cheat_panel.gd" id="1_fmce2"]
 
 [node name="CheatPanel" type="Control" unique_id=1714118611]
 layout_mode = 3

@@ -1,15 +1,15 @@
 extends Control
 
-const ACTIVITY_HERBALISM   := 1
-const ACTIVITY_ALCHEMY     := 2
-const ACTIVITY_HUNTING     := 3
-const ACTIVITY_MINING      := 4
-const ACTIVITY_WOODCUTTING := 5
-const ACTIVITY_FISHING     := 6
-const ACTIVITY_RIFT        := 7
-const ACTIVITY_TRAVEL      := 8
+const ACTIVITY_HERBALISM   = 1
+const ACTIVITY_ALCHEMY     = 2
+const ACTIVITY_HUNTING     = 3
+const ACTIVITY_MINING      = 4
+const ACTIVITY_WOODCUTTING = 5
+const ACTIVITY_FISHING     = 6
+const ACTIVITY_RIFT        = 7
+const ACTIVITY_TRAVEL      = 8
 
-const ACTIVITY_PROF_NAME := {
+const ACTIVITY_PROF_NAME = {
 	ACTIVITY_HERBALISM:   "herbalism",
 	ACTIVITY_ALCHEMY:     "alchemy",
 	ACTIVITY_HUNTING:     "hunting",
@@ -19,14 +19,17 @@ const ACTIVITY_PROF_NAME := {
 	ACTIVITY_RIFT:        "rift",
 }
 
+const CONFIRMATION_DIALOG = preload("res://scenes/secondary_scenes/confirmation_dialog.tscn")
+var _confirm_dialog: Control = null
+
 # --- Scene References ---
 @onready var main_panel: PanelContainer = $VBoxContainer/Main_Panel
-@onready var location_title: Label = $VBoxContainer/Main_Panel/MarginContainer/HBoxContainer/Left_Column/Location_Title
-@onready var image_frame: PanelContainer = $VBoxContainer/Main_Panel/MarginContainer/HBoxContainer/Left_Column/Image_Frame
-@onready var location_picture: TextureRect = $VBoxContainer/Main_Panel/MarginContainer/HBoxContainer/Left_Column/Image_Frame/LocationPicture
-@onready var location_desc: Label = $VBoxContainer/Main_Panel/MarginContainer/HBoxContainer/Left_Column/Location_Desc
-@onready var activities_header: Label = $VBoxContainer/Main_Panel/MarginContainer/HBoxContainer/Right_Column/Activities_Header
-@onready var activities_vbox: VBoxContainer = $VBoxContainer/Main_Panel/MarginContainer/HBoxContainer/Right_Column/Activities_Scroll/Activities_VBox
+@onready var location_title: Label = $VBoxContainer/Main_Panel/ScrollContainer/Content_VBox/Info_Margin/Info_VBox/Location_Title
+@onready var image_frame: PanelContainer = $VBoxContainer/Main_Panel/ScrollContainer/Content_VBox/Image_Frame
+@onready var location_picture: TextureRect = $VBoxContainer/Main_Panel/ScrollContainer/Content_VBox/Image_Frame/LocationPicture
+@onready var location_desc: Label = $VBoxContainer/Main_Panel/ScrollContainer/Content_VBox/Info_Margin/Info_VBox/Location_Desc
+@onready var activities_header: Label = $VBoxContainer/Main_Panel/ScrollContainer/Content_VBox/Activities_Margin/Activities_VBox_Wrapper/Activities_Header
+@onready var activities_vbox: VBoxContainer = $VBoxContainer/Main_Panel/ScrollContainer/Content_VBox/Activities_Margin/Activities_VBox_Wrapper/Activities_VBox
 
 @onready var status_panel: PanelContainer = $VBoxContainer/Status_Panel
 @onready var status_title: Label = $VBoxContainer/Status_Panel/MarginContainer/Status_VBox/Status_Title
@@ -73,7 +76,7 @@ func _apply_visual_theme() -> void:
 	Styler._apply_parchment_style(status_panel)
 
 	# Image frame border
-	var img_sb := StyleBoxFlat.new()
+	var img_sb = StyleBoxFlat.new()
 	img_sb.bg_color     = Color(0.0, 0.0, 0.0, 0.04)
 	img_sb.border_color = Color(0.0, 0.0, 0.0, 0.25)
 	img_sb.set_border_width_all(1)
@@ -86,8 +89,8 @@ func _apply_visual_theme() -> void:
 	location_title.add_theme_color_override("font_color", Styler.COLOR_GOLD)
 
 	# Location description
-	location_desc.add_theme_font_override("font", Styler.JANDA_FONT)
-	location_desc.add_theme_font_size_override("font_size", 12)
+	location_desc.add_theme_font_override("font", Styler.QUADRAT_FONT)
+	location_desc.add_theme_font_size_override("font_size", 14)
 	location_desc.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 
 	# Activities header
@@ -103,8 +106,8 @@ func _apply_visual_theme() -> void:
 	Styler.style_mini_progress(status_xp_bar, Color.from_rgba8(80, 160, 255))
 
 	for lbl in [status_xp_label, status_steps_label, status_actions_label, status_progress_label]:
-		lbl.add_theme_font_override("font", Styler.JANDA_FONT)
-		lbl.add_theme_font_size_override("font_size", 12)
+		lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
+		lbl.add_theme_font_size_override("font_size", 14)
 		lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 
 	# Stop button
@@ -119,13 +122,13 @@ func _on_account_data_received(_value) -> void:
 
 
 func _refresh() -> void:
-	var loc := int(Account.location)
+	var loc = int(Account.location)
 
 	# Only rebuild cards + location visuals when the location actually changes
 	if loc != _last_built_location:
 		_last_built_location = loc
 
-		var path := "res://assets/background/locations/location_%d.png" % loc
+		var path = "res://assets/background/locations/location_%d.png" % loc
 		if ResourceLoader.exists(path):
 			location_picture.texture = load(path)
 
@@ -167,70 +170,78 @@ func _build_activity_cards() -> void:
 	var gathering_entries: Array = []
 	var battle_entries: Array = []
 	for entry in site_entries:
-		var act_id := int(entry["id"])
+		var act_id = int(entry["id"])
 		if act_id in gathering_ids:
 			gathering_entries.append(entry)
 		elif act_id in battle_ids:
 			battle_entries.append(entry)
 
-	var groups := []
-	if not gathering_entries.is_empty():
-		groups.append({"name": "Gathering", "entries": gathering_entries})
-	if not battle_entries.is_empty():
-		groups.append({"name": "Battle", "entries": battle_entries})
+	# Two-column layout: gathering (left) | battle (right)
+	var columns = HBoxContainer.new()
+	columns.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	columns.add_theme_constant_override("separation", 8)
+	activities_vbox.add_child(columns)
 
+	var groups = [
+		{"name": "Gathering", "entries": gathering_entries},
+		{"name": "Battle", "entries": battle_entries},
+	]
 	for group in groups:
-		# Group header panel
-		var grp_panel := PanelContainer.new()
-		grp_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var grp_sb := StyleBoxFlat.new()
-		grp_sb.bg_color     = Color(0.0, 0.0, 0.0, 0.10)
-		grp_sb.border_color = Color(0.0, 0.0, 0.0, 0.20)
-		grp_sb.set_border_width_all(1)
-		grp_sb.set_corner_radius_all(4)
-		grp_panel.add_theme_stylebox_override("panel", grp_sb)
+		var col_vbox = VBoxContainer.new()
+		col_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		col_vbox.add_theme_constant_override("separation", 4)
+		columns.add_child(col_vbox)
 
-		var grp_lbl := Label.new()
+		# Column header
+		var grp_lbl = Label.new()
 		grp_lbl.text = group.name.to_upper()
-		grp_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
+		grp_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		grp_lbl.add_theme_color_override("font_color", Styler.COLOR_GOLD)
 		grp_lbl.add_theme_font_size_override("font_size", 14)
 		grp_lbl.add_theme_font_override("font", Styler.JANDA_FONT)
-		grp_panel.add_child(grp_lbl)
-		activities_vbox.add_child(grp_panel)
+		col_vbox.add_child(grp_lbl)
 
-		# Mini-cards for each activity
-		for entry in group.entries:
-			var card := _make_activity_card(entry)
-			card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			activities_vbox.add_child(card)
-			_activity_cards[int(entry["id"])] = card
+		if group.entries.is_empty():
+			var empty_lbl = Label.new()
+			empty_lbl.text = "—"
+			empty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			empty_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+			col_vbox.add_child(empty_lbl)
+		else:
+			for entry in group.entries:
+				var card = _make_activity_card(entry)
+				card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				col_vbox.add_child(card)
+				_activity_cards[int(entry["id"])] = card
 
 	_highlight_active_card()
 
 
 func _make_activity_card(entry: Dictionary) -> PanelContainer:
-	var activity_id := int(entry["id"])
+	var activity_id = int(entry["id"])
 	var activity_name: String = entry.get("name", "")
 	var profession: String = entry.get("profession", "")
 
 	# Card container
-	var panel := PanelContainer.new()
-	var card_sb := StyleBoxFlat.new()
+	var panel = PanelContainer.new()
+	panel.custom_minimum_size = Vector2(0, 44)
+	var card_sb = StyleBoxFlat.new()
 	card_sb.bg_color     = Color(0.0, 0.0, 0.0, 0.06)
 	card_sb.border_color = Color(0.0, 0.0, 0.0, 0.20)
 	card_sb.set_border_width_all(1)
 	card_sb.set_corner_radius_all(5)
+	card_sb.content_margin_left = 8
+	card_sb.content_margin_right = 8
 	panel.add_theme_stylebox_override("panel", card_sb)
 	panel.set_meta("sb", card_sb)
 
-	var main_hbox := HBoxContainer.new()
-	main_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	main_hbox.alignment = BoxContainer.ALIGNMENT_BEGIN
+	var main_hbox = HBoxContainer.new()
+	main_hbox.add_theme_constant_override("separation", 10)
 	panel.add_child(main_hbox)
 
-	# Icon (aligned left)
-	var icon := TextureRect.new()
-	icon.custom_minimum_size = Vector2(52, 52)
+	# Icon
+	var icon = TextureRect.new()
+	icon.custom_minimum_size = Vector2(40, 40)
 	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -238,13 +249,12 @@ func _make_activity_card(entry: Dictionary) -> PanelContainer:
 	icon.texture = ItemDB.get_icon(profession)
 	main_hbox.add_child(icon)
 
-	# Activity name (centered in remaining space)
-	var n_lbl := Label.new()
+	# Activity name (left-aligned)
+	var n_lbl = Label.new()
 	n_lbl.text = activity_name
 	n_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	n_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	n_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	n_lbl.add_theme_font_size_override("font_size", 18)
+	n_lbl.add_theme_font_size_override("font_size", 16)
 	n_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 	n_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	main_hbox.add_child(n_lbl)
@@ -259,10 +269,27 @@ func _make_activity_card(entry: Dictionary) -> PanelContainer:
 
 
 func _on_activity_card_clicked(activity_id: int) -> void:
+	if _confirm_dialog and is_instance_valid(_confirm_dialog):
+		return
+	var activity_name: String = GameTextEn.activities_texts.get(activity_id, "Activity")
+	var text: String
 	if activity_id == ACTIVITY_RIFT:
+		# Rift browser opens without changing the current activity;
+		# the actual activity switch happens when the player clicks ENTER RIFT
 		SignalManager.signal_ShowRift.emit()
+		return
+	if Account.activity:
+		var current_name: String = GameTextEn.activities_texts.get(Account.activity, "Activity")
+		text = "Stop %s and Start %s?" % [current_name, activity_name]
 	else:
+		text = "Start %s?" % activity_name
+	_confirm_dialog = CONFIRMATION_DIALOG.instantiate()
+	_confirm_dialog.setup(text)
+	add_child(_confirm_dialog)
+	_confirm_dialog.confirmed.connect(func():
 		SignalManager.signal_UserActivity.emit(activity_id, Account.location, "start")
+	)
+	_confirm_dialog.tree_exited.connect(func(): _confirm_dialog = null, CONNECT_ONE_SHOT)
 
 
 func _highlight_active_card() -> void:
@@ -326,7 +353,7 @@ func _update_status_panel() -> void:
 		if Account.travel_steps_max > 0:
 			status_xp_bar.max_value = Account.travel_steps_max
 			status_xp_bar.value = Account.travel_steps
-			var pct := int(round(float(Account.travel_steps) / float(Account.travel_steps_max) * 100.0))
+			var pct = int(round(float(Account.travel_steps) / float(Account.travel_steps_max) * 100.0))
 			status_xp_label.text = "%d / %d steps (%d%%)" % [Account.travel_steps, Account.travel_steps_max, pct]
 		else:
 			status_xp_bar.value = 0
@@ -355,10 +382,10 @@ func _update_status_panel() -> void:
 	status_title.text = "%s — Level %d" % [display_name, lvl]
 
 	# Use last activity progress data, or compute from account profession XP
-	var xp_into := _last_xp_into
-	var xp_to_next := _last_xp_to_next
+	var xp_into = _last_xp_into
+	var xp_to_next = _last_xp_to_next
 	if xp_to_next <= 0:
-		var total_xp := int(Account.get(prof + "_xp"))
+		var total_xp = int(Account.get(prof + "_xp"))
 		var floor_xp: int = ACTIVITY_TOTAL_TO_LEVEL.get(str(lvl), total_xp)
 		var next_xp: int = ACTIVITY_TOTAL_TO_LEVEL.get(str(lvl + 1), -1)
 		if next_xp >= 0:
@@ -368,7 +395,7 @@ func _update_status_panel() -> void:
 	if xp_to_next > 0:
 		status_xp_bar.max_value = xp_to_next
 		status_xp_bar.value = xp_into
-		var pct := int(round(float(xp_into) / float(xp_to_next) * 100.0))
+		var pct = int(round(float(xp_into) / float(xp_to_next) * 100.0))
 		status_xp_label.text = "%d / %d XP (%d%%)" % [xp_into, xp_to_next, pct]
 	else:
 		status_xp_bar.value = status_xp_bar.max_value

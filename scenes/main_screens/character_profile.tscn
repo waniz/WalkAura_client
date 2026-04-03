@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://d3b3g8rafrbl2"]
 
-[ext_resource type="Script" uid="uid://dmby8fhkmpq7m" path="res://scenes/main_screens/character_profile.gd" id="1_ub8o2"]
+[ext_resource type="Script" uid="uid://dyy6c5jihdcpb" path="res://scenes/main_screens/character_profile.gd" id="1_ub8o2"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_ets3d"]
 

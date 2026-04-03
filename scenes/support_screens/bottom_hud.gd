@@ -1,23 +1,23 @@
 extends CanvasLayer
 
-const PAGE_LABELS := ["Profile", "Location", "Inventory", "Skills", ""]
-const PAGE_ICONS := [
+const PAGE_LABELS = ["Profile", "Location", "Inventory", "Skills", ""]
+const PAGE_ICONS = [
 	"res://assets/general_icons/hud/buttom_hud_character_without_face.png",
 	"res://assets/general_icons/hud/buttom_hud_location.png",
 	"res://assets/general_icons/hud/buttom_hud_inventory.png",
 	"",
 	"",
 ]
-const NAV_COUNT := 4
+const NAV_COUNT = 4
 
 @onready var _button_panel: PanelContainer = $ButtonPanel
 
 var _slots: Array = []
 var _current_page: int = 0
 # Pre-built StyleBox sets to avoid allocating new objects on every page change
-var _sb_active := {}
-var _sb_nav := {}
-var _sb_disabled := {}
+var _sb_active = {}
+var _sb_nav = {}
+var _sb_disabled = {}
 
 
 func _ready() -> void:
@@ -34,8 +34,8 @@ func _ready() -> void:
 
 
 func _precache_styleboxes() -> void:
-	var bg_a := Color(58.0 / 255.0, 46.0 / 255.0, 22.0 / 255.0, 1.0)
-	var bd_a := Color(220.0 / 255.0, 175.0 / 255.0, 68.0 / 255.0, 1.0)
+	var bg_a = Color(58.0 / 255.0, 46.0 / 255.0, 22.0 / 255.0, 1.0)
+	var bd_a = Color(220.0 / 255.0, 175.0 / 255.0, 68.0 / 255.0, 1.0)
 	_sb_active = {
 		"normal":   _make_sb(bg_a, bd_a, true, 5),
 		"hover":    _make_sb(bg_a.lightened(0.08), bd_a, true, 5),
@@ -43,8 +43,8 @@ func _precache_styleboxes() -> void:
 		"focus":    _make_sb(bg_a, bd_a, true, 5),
 		"disabled": _make_sb(bg_a, bd_a, true, 5),
 	}
-	var bg_n := Color(28.0 / 255.0, 22.0 / 255.0, 14.0 / 255.0, 230.0 / 255.0)
-	var bd_n := Color(80.0 / 255.0, 64.0 / 255.0, 40.0 / 255.0, 180.0 / 255.0)
+	var bg_n = Color(28.0 / 255.0, 22.0 / 255.0, 14.0 / 255.0, 230.0 / 255.0)
+	var bd_n = Color(80.0 / 255.0, 64.0 / 255.0, 40.0 / 255.0, 180.0 / 255.0)
 	_sb_nav = {
 		"normal":   _make_sb(bg_n, bd_n, false, 0),
 		"hover":    _make_sb(bg_n.lightened(0.08), bd_n, false, 0),
@@ -52,8 +52,8 @@ func _precache_styleboxes() -> void:
 		"focus":    _make_sb(bg_n, bd_n, false, 0),
 		"disabled": _make_sb(bg_n, bd_n, false, 0),
 	}
-	var bg_d := Color(20.0 / 255.0, 16.0 / 255.0, 12.0 / 255.0, 100.0 / 255.0)
-	var bd_d := Color(45.0 / 255.0, 36.0 / 255.0, 24.0 / 255.0, 100.0 / 255.0)
+	var bg_d = Color(20.0 / 255.0, 16.0 / 255.0, 12.0 / 255.0, 100.0 / 255.0)
+	var bd_d = Color(45.0 / 255.0, 36.0 / 255.0, 24.0 / 255.0, 100.0 / 255.0)
 	_sb_disabled = {
 		"normal":   _make_sb(bg_d, bd_d, false, 0),
 		"hover":    _make_sb(bg_d, bd_d, false, 0),
@@ -64,7 +64,7 @@ func _precache_styleboxes() -> void:
 
 
 func _apply_bar_style() -> void:
-	var sb := StyleBoxFlat.new()
+	var sb = StyleBoxFlat.new()
 	sb.bg_color = Color(18.0 / 255.0, 14.0 / 255.0, 10.0 / 255.0, 248.0 / 255.0)
 	sb.border_color = Color(180.0 / 255.0, 140.0 / 255.0, 60.0 / 255.0, 1.0)
 	sb.border_width_top = 2
@@ -76,19 +76,19 @@ func _apply_bar_style() -> void:
 
 
 func _build_buttons() -> void:
-	var margin := MarginContainer.new()
+	var margin = MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 6)
 	margin.add_theme_constant_override("margin_right", 6)
 	margin.add_theme_constant_override("margin_top", 6)
 	margin.add_theme_constant_override("margin_bottom", 6)
 	_button_panel.add_child(margin)
 
-	var hbox := HBoxContainer.new()
+	var hbox = HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 6)
 	margin.add_child(hbox)
 
 	for i in range(5):
-		var slot := _make_slot(i)
+		var slot = _make_slot(i)
 		_slots.append(slot)
 		hbox.add_child(slot.btn)
 
@@ -96,7 +96,7 @@ func _build_buttons() -> void:
 func _make_slot(idx: int) -> Dictionary:
 	var is_nav: bool = idx < NAV_COUNT
 
-	var btn := Button.new()
+	var btn = Button.new()
 	btn.text = ""
 	btn.focus_mode = Control.FOCUS_NONE
 	btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -107,14 +107,14 @@ func _make_slot(idx: int) -> Dictionary:
 	else:
 		btn.disabled = true
 
-	var vbox := VBoxContainer.new()
+	var vbox = VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_theme_constant_override("separation", 3)
 	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	btn.add_child(vbox)
 
-	var icon := TextureRect.new()
+	var icon = TextureRect.new()
 	icon.custom_minimum_size = Vector2(42, 42)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -125,13 +125,13 @@ func _make_slot(idx: int) -> Dictionary:
 		icon.texture = load(PAGE_ICONS[idx])
 	vbox.add_child(icon)
 
-	var lbl := Label.new()
+	var lbl = Label.new()
 	lbl.text = PAGE_LABELS[idx]
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	lbl.add_theme_font_override("font", Styler.JANDA_FONT)
-	lbl.add_theme_font_size_override("font_size", 13)
+	lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
+	lbl.add_theme_font_size_override("font_size", 15)
 	lbl.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 1.0))
 	lbl.add_theme_constant_override("outline_size", 2)
 	vbox.add_child(lbl)
@@ -172,7 +172,7 @@ func _apply_slot_style(slot: Dictionary, is_active: bool) -> void:
 
 
 func _make_sb(bg: Color, border: Color, use_shadow: bool, shad_size: int) -> StyleBoxFlat:
-	var sb := StyleBoxFlat.new()
+	var sb = StyleBoxFlat.new()
 	sb.bg_color = bg
 	sb.border_color = border
 	sb.border_width_top = 2

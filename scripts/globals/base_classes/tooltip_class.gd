@@ -48,7 +48,7 @@ func _ready() -> void:
 	margin_main.add_theme_constant_override("margin_left", 10)
 	margin_main.add_theme_constant_override("margin_top", 10)
 	margin_main.add_theme_constant_override("margin_bottom", 10)
-	margin_main.add_theme_constant_override("margin_rigt", 10)
+	margin_main.add_theme_constant_override("margin_right", 10)
 	root.add_child(margin_main)
 
 	_title = Label.new()
@@ -187,7 +187,7 @@ func set_data(item_def: Dictionary, qty: int=1, tooltip_source="inventory", slot
 		
 	# Stack count
 	if qty > 1:
-		var st := Label.new()
+		var st = Label.new()
 		st.text = "Stack: %d" % qty
 		st.modulate = Color(0.9, 0.9, 0.9, 0.9)
 		_lines.add_child(st)

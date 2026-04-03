@@ -17,6 +17,8 @@ extends Control
 const CREATE_USER_UI = preload("uid://d1bmiemb8yjfl")
 var child: Node = null
 var status_login = false
+var _login_ok = false
+var _login_error = ""
 
 
 func _ready() -> void:
@@ -51,16 +53,35 @@ func _on_child_closed() -> void:
 	child = null
 
 func _on_button_login_button_down() -> void:
-	button_login.disabled = true
 	status_label.text = ""
-	
+	if username_login_edit.text.strip_edges() == "" or password_login_edit.text == "":
+		status_label.text = "Username and password are required"
+		return
+	if not ServerConnector._is_socket_open():
+		status_label.text = "Not connected to server"
+		return
+	button_login.disabled = true
+	_login_ok = false
+	_login_error = ""
+
+	AccountManager.signal_LoginResult.connect(_on_login_result, CONNECT_ONE_SHOT)
+	AccountManager.signal_AccountDataReceived.connect(_on_login_data, CONNECT_ONE_SHOT)
 	SignalManager.signal_LoginUser.emit(username_login_edit.text, password_login_edit.text)
-	
-	var login_result = await AccountManager.signal_LoginResult
-	var login_data_result = await AccountManager.signal_AccountDataReceived
+
+
+func _on_login_result(ok: bool, error: String) -> void:
+	_login_ok = ok
+	_login_error = error
+
+
+func _on_login_data(_result) -> void:
 	button_login.disabled = false
-	if login_result and login_data_result:
+	if _login_ok:
 		SceneManage.goto("res://scenes/app_scenes_handler.tscn")
 		SceneManage.reload()
 	else:
-		status_label.text = "Incorrect login data"
+		match _login_error:
+			"invalid_credentials":
+				status_label.text = "Invalid username or password"
+			_:
+				status_label.text = "Login failed: " + _login_error

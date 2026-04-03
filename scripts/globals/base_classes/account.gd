@@ -6,7 +6,7 @@ var userid
 var username
 
 # primary parameters
-var str
+var str_stat
 var agi
 var vit
 var int_stat
@@ -81,6 +81,16 @@ var mana_flow_lvl
 var mana_flow_xp
 var regenerative_steps_lvl
 var regenerative_steps_xp
+var pyromaniac_lvl: int = 0
+var pyromaniac_xp: int = 0
+var permafrost_lvl: int = 0
+var permafrost_xp: int = 0
+var devotion_lvl: int = 0
+var devotion_xp: int = 0
+var shadow_mastery_lvl: int = 0
+var shadow_mastery_xp: int = 0
+var arcane_mastery_lvl: int = 0
+var arcane_mastery_xp: int = 0
 
 # secondary parameters
 var atk
@@ -168,6 +178,9 @@ var rift_steps_max
 var rift_milestone_index
 var rift_total_milestones
 var rift_instance_id
+var rift_pending_fight: bool = false
+var rift_pending_monster: String = ""
+var rift_pending_milestone: int = 0
 var rift_lvl
 var rift_xp
 
@@ -186,6 +199,9 @@ var variance
 var vit_crit_soften
 var spirit_healing_mult
 
+# temporary buffs from elixirs/flasks
+var active_buffs: Dictionary = {}
+
 # structures to keep autoloaded
 var raw_structures = {
 	"all_server_skills": null,
@@ -194,14 +210,40 @@ var raw_structures = {
 
 func to_dict() -> Dictionary:
 	# export everything (flat), matching server keys
-	var out := {}
+	var out = {}
 	for p in get_property_list():
 		if p.usage & PROPERTY_USAGE_SCRIPT_VARIABLE != 0:
-			var name = p.name
+			var prop_name = p.name
 			# skip signals/constants/methods
-			if has_method(name):
+			if has_method(prop_name):
 				continue
-			if p.name == "raw_structures":
+			if prop_name == "raw_structures":
 				continue
-			out[name] = get(name)
+			out[prop_name] = get(prop_name)
 	return out
+
+
+func clear() -> void:
+	# reset all script variables to their defaults
+	for p in get_property_list():
+		if p.usage & PROPERTY_USAGE_SCRIPT_VARIABLE != 0:
+			var prop_name = p.name
+			# skip signals/constants/methods
+			if has_method(prop_name):
+				continue
+			if prop_name == "raw_structures":
+				continue
+			# reset based on property type
+			match p.type:
+				TYPE_INT:
+					set(prop_name, 0)
+				TYPE_FLOAT:
+					set(prop_name, 0.0)
+				TYPE_STRING:
+					set(prop_name, "")
+				_:
+					set(prop_name, null)
+
+	# reset raw_structures dict values
+	raw_structures.all_server_skills = null
+	raw_structures.account_skills = null

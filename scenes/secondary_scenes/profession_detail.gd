@@ -2,8 +2,10 @@ extends Control
 
 const ACTIVITY_ALCHEMY = 2
 const ACTIVITY_ENCHANTING = 9
+const CONFIRMATION_DIALOG = preload("res://scenes/secondary_scenes/confirmation_dialog.tscn")
 
 var _profession_name: String = ""
+var _confirm_dialog: Control = null
 var _loading_label: Label
 var _xp_bar: ProgressBar
 var _xp_pct_label: Label
@@ -130,7 +132,7 @@ func _build_ui() -> void:
 	_xp_pct_label.text = "0%"
 	_xp_pct_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_xp_pct_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_xp_pct_label.add_theme_font_size_override("font_size", 12)
+	_xp_pct_label.add_theme_font_size_override("font_size", 15)
 	_xp_pct_label.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	_xp_pct_label.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 	_xp_pct_label.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -261,24 +263,24 @@ func _on_profession_info(data: Dictionary) -> void:
 	for child in _scroll_content.get_children():
 		child.queue_free()
 
-	if _profession_name == "herbalism":
-		_build_herbalism_content(data)
+	if _profession_name in ["herbalism", "mining", "woodcutting", "fishing"]:
+		_build_gathering_content(data)
 	elif _profession_name == "alchemy":
 		_build_alchemy_content(data)
 	elif _profession_name == "enchanting":
 		_build_enchanting_content(data)
 
 
-func _build_herbalism_content(data: Dictionary) -> void:
-	var herbs: Array = data.get("herbs", [])
+func _build_gathering_content(data: Dictionary) -> void:
+	var loot_items: Array = data.get("loot_table", [])
 	var req_skill: int = int(data.get("req_skill", 0))
 	var prof_lvl: int = int(data.get("level", 1))
 	var activity_name: String = data.get("activity_name", "")
-	var herb_loot_counts: Dictionary = data.get("herb_loot_counts", {})
+	var loot_counts: Dictionary = data.get("loot_counts", {})
 
 	if req_skill > prof_lvl:
 		var locked_lbl = Label.new()
-		locked_lbl.text = "Requires Herbalism Level %d" % req_skill
+		locked_lbl.text = "Requires Level %d" % req_skill
 		Styler.style_parchment_label(locked_lbl, Color.from_rgba8(200, 80, 80))
 		_scroll_content.add_child(locked_lbl)
 		return
@@ -330,14 +332,30 @@ func _build_herbalism_content(data: Dictionary) -> void:
 	left_vbox.add_child(steps_lbl)
 
 	var cycles_lbl = Label.new()
-	cycles_lbl.text = "Cycles: %d" % int(data.get("activity_cycles", 0))
+	cycles_lbl.text = "Actions: %d" % int(data.get("activity_cycles", 0))
 	Styler.style_parchment_label(cycles_lbl, Styler.COLOR_TEXT_DARK)
 	left_vbox.add_child(cycles_lbl)
 
 	var spc_lbl = Label.new()
-	spc_lbl.text = "Steps/cycle: %d" % int(data.get("base_steps", 0))
+	spc_lbl.text = "Steps per action: %d" % int(data.get("base_steps", 0))
 	Styler.style_parchment_label(spc_lbl, Styler.COLOR_TEXT_DARK)
 	left_vbox.add_child(spc_lbl)
+
+	# Overall stats separator
+	var overall_header = Label.new()
+	overall_header.text = "Overall"
+	Styler.style_parchment_label(overall_header, Styler.COLOR_GOLD)
+	left_vbox.add_child(overall_header)
+
+	var total_actions_lbl = Label.new()
+	total_actions_lbl.text = "Total Actions: %d" % int(data.get("total_profession_actions", 0))
+	Styler.style_parchment_label(total_actions_lbl, Styler.COLOR_TEXT_DARK)
+	left_vbox.add_child(total_actions_lbl)
+
+	var total_steps_lbl = Label.new()
+	total_steps_lbl.text = "Total Steps: %d" % int(data.get("total_profession_steps", 0))
+	Styler.style_parchment_label(total_steps_lbl, Styler.COLOR_TEXT_DARK)
+	left_vbox.add_child(total_steps_lbl)
 
 	# Right — Loot frame
 	var right_panel = PanelContainer.new()
@@ -364,19 +382,19 @@ func _build_herbalism_content(data: Dictionary) -> void:
 	Styler.style_parchment_label(loot_header, Styler.COLOR_GOLD)
 	right_vbox.add_child(loot_header)
 
-	if herbs.is_empty():
+	if loot_items.is_empty():
 		var empty_lbl = Label.new()
-		empty_lbl.text = "No herbs available."
+		empty_lbl.text = "No loot available."
 		Styler.style_parchment_label(empty_lbl, Styler.COLOR_TEXT_DARK)
 		right_vbox.add_child(empty_lbl)
 		return
 
-	for herb in herbs:
-		var row = _build_herb_row(herb, herb_loot_counts)
+	for item in loot_items:
+		var row = _build_loot_row(item, loot_counts)
 		right_vbox.add_child(row)
 
 
-func _build_herb_row(herb: Dictionary, loot_counts: Dictionary = {}) -> PanelContainer:
+func _build_loot_row(herb: Dictionary, loot_counts: Dictionary = {}) -> PanelContainer:
 	var panel = PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var sb = StyleBoxFlat.new()
@@ -407,7 +425,7 @@ func _build_herb_row(herb: Dictionary, loot_counts: Dictionary = {}) -> PanelCon
 	var name_lbl = Label.new()
 	name_lbl.text = str(herb.get("name", "")).replace("_", " ").capitalize()
 	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	name_lbl.add_theme_font_size_override("font_size", 14)
+	name_lbl.add_theme_font_size_override("font_size", 15)
 	name_lbl.add_theme_color_override("font_color", quality_color)
 	name_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	hbox.add_child(name_lbl)
@@ -417,7 +435,7 @@ func _build_herb_row(herb: Dictionary, loot_counts: Dictionary = {}) -> PanelCon
 	var times_looted: int = int(loot_counts.get(herb_uid, 0))
 	var count_lbl = Label.new()
 	count_lbl.text = "x%d" % times_looted
-	count_lbl.add_theme_font_size_override("font_size", 12)
+	count_lbl.add_theme_font_size_override("font_size", 15)
 	count_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 	count_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	hbox.add_child(count_lbl)
@@ -425,7 +443,7 @@ func _build_herb_row(herb: Dictionary, loot_counts: Dictionary = {}) -> PanelCon
 	# Drop chance (2 decimal places)
 	var pct_lbl = Label.new()
 	pct_lbl.text = "%.2f%%" % float(herb.get("drop_pct", 0))
-	pct_lbl.add_theme_font_size_override("font_size", 12)
+	pct_lbl.add_theme_font_size_override("font_size", 15)
 	pct_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 	pct_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	hbox.add_child(pct_lbl)
@@ -544,7 +562,7 @@ func _build_recipe_card(recipe: Dictionary) -> PanelContainer:
 	name_lbl.text = recipe.get("name", "Unknown")
 	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var name_color = Styler.COLOR_TEXT_DARK if unlocked else Color(0.5, 0.5, 0.5)
-	name_lbl.add_theme_font_size_override("font_size", 15)
+	name_lbl.add_theme_font_size_override("font_size", 18)
 	name_lbl.add_theme_color_override("font_color", name_color)
 	name_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	header_hbox.add_child(name_lbl)
@@ -552,7 +570,7 @@ func _build_recipe_card(recipe: Dictionary) -> PanelContainer:
 	if not unlocked:
 		var lock_lbl = Label.new()
 		lock_lbl.text = "Lvl %d" % int(recipe.get("req_level", 0))
-		lock_lbl.add_theme_font_size_override("font_size", 12)
+		lock_lbl.add_theme_font_size_override("font_size", 15)
 		lock_lbl.add_theme_color_override("font_color", Color.from_rgba8(200, 80, 80))
 		lock_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 		header_hbox.add_child(lock_lbl)
@@ -564,7 +582,7 @@ func _build_recipe_card(recipe: Dictionary) -> PanelContainer:
 
 	var ing_label = Label.new()
 	ing_label.text = "Needs:"
-	ing_label.add_theme_font_size_override("font_size", 11)
+	ing_label.add_theme_font_size_override("font_size", 15)
 	ing_label.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 	ing_label.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	ing_hbox.add_child(ing_label)
@@ -587,7 +605,7 @@ func _build_recipe_card(recipe: Dictionary) -> PanelContainer:
 
 		var ing_name_lbl = Label.new()
 		ing_name_lbl.text = str(ing.get("name", "")).replace("_", " ").capitalize()
-		ing_name_lbl.add_theme_font_size_override("font_size", 11)
+		ing_name_lbl.add_theme_font_size_override("font_size", 15)
 		ing_name_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 		ing_name_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 		ing_item.add_child(ing_name_lbl)
@@ -597,7 +615,7 @@ func _build_recipe_card(recipe: Dictionary) -> PanelContainer:
 		var qty_color = Color.from_rgba8(60, 160, 80) if qty_have >= qty_need else Color.from_rgba8(200, 80, 80)
 		var qty_lbl = Label.new()
 		qty_lbl.text = "%d/%d" % [qty_have, qty_need]
-		qty_lbl.add_theme_font_size_override("font_size", 11)
+		qty_lbl.add_theme_font_size_override("font_size", 15)
 		qty_lbl.add_theme_color_override("font_color", qty_color)
 		qty_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 		ing_item.add_child(qty_lbl)
@@ -610,17 +628,30 @@ func _build_recipe_card(recipe: Dictionary) -> PanelContainer:
 	var out_lbl = Label.new()
 	out_lbl.text = "Makes: %dx %s" % [int(recipe.get("output_qty", 1)), recipe.get("output_name", "?")]
 	out_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	out_lbl.add_theme_font_size_override("font_size", 11)
+	out_lbl.add_theme_font_size_override("font_size", 15)
 	out_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 	out_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	info_hbox.add_child(out_lbl)
 
 	var steps_lbl = Label.new()
 	steps_lbl.text = "%d steps  %d XP" % [int(recipe.get("base_steps", 0)), int(recipe.get("base_xp", 0))]
-	steps_lbl.add_theme_font_size_override("font_size", 11)
+	steps_lbl.add_theme_font_size_override("font_size", 15)
 	steps_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 	steps_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	info_hbox.add_child(steps_lbl)
+
+	# Effects (potion/scroll bonuses)
+	var effects = recipe.get("output_effects")
+	if effects != null and effects is Dictionary and effects.size() > 0:
+		var effects_parts: PackedStringArray = []
+		for eff_name in effects:
+			effects_parts.append("%s: +%s" % [eff_name, str(effects[eff_name])])
+		var eff_lbl = Label.new()
+		eff_lbl.text = "  ".join(effects_parts)
+		eff_lbl.add_theme_font_size_override("font_size", 15)
+		eff_lbl.add_theme_color_override("font_color", Color.from_rgba8(60, 200, 80))
+		eff_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
+		vbox.add_child(eff_lbl)
 
 	# Craft button (for crafting professions: alchemy, enchanting)
 	if _profession_name in ["alchemy", "enchanting"]:
@@ -642,15 +673,30 @@ func _build_recipe_card(recipe: Dictionary) -> PanelContainer:
 			craft_btn.text = "CRAFT"
 			Styler.style_button_small(craft_btn, Color.from_rgba8(60, 130, 70))
 			var rid: String = recipe.get("recipe_id", "")
-			craft_btn.pressed.connect(func(): _on_craft_pressed(rid))
+			var rname: String = recipe.get("name", "Unknown")
+			craft_btn.pressed.connect(func(): _on_craft_pressed(rid, rname))
 		vbox.add_child(craft_btn)
 
 	return panel
 
 
-func _on_craft_pressed(recipe_id: String) -> void:
+func _on_craft_pressed(recipe_id: String, recipe_name: String) -> void:
+	if _confirm_dialog and is_instance_valid(_confirm_dialog):
+		return
 	var act = ACTIVITY_ENCHANTING if _profession_name == "enchanting" else ACTIVITY_ALCHEMY
-	SignalManager.signal_StartCraftActivity.emit(act, Account.location, recipe_id)
+	var text: String
+	if Account.activity:
+		var current_name: String = GameTextEn.activities_texts.get(Account.activity, "Activity")
+		text = "Stop %s and Craft %s?" % [current_name, recipe_name]
+	else:
+		text = "Craft %s?" % recipe_name
+	_confirm_dialog = CONFIRMATION_DIALOG.instantiate()
+	_confirm_dialog.setup(text)
+	add_child(_confirm_dialog)
+	_confirm_dialog.confirmed.connect(func():
+		SignalManager.signal_StartCraftActivity.emit(act, Account.location, recipe_id)
+	)
+	_confirm_dialog.tree_exited.connect(func(): _confirm_dialog = null, CONNECT_ONE_SHOT)
 
 
 func _on_stop_craft() -> void:
@@ -676,6 +722,7 @@ func _on_activity_progress(data: Dictionary) -> void:
 
 func _on_account_data(_ok) -> void:
 	_update_craft_progress()
+	SignalManager.signal_RequestProfessionInfo.emit(_profession_name)
 
 
 func _update_craft_progress() -> void:

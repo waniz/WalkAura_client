@@ -12,6 +12,15 @@ var LINEAR_CONSTANT
 var DIMINISHING_CONSTANT
 var SERVER_VERSION = ""
 
+# Talent system config (loaded from talents_config message)
+var TALENT_REGISTRY: Array = []
+var TALENT_SYNERGIES: Array = []
+var TIER_2_THRESHOLD: int = 16
+var TIER_3_THRESHOLD: int = 31
+var MAX_RANK: int = 50
+var MAX_ALLOCATED: int = 100
+var POINTS_PER_STEPS: int = 500
+
 func _ready() -> void:
 	AccountManager.signal_LoginParamsReceived.connect(on_login_params_received)
 	

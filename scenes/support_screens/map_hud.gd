@@ -4,11 +4,11 @@ signal waypoint_pressed(waypoint_id: String)
 
 @export var mini_map_size: Vector2 = Vector2(162, 162)
 
-const ZOOM_MIN := 0.25
-const ZOOM_MAX := 4.0
-const PAN_SPEED  := 0.55   # fraction of raw finger/mouse delta applied each event
-const PINCH_DAMPEN := 0.45 # how much of the raw pinch ratio is applied (0=none, 1=full)
-const WHEEL_STEP := 1.05   # zoom factor per mouse-wheel tick
+const ZOOM_MIN = 0.25
+const ZOOM_MAX = 4.0
+const PAN_SPEED  = 0.55   # fraction of raw finger/mouse delta applied each event
+const PINCH_DAMPEN = 0.45 # how much of the raw pinch ratio is applied (0=none, 1=full)
+const WHEEL_STEP = 1.05   # zoom factor per mouse-wheel tick
 
 @onready var mini_map_frame: PanelContainer = $MiniMapFrame
 @onready var mini_map_texture: TextureRect = $MiniMapFrame/Mask/MapTexture
@@ -23,6 +23,21 @@ const WHEEL_STEP := 1.05   # zoom factor per mouse-wheel tick
 
 var player_pos_ratio: Vector2 = Vector2(0.33, 0.42)
 var map_texture: Texture2D = load("res://assets/world_map_v1.png")
+
+const CONFIRMATION_DIALOG = preload("res://scenes/secondary_scenes/confirmation_dialog.tscn")
+var _confirm_dialog: Control = null
+
+const SYSTEM_MENU_SCENE = preload("res://scenes/support_screens/system_menu.tscn")
+var _system_menu: Control = null
+var _menu_btn: Button
+
+const DEV_MENU_SCENE = preload("res://scenes/support_screens/dev_menu.tscn")
+var _dev_menu: Control = null
+var _dev_btn: Button = null
+var _auto_walk_active: bool = false
+var _auto_walk_rate: int = 25
+var _auto_walk_timer: Timer = null
+var _dev_btn_pulse_tween: Tween = null
 
 var _tooltip_panel: PanelContainer = null
 var _tooltip_label: Label = null
@@ -56,7 +71,7 @@ func _ready() -> void:
 	_build_waypoints()
 	waypoint_pressed.connect(_on_waypoint_pressed)
 	Styler.style_button(close_btn, Color.from_rgba8(64, 180, 255))
-	var _btn_transparent := StyleBoxFlat.new()
+	var _btn_transparent = StyleBoxFlat.new()
 	_btn_transparent.bg_color = Color(0, 0, 0, 0)
 	_btn_transparent.set_corner_radius_all(30)
 	for state in ["normal", "hover", "pressed", "focus"]:
@@ -85,13 +100,75 @@ func _ready() -> void:
 	else:
 		update_location(player_pos_ratio)
 
+	# Circular hamburger menu button — centered on minimap bottom-right corner
+	var btn_size = 32
+	_menu_btn = Button.new()
+	_menu_btn.text = "☰"
+	_menu_btn.custom_minimum_size = Vector2(btn_size, btn_size)
+	# Circular style
+	var circle_normal = StyleBoxFlat.new()
+	circle_normal.bg_color = Color.from_rgba8(40, 42, 54, 220)
+	circle_normal.set_corner_radius_all(btn_size / 2)
+	circle_normal.border_color = Color(1.0, 0.78, 0.26, 0.6)
+	circle_normal.set_border_width_all(2)
+	var circle_hover = circle_normal.duplicate()
+	circle_hover.bg_color = Color.from_rgba8(60, 62, 74, 230)
+	var circle_pressed = circle_normal.duplicate()
+	circle_pressed.bg_color = Color.from_rgba8(30, 32, 44, 240)
+	_menu_btn.add_theme_stylebox_override("normal", circle_normal)
+	_menu_btn.add_theme_stylebox_override("hover", circle_hover)
+	_menu_btn.add_theme_stylebox_override("pressed", circle_pressed)
+	_menu_btn.add_theme_font_size_override("font_size", 18)
+	_menu_btn.add_theme_color_override("font_color", Color(1.0, 0.78, 0.26))
+	_menu_btn.pressed.connect(_on_menu_btn_pressed)
+	add_child(_menu_btn)
+	# Center on minimap bottom-right corner
+	await get_tree().process_frame
+	_menu_btn.position = Vector2(
+		mini_map_frame.position.x + mini_map_frame.size.x - btn_size / 2,
+		mini_map_frame.position.y + mini_map_frame.size.y - btn_size / 2
+	)
+
+	# Dev menu button — debug builds only, bottom-left of minimap
+	if OS.is_debug_build():
+		_dev_btn = Button.new()
+		_dev_btn.text = "D"
+		_dev_btn.custom_minimum_size = Vector2(btn_size, btn_size)
+		var dev_normal = StyleBoxFlat.new()
+		dev_normal.bg_color = Color.from_rgba8(40, 42, 54, 220)
+		dev_normal.set_corner_radius_all(btn_size / 2)
+		dev_normal.border_color = Color(1.0, 0.78, 0.26, 0.6)
+		dev_normal.set_border_width_all(2)
+		var dev_hover = dev_normal.duplicate()
+		dev_hover.bg_color = Color.from_rgba8(60, 62, 74, 230)
+		var dev_pressed = dev_normal.duplicate()
+		dev_pressed.bg_color = Color.from_rgba8(30, 32, 44, 240)
+		_dev_btn.add_theme_stylebox_override("normal", dev_normal)
+		_dev_btn.add_theme_stylebox_override("hover", dev_hover)
+		_dev_btn.add_theme_stylebox_override("pressed", dev_pressed)
+		_dev_btn.add_theme_font_size_override("font_size", 16)
+		_dev_btn.add_theme_color_override("font_color", Color(1.0, 0.78, 0.26))
+		_dev_btn.pressed.connect(_on_dev_btn_pressed)
+		add_child(_dev_btn)
+		_dev_btn.position = Vector2(
+			mini_map_frame.position.x - btn_size / 2,
+			mini_map_frame.position.y + mini_map_frame.size.y - btn_size / 2
+		)
+
+		# Auto-walk timer (starts stopped)
+		_auto_walk_timer = Timer.new()
+		_auto_walk_timer.wait_time = 1.0
+		_auto_walk_timer.autostart = false
+		_auto_walk_timer.timeout.connect(_on_auto_walk_tick)
+		add_child(_auto_walk_timer)
+
 
 # Call whenever the player moves. pos_ratio: Vector2 where x/y are 0.0–1.0.
 func update_location(pos_ratio: Vector2) -> void:
 	player_pos_ratio = pos_ratio
 	_update_mini_map(pos_ratio)
 	if _big_player_marker and map_texture:
-		var marker_size := _big_player_marker.size
+		var marker_size = _big_player_marker.size
 		_big_player_marker.position = map_texture.get_size() * pos_ratio - marker_size / 2.0
 
 
@@ -106,6 +183,9 @@ func _update_mini_map(pos_ratio: Vector2) -> void:
 
 func _on_mini_map_clicked() -> void:
 	full_map_overlay.visible = true
+	_menu_btn.visible = false
+	if _dev_btn != null:
+		_dev_btn.visible = false
 	_scale = 1.0
 	_touches.clear()
 	_mouse_dragging = false
@@ -115,6 +195,9 @@ func _on_mini_map_clicked() -> void:
 
 func _on_close_clicked() -> void:
 	full_map_overlay.visible = false
+	_menu_btn.visible = true
+	if _dev_btn != null:
+		_dev_btn.visible = true
 	_touches.clear()
 	_mouse_dragging = false
 	_hide_tooltip()
@@ -195,8 +278,8 @@ func _pan(delta: Vector2) -> void:
 
 
 func _zoom_at(focal_screen: Vector2, factor: float) -> void:
-	var new_scale := clampf(_scale * factor, ZOOM_MIN, ZOOM_MAX)
-	var actual_factor := new_scale / _scale
+	var new_scale = clampf(_scale * factor, ZOOM_MIN, ZOOM_MAX)
+	var actual_factor = new_scale / _scale
 	_offset = focal_screen + (_offset - focal_screen) * actual_factor
 	_scale = new_scale
 	_apply_transform()
@@ -211,9 +294,9 @@ func _apply_transform() -> void:
 func _clamp_offset() -> void:
 	if not map_texture:
 		return
-	var view := map_view.size
-	var map_w := map_texture.get_size().x * _scale
-	var map_h := map_texture.get_size().y * _scale
+	var view = map_view.size
+	var map_w = map_texture.get_size().x * _scale
+	var map_h = map_texture.get_size().y * _scale
 
 	if map_w > view.x:
 		_offset.x = clampf(_offset.x, view.x - map_w, 0.0)
@@ -231,7 +314,7 @@ func _build_waypoints() -> void:
 		return
 	for id in ItemDB.WAYPOINTS:
 		var pos_ratio: Vector2 = ItemDB.WAYPOINTS[id]
-		var btn := Button.new()
+		var btn = Button.new()
 		btn.text = ""
 		btn.focus_mode = Control.FOCUS_NONE
 		btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -239,8 +322,7 @@ func _build_waypoints() -> void:
 		btn.size = Vector2(72, 72)
 		btn.position = map_texture.get_size() * pos_ratio - Vector2(36.0, 36.0)
 		_style_waypoint(btn)
-		var icon := TextureRect.new()
-		icon.layout_mode = 0
+		var icon = TextureRect.new()
 		icon.offset_left = 4.0
 		icon.offset_top = 4.0
 		icon.offset_right = 68.0
@@ -250,17 +332,17 @@ func _build_waypoints() -> void:
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		btn.add_child(icon)
 		btn.pressed.connect(func(): waypoint_pressed.emit(id))
-		var display_name := _format_waypoint_name(id)
+		var display_name = _format_waypoint_name(id)
 		btn.mouse_entered.connect(func(): _show_tooltip(display_name))
 		btn.mouse_exited.connect(_hide_tooltip)
 		map_canvas.add_child(btn)
 
 
 func _update_tooltip_pos() -> void:
-	var mp := get_viewport().get_mouse_position()
-	var vp_size := get_viewport().get_visible_rect().size
-	var tp_size := _tooltip_panel.size
-	var pos := mp + Vector2(12.0, -tp_size.y - 6.0)
+	var mp = get_viewport().get_mouse_position()
+	var vp_size = get_viewport().get_visible_rect().size
+	var tp_size = _tooltip_panel.size
+	var pos = mp + Vector2(12.0, -tp_size.y - 6.0)
 	pos.x = clampf(pos.x, 4.0, vp_size.x - tp_size.x - 4.0)
 	pos.y = clampf(pos.y, 4.0, vp_size.y - tp_size.y - 4.0)
 	_tooltip_panel.position = pos
@@ -268,7 +350,7 @@ func _update_tooltip_pos() -> void:
 
 func _create_tooltip() -> void:
 	_tooltip_panel = PanelContainer.new()
-	var sb := StyleBoxFlat.new()
+	var sb = StyleBoxFlat.new()
 	sb.bg_color = Color(18.0 / 255.0, 14.0 / 255.0, 10.0 / 255.0, 230.0 / 255.0)
 	sb.border_color = Color(220.0 / 255.0, 175.0 / 255.0, 68.0 / 255.0, 1.0)
 	sb.set_border_width_all(2)
@@ -291,8 +373,8 @@ func _create_tooltip() -> void:
 
 
 func _format_waypoint_name(id: String) -> String:
-	var words := id.split("_")
-	var result := ""
+	var words = id.split("_")
+	var result = ""
 	for word in words:
 		if result != "":
 			result += " "
@@ -312,7 +394,7 @@ func _hide_tooltip() -> void:
 
 
 func _style_waypoint(btn: Button) -> void:
-	var normal := StyleBoxFlat.new()
+	var normal = StyleBoxFlat.new()
 	normal.bg_color = Color(18.0 / 255.0, 14.0 / 255.0, 10.0 / 255.0, 220.0 / 255.0)
 	normal.border_color = Color(220.0 / 255.0, 175.0 / 255.0, 68.0 / 255.0, 1.0)
 	normal.set_border_width_all(3)
@@ -320,11 +402,11 @@ func _style_waypoint(btn: Button) -> void:
 	normal.shadow_color = Color(220.0 / 255.0, 175.0 / 255.0, 68.0 / 255.0, 0.55)
 	normal.shadow_size = 6
 
-	var hover := normal.duplicate()
+	var hover = normal.duplicate()
 	hover.bg_color = normal.bg_color.lightened(0.18)
 	hover.shadow_size = 12
 
-	var pressed := normal.duplicate()
+	var pressed = normal.duplicate()
 	pressed.bg_color = normal.bg_color.darkened(0.12)
 	pressed.shadow_size = 3
 
@@ -335,7 +417,7 @@ func _style_waypoint(btn: Button) -> void:
 
 
 func _center_on_player() -> void:
-	var player_px := map_texture.get_size() * player_pos_ratio
+	var player_px = map_texture.get_size() * player_pos_ratio
 	_offset = map_view.size * 0.5 - player_px * _scale
 	_apply_transform()
 
@@ -360,7 +442,7 @@ func _update_avatar_texture() -> void:
 
 
 func _apply_circle_shader(target: TextureRect, sz: Vector2) -> void:
-	var mat := ShaderMaterial.new()
+	var mat = ShaderMaterial.new()
 	mat.shader = _avatar_shader
 	mat.set_shader_parameter("rect_size", sz)
 	mat.set_shader_parameter("border_color", Color(0.86, 0.69, 0.27, 1.0))
@@ -379,7 +461,117 @@ func _location_to_map_ratio(location_id: int) -> Vector2:
 func _on_waypoint_pressed(waypoint_id: String) -> void:
 	var location_id: int = ItemDB.WAYPOINT_LOCATION_IDS.get(waypoint_id, -1)
 	if location_id == -1:
-		return  # safety: waypoint not mapped to a server location
-	full_map_overlay.visible = false
-	_hide_tooltip()
-	SignalManager.signal_TravelRequest.emit(location_id)
+		return
+	if _confirm_dialog and is_instance_valid(_confirm_dialog):
+		return
+	var location_name: String = ItemDB.LOCATION_NAMES.get(location_id, "Unknown")
+	var text: String
+	if Account.activity:
+		var current_name: String = GameTextEn.activities_texts.get(Account.activity, "Activity")
+		text = "Stop %s and Travel to %s?" % [current_name, location_name]
+	else:
+		text = "Travel to %s?" % location_name
+	_confirm_dialog = CONFIRMATION_DIALOG.instantiate()
+	_confirm_dialog.setup(text)
+	add_child(_confirm_dialog)
+	_confirm_dialog.confirmed.connect(func():
+		full_map_overlay.visible = false
+		_hide_tooltip()
+		SignalManager.signal_TravelRequest.emit(location_id)
+	)
+	_confirm_dialog.tree_exited.connect(func(): _confirm_dialog = null, CONNECT_ONE_SHOT)
+
+
+func _on_dev_btn_pressed() -> void:
+	if _dev_menu and is_instance_valid(_dev_menu):
+		return
+	_dev_menu = DEV_MENU_SCENE.instantiate()
+	_dev_menu.setup(_dev_btn.global_position, _auto_walk_active, _auto_walk_rate)
+	add_child(_dev_menu)
+	_dev_menu.auto_walk_toggled.connect(_on_auto_walk_toggled)
+	_dev_menu.auto_walk_rate_changed.connect(_on_auto_walk_rate_changed)
+	_dev_menu.tree_exited.connect(func(): _dev_menu = null, CONNECT_ONE_SHOT)
+
+
+func _on_auto_walk_toggled(active: bool) -> void:
+	_auto_walk_active = active
+	if _auto_walk_active:
+		_auto_walk_timer.wait_time = 1.0
+		_auto_walk_timer.start()
+		_start_dev_btn_pulse()
+	else:
+		_auto_walk_timer.stop()
+		_stop_dev_btn_pulse()
+
+
+func _on_auto_walk_rate_changed(rate: int) -> void:
+	_auto_walk_rate = rate
+
+
+func _on_auto_walk_tick() -> void:
+	SignalManager.signal_StepsUpdatesCheats.emit(_auto_walk_rate)
+
+
+func _start_dev_btn_pulse() -> void:
+	if not _dev_btn:
+		return
+	var style: StyleBoxFlat = _dev_btn.get_theme_stylebox("normal")
+	style.border_color = Color(0.31, 0.86, 0.31, 0.6)
+	if _dev_btn_pulse_tween and _dev_btn_pulse_tween.is_valid():
+		_dev_btn_pulse_tween.kill()
+	_dev_btn_pulse_tween = create_tween().set_loops()
+	_dev_btn_pulse_tween.tween_property(style, "border_color:a", 1.0, 0.75)
+	_dev_btn_pulse_tween.tween_property(style, "border_color:a", 0.4, 0.75)
+
+
+func _stop_dev_btn_pulse() -> void:
+	if not _dev_btn:
+		return
+	if _dev_btn_pulse_tween and _dev_btn_pulse_tween.is_valid():
+		_dev_btn_pulse_tween.kill()
+		_dev_btn_pulse_tween = null
+	var style: StyleBoxFlat = _dev_btn.get_theme_stylebox("normal")
+	style.border_color = Color(1.0, 0.78, 0.26, 0.6)
+
+
+func _on_menu_btn_pressed() -> void:
+	if _system_menu and is_instance_valid(_system_menu):
+		return
+	_system_menu = SYSTEM_MENU_SCENE.instantiate()
+	_system_menu.setup(_menu_btn.global_position)
+	add_child(_system_menu)
+	_system_menu.settings_pressed.connect(_on_settings)
+	_system_menu.relogin_pressed.connect(_on_relogin)
+	_system_menu.exit_pressed.connect(_on_exit)
+	_system_menu.tree_exited.connect(func(): _system_menu = null, CONNECT_ONE_SHOT)
+
+
+func _on_settings() -> void:
+	pass  # TODO: open settings screen
+
+
+func _on_relogin() -> void:
+	ServerConnector.socket.close()
+	ServerConnector.clear_credentials()
+	Account.clear()
+	SceneManage.goto("res://scenes/login_screen/login_scene.tscn")
+	ServerConnector.connect_to_server.call_deferred()
+
+
+func _on_exit() -> void:
+	if _confirm_dialog and is_instance_valid(_confirm_dialog):
+		return
+	# Hide reconnect overlay so it doesn't block the exit confirmation
+	ServerConnector.suppress_reconnect_overlay = true
+	if ServerConnector._reconnect_overlay:
+		ServerConnector._hide_reconnect_overlay()
+	_confirm_dialog = CONFIRMATION_DIALOG.instantiate()
+	_confirm_dialog.setup("Are you sure you want to exit?")
+	add_child(_confirm_dialog)
+	_confirm_dialog.confirmed.connect(func():
+		get_tree().quit()
+	)
+	_confirm_dialog.tree_exited.connect(func():
+		_confirm_dialog = null
+		ServerConnector.suppress_reconnect_overlay = false
+	, CONNECT_ONE_SHOT)
