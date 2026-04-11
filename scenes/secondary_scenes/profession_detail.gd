@@ -26,9 +26,12 @@ const PROF_ICON_KEY = {
 var _craft_progress_container: VBoxContainer
 var _craft_progress_bar: ProgressBar
 var _craft_progress_label: Label
+var _craft_steps_label: Label
 var _craft_header_label: Label
 var _craft_stop_btn: Button
 var _last_crafting_steps_max: int = 0
+var _last_crafting_target_qty: int = 0
+var _last_crafting_batch_done: int = 0
 
 
 func set_profession(prof_name: String) -> void:
@@ -215,10 +218,17 @@ func _build_ui() -> void:
 	_craft_progress_bar.add_theme_stylebox_override("fill", cpb_fill)
 	_craft_progress_container.add_child(_craft_progress_bar)
 
-	_craft_progress_label = Label.new()
+	_craft_progress_label = Label.new()  # Primary: "Batch: 7 / 20"
 	_craft_progress_label.text = ""
-	Styler.style_parchment_label(_craft_progress_label, Styler.COLOR_TEXT_DARK)
+	Styler.style_parchment_label(_craft_progress_label, Styler.COLOR_GOLD)
+	_craft_progress_label.add_theme_font_size_override("font_size", 18)
 	_craft_progress_container.add_child(_craft_progress_label)
+
+	_craft_steps_label = Label.new()  # Secondary: "Steps: 52 / 80"
+	_craft_steps_label.text = ""
+	Styler.style_parchment_label(_craft_steps_label, Styler.COLOR_TEXT_DARK)
+	_craft_steps_label.add_theme_font_size_override("font_size", 14)
+	_craft_progress_container.add_child(_craft_steps_label)
 
 	_craft_stop_btn = Button.new()
 	_craft_stop_btn.text = "STOP CRAFTING"
@@ -476,6 +486,8 @@ func _build_alchemy_content(data: Dictionary) -> void:
 				_craft_header_label.text = "Crafting: %s" % recipe.get("name", "Unknown")
 				if _last_crafting_steps_max == 0:
 					_last_crafting_steps_max = int(recipe.get("base_steps", 0))
+					_last_crafting_target_qty = int(Account.statuses.get("crafting_target_qty", 0))
+					_last_crafting_batch_done = 0
 					_update_craft_progress()
 				break
 
@@ -506,6 +518,8 @@ func _build_enchanting_content(data: Dictionary) -> void:
 				_craft_header_label.text = "Enchanting: %s" % recipe.get("name", "Unknown")
 				if _last_crafting_steps_max == 0:
 					_last_crafting_steps_max = int(recipe.get("base_steps", 0))
+					_last_crafting_target_qty = int(Account.statuses.get("crafting_target_qty", 0))
+					_last_crafting_batch_done = 0
 					_update_craft_progress()
 				break
 
@@ -787,17 +801,19 @@ func _on_craft_pressed(recipe_id: String, recipe_name: String, target_qty: int =
 	if _confirm_dialog and is_instance_valid(_confirm_dialog):
 		return
 	var act = ACTIVITY_ENCHANTING if _profession_name == "enchanting" else ACTIVITY_ALCHEMY
+	var qty: int = maxi(1, target_qty)
+	var qty_name: String = ("%dx %s" % [qty, recipe_name]) if qty > 1 else recipe_name
 	var text: String
 	if Account.activity:
 		var current_name: String = GameTextEn.activities_texts.get(Account.activity, "Activity")
-		text = "Stop %s and Craft %s?" % [current_name, recipe_name]
+		text = "Stop %s and Craft %s?" % [current_name, qty_name]
 	else:
-		text = "Craft %s?" % recipe_name
+		text = "Craft %s?" % qty_name
 	_confirm_dialog = CONFIRMATION_DIALOG.instantiate()
 	_confirm_dialog.setup(text)
 	add_child(_confirm_dialog)
 	_confirm_dialog.confirmed.connect(func():
-		SignalManager.signal_StartCraftActivity.emit(act, Account.location, recipe_id, 1)
+		SignalManager.signal_StartCraftActivity.emit(act, Account.location, recipe_id, qty)
 	)
 	_confirm_dialog.tree_exited.connect(func(): _confirm_dialog = null, CONNECT_ONE_SHOT)
 
@@ -813,6 +829,10 @@ func _on_activity_progress(data: Dictionary) -> void:
 	var d: Dictionary = raw.get("data", raw)
 	if d.has("crafting_steps_max"):
 		_last_crafting_steps_max = int(d["crafting_steps_max"])
+	if d.has("crafting_target_qty"):
+		_last_crafting_target_qty = int(d["crafting_target_qty"])
+	if d.has("crafting_batch_done"):
+		_last_crafting_batch_done = int(d["crafting_batch_done"])
 	_update_craft_progress()
 	# Refresh recipe data to update ingredient counts
 	var craft_active = (
@@ -839,9 +859,14 @@ func _update_craft_progress() -> void:
 	if _last_crafting_steps_max > 0:
 		_craft_progress_bar.max_value = _last_crafting_steps_max
 		_craft_progress_bar.value = steps
-		_craft_progress_label.text = "Steps: %d / %d" % [steps, _last_crafting_steps_max]
+		_craft_steps_label.text = "Steps: %d / %d" % [steps, _last_crafting_steps_max]
 	else:
-		_craft_progress_label.text = "Steps: %d" % steps
+		_craft_steps_label.text = "Steps: %d" % steps
+
+	if _last_crafting_target_qty > 1:
+		_craft_progress_label.text = "Batch: %d / %d" % [_last_crafting_batch_done, _last_crafting_target_qty]
+	else:
+		_craft_progress_label.text = ""
 
 
 func _quality_color(quality: int) -> Color:
