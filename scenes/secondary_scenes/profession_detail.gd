@@ -668,16 +668,27 @@ func _build_recipe_card(recipe: Dictionary) -> PanelContainer:
 		eff_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 		vbox.add_child(eff_lbl)
 
-	# Craft button (for crafting professions: alchemy, enchanting)
+	# Craft row (for crafting professions: alchemy, enchanting)
 	if _profession_name in ["alchemy", "enchanting"]:
 		var current_craft_activity = ACTIVITY_ENCHANTING if _profession_name == "enchanting" else ACTIVITY_ALCHEMY
+		var max_qty: int = _compute_max_craft_qty(ingredients)
+
+		var craft_row = HBoxContainer.new()
+		craft_row.add_theme_constant_override("separation", 6)
+		craft_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		vbox.add_child(craft_row)
+
 		var craft_btn = Button.new()
+		craft_btn.custom_minimum_size = Vector2(120, 0)
+		craft_row.add_child(craft_btn)
+
+		# LOCKED: show button only, no qty controls
 		if not unlocked:
 			craft_btn.text = "LOCKED"
 			craft_btn.disabled = true
 			Styler.style_button_small(craft_btn, Color.from_rgba8(160, 155, 150))
 		elif not can_craft:
-			craft_btn.text = "MISSING INGREDIENTS"
+			craft_btn.text = "MISSING"
 			craft_btn.disabled = true
 			Styler.style_button_small(craft_btn, Color.from_rgba8(200, 160, 100))
 		elif Account.activity == current_craft_activity:
@@ -687,15 +698,92 @@ func _build_recipe_card(recipe: Dictionary) -> PanelContainer:
 		else:
 			craft_btn.text = "CRAFT"
 			Styler.style_button_small(craft_btn, Color.from_rgba8(60, 130, 70))
-			var rid: String = recipe.get("recipe_id", "")
-			var rname: String = recipe.get("name", "Unknown")
-			craft_btn.pressed.connect(func(): _on_craft_pressed(rid, rname))
-		vbox.add_child(craft_btn)
+
+		# Quantity control — only shown when unlocked; disabled when BUSY or MISSING
+		if unlocked:
+			var minus_btn = Button.new()
+			minus_btn.text = "−"
+			minus_btn.custom_minimum_size = Vector2(36, 0)
+			Styler.style_button_small(minus_btn, Styler.COLOR_GOLD)
+			craft_row.add_child(minus_btn)
+
+			var qty_edit = LineEdit.new()
+			qty_edit.text = "1"
+			qty_edit.alignment = HORIZONTAL_ALIGNMENT_CENTER
+			qty_edit.custom_minimum_size = Vector2(60, 0)
+			qty_edit.add_theme_color_override("font_color", Styler.COLOR_GOLD)
+			qty_edit.add_theme_font_override("font", Styler.QUADRAT_FONT)
+			qty_edit.add_theme_font_size_override("font_size", 18)
+			qty_edit.virtual_keyboard_type = LineEdit.KEYBOARD_TYPE_NUMBER
+			craft_row.add_child(qty_edit)
+
+			var plus_btn = Button.new()
+			plus_btn.text = "+"
+			plus_btn.custom_minimum_size = Vector2(36, 0)
+			Styler.style_button_small(plus_btn, Styler.COLOR_GOLD)
+			craft_row.add_child(plus_btn)
+
+			var max_btn = Button.new()
+			max_btn.text = "MAX"
+			max_btn.custom_minimum_size = Vector2(56, 0)
+			Styler.style_button_small(max_btn, Styler.COLOR_GOLD)
+			craft_row.add_child(max_btn)
+
+			var disable_qty: bool = (not can_craft) or (Account.activity == current_craft_activity) or (max_qty <= 0)
+
+			var clamp_qty := func(n: int) -> int:
+				if max_qty <= 0:
+					return 1
+				return clampi(n, 1, max_qty)
+
+			minus_btn.pressed.connect(func():
+				qty_edit.text = str(clamp_qty.call(int(qty_edit.text) - 1))
+			)
+			plus_btn.pressed.connect(func():
+				qty_edit.text = str(clamp_qty.call(int(qty_edit.text) + 1))
+			)
+			max_btn.pressed.connect(func():
+				qty_edit.text = str(maxi(1, max_qty))
+			)
+			qty_edit.text_submitted.connect(func(_s: String):
+				qty_edit.text = str(clamp_qty.call(int(qty_edit.text)))
+				qty_edit.release_focus()
+			)
+			qty_edit.focus_exited.connect(func():
+				qty_edit.text = str(clamp_qty.call(int(qty_edit.text)))
+			)
+
+			minus_btn.disabled = disable_qty
+			plus_btn.disabled = disable_qty
+			max_btn.disabled = disable_qty or max_qty == 0
+			qty_edit.editable = not disable_qty
+
+			# Wire the CRAFT press last so it captures the live qty_edit
+			if craft_btn.text == "CRAFT":
+				var rid: String = recipe.get("recipe_id", "")
+				var rname: String = recipe.get("name", "Unknown")
+				craft_btn.pressed.connect(func():
+					var q: int = clamp_qty.call(int(qty_edit.text))
+					_on_craft_pressed(rid, rname, q)
+				)
 
 	return panel
 
 
-func _on_craft_pressed(recipe_id: String, recipe_name: String) -> void:
+func _compute_max_craft_qty(ingredients: Array) -> int:
+	var result: int = 999999
+	for ing in ingredients:
+		var have: int = int(ing.get("qty_have", 0))
+		var need: int = int(ing.get("qty_needed", 1))
+		if need <= 0:
+			continue
+		result = mini(result, have / need)
+	if result < 0:
+		result = 0
+	return result
+
+
+func _on_craft_pressed(recipe_id: String, recipe_name: String, target_qty: int = 1) -> void:
 	if _confirm_dialog and is_instance_valid(_confirm_dialog):
 		return
 	var act = ACTIVITY_ENCHANTING if _profession_name == "enchanting" else ACTIVITY_ALCHEMY
