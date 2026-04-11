@@ -7,13 +7,22 @@ const CONFIRMATION_DIALOG = preload("res://scenes/secondary_scenes/confirmation_
 var _profession_name: String = ""
 var _confirm_dialog: Control = null
 var _loading_label: Label
-var _xp_bar: ProgressBar
-var _xp_pct_label: Label
+var _radial_progress: Node
 var _details_xp_label: Label
 var _details_xp_next_label: Label
 var _details_total_steps_label: Label
 var _level_label: Label
 var _scroll_content: VBoxContainer
+
+const PROF_ICON_KEY = {
+	"herbalism"   : "herbalism",
+	"alchemy"     : "alchemy",
+	"enchanting"  : "enchanting",
+	"hunting"     : "hunting",
+	"mining"      : "mining",
+	"woodcutting" : "woodcutting",
+	"fishing"     : "fishing",
+}
 var _craft_progress_container: VBoxContainer
 var _craft_progress_bar: ProgressBar
 var _craft_progress_label: Label
@@ -100,45 +109,53 @@ func _build_ui() -> void:
 	top_row.add_theme_constant_override("separation", 8)
 	root_vbox.add_child(top_row)
 
-	# Left column: level label + xp bar stacked
+	# Left column: icon with radial ring + level label
 	var left_col = VBoxContainer.new()
-	left_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left_col.size_flags_stretch_ratio = 1.0
-	left_col.add_theme_constant_override("separation", 6)
+	left_col.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	left_col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	left_col.add_theme_constant_override("separation", 4)
 	top_row.add_child(left_col)
 
+	var ring_radius = 34.0
+	var ring_size = int(ring_radius * 2.0)
+	var ring_wrapper = Control.new()
+	ring_wrapper.custom_minimum_size = Vector2(ring_size, ring_size)
+	ring_wrapper.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	left_col.add_child(ring_wrapper)
+
+	_radial_progress = RadialProgress.new()
+	_radial_progress.ring = true
+	_radial_progress.radius = ring_radius
+	_radial_progress.thickness = 6.0
+	_radial_progress.max_value = 100.0
+	_radial_progress.progress = 0.0
+	_radial_progress.bg_color = Color(1.0, 1.0, 1.0, 0.15)
+	_radial_progress.bar_color = Color.WHITE
+	_radial_progress.border_width = 1.0
+	_radial_progress.border_color = Color(0, 0, 0, 0.4)
+	_radial_progress.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_radial_progress.position = Vector2(ring_radius, ring_radius)
+	ring_wrapper.add_child(_radial_progress)
+
+	var prof_icon = TextureRect.new()
+	prof_icon.custom_minimum_size = Vector2(52, 52)
+	prof_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	prof_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	prof_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var icon_offset = (ring_size - 52) / 2.0
+	prof_icon.position = Vector2(icon_offset, icon_offset)
+	var icon_id = PROF_ICON_KEY.get(_profession_name, "")
+	if not icon_id.is_empty():
+		prof_icon.texture = ItemDB.get_icon(icon_id)
+	ring_wrapper.add_child(prof_icon)
+
 	_level_label = Label.new()
-	_level_label.text = "Level: ..."
-	Styler.style_parchment_label(_level_label, Styler.COLOR_GOLD, 18)
+	_level_label.text = "..."
+	_level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	Styler.style_parchment_label(_level_label, Styler.COLOR_SECTION_HDR, 16)
 	left_col.add_child(_level_label)
 
-	_xp_bar = ProgressBar.new()
-	_xp_bar.custom_minimum_size = Vector2(0, 24)
-	_xp_bar.show_percentage = false
-	_xp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var pb_bg = StyleBoxFlat.new()
-	pb_bg.bg_color = Color(0.0, 0.0, 0.0, 0.2)
-	pb_bg.set_corner_radius_all(8)
-	_xp_bar.add_theme_stylebox_override("background", pb_bg)
-	var pb_fill = StyleBoxFlat.new()
-	pb_fill.bg_color = Styler.COL_PRIMARY
-	pb_fill.shadow_color = Color(0, 0, 0, 0.25)
-	pb_fill.shadow_size = 2
-	pb_fill.set_corner_radius_all(8)
-	_xp_bar.add_theme_stylebox_override("fill", pb_fill)
-	left_col.add_child(_xp_bar)
-
-	_xp_pct_label = Label.new()
-	_xp_pct_label.text = "0%"
-	_xp_pct_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_xp_pct_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_xp_pct_label.add_theme_font_size_override("font_size", 15)
-	_xp_pct_label.add_theme_font_override("font", Styler.QUADRAT_FONT)
-	_xp_pct_label.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
-	_xp_pct_label.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_xp_bar.add_child(_xp_pct_label)
-
-	# Right column: Overall Details frame (aligned with top of Level label)
+	# Right column: Overall Details frame
 	var details_panel = PanelContainer.new()
 	details_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	details_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
@@ -182,7 +199,7 @@ func _build_ui() -> void:
 
 	_craft_header_label = Label.new()
 	_craft_header_label.text = "Crafting in Progress"
-	Styler.style_parchment_label(_craft_header_label, Styler.COLOR_GOLD)
+	Styler.style_parchment_label(_craft_header_label, Styler.COLOR_SECTION_HDR)
 	_craft_progress_container.add_child(_craft_header_label)
 
 	_craft_progress_bar = ProgressBar.new()
@@ -241,20 +258,18 @@ func _on_profession_info(data: Dictionary) -> void:
 	var xp: int = int(data.get("xp", 0))
 	var xp_to_next = data.get("xp_to_next", null)
 
-	_level_label.text = "Level %d" % lvl
+	_level_label.text = "Lv %d" % lvl
 
 	if xp_to_next != null and int(xp_to_next) > 0:
-		_xp_bar.max_value = int(xp_to_next)
-		_xp_bar.value = xp
+		var pct = int(round(float(xp) / float(int(xp_to_next)) * 100.0))
 		_details_xp_label.text = "XP: %d" % xp
 		_details_xp_next_label.text = "XP to next: %d" % int(xp_to_next)
-		var pct = int(round(float(xp) / float(int(xp_to_next)) * 100.0))
-		_xp_pct_label.text = str(pct) + "%"
+		var tween = _radial_progress.create_tween()
+		tween.tween_property(_radial_progress, "progress", float(pct), 0.5).from(0.0)
 	else:
-		_xp_bar.value = _xp_bar.max_value
 		_details_xp_label.text = "XP: MAX"
 		_details_xp_next_label.text = "Max level reached"
-		_xp_pct_label.text = "100%"
+		_radial_progress.progress = 100.0
 
 	var total_steps: int = int(data.get("total_profession_steps", 0))
 	_details_total_steps_label.text = "Total steps: %d" % total_steps
@@ -292,7 +307,7 @@ func _build_gathering_content(data: Dictionary) -> void:
 		act_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		act_lbl.add_theme_font_size_override("font_size", 18)
 		act_lbl.add_theme_font_override("font", Styler.JANDA_FONT)
-		act_lbl.add_theme_color_override("font_color", Styler.COLOR_GOLD)
+		act_lbl.add_theme_color_override("font_color", Styler.COLOR_SECTION_HDR)
 		_scroll_content.add_child(act_lbl)
 
 	# Two-column layout: Activity Details (left) + Loot (right)
@@ -323,7 +338,7 @@ func _build_gathering_content(data: Dictionary) -> void:
 
 	var details_header = Label.new()
 	details_header.text = "Activity Details"
-	Styler.style_parchment_label(details_header, Styler.COLOR_GOLD)
+	Styler.style_parchment_label(details_header, Styler.COLOR_SECTION_HDR)
 	left_vbox.add_child(details_header)
 
 	var steps_lbl = Label.new()
@@ -344,7 +359,7 @@ func _build_gathering_content(data: Dictionary) -> void:
 	# Overall stats separator
 	var overall_header = Label.new()
 	overall_header.text = "Overall"
-	Styler.style_parchment_label(overall_header, Styler.COLOR_GOLD)
+	Styler.style_parchment_label(overall_header, Styler.COLOR_SECTION_HDR)
 	left_vbox.add_child(overall_header)
 
 	var total_actions_lbl = Label.new()
@@ -379,7 +394,7 @@ func _build_gathering_content(data: Dictionary) -> void:
 
 	var loot_header = Label.new()
 	loot_header.text = "Loot"
-	Styler.style_parchment_label(loot_header, Styler.COLOR_GOLD)
+	Styler.style_parchment_label(loot_header, Styler.COLOR_SECTION_HDR)
 	right_vbox.add_child(loot_header)
 
 	if loot_items.is_empty():
@@ -466,7 +481,7 @@ func _build_alchemy_content(data: Dictionary) -> void:
 
 	var header_lbl = Label.new()
 	header_lbl.text = "Recipes"
-	Styler.style_parchment_label(header_lbl, Styler.COLOR_GOLD)
+	Styler.style_parchment_label(header_lbl, Styler.COLOR_SECTION_HDR)
 	_scroll_content.add_child(header_lbl)
 
 	if recipes.is_empty():
@@ -496,7 +511,7 @@ func _build_enchanting_content(data: Dictionary) -> void:
 
 	var header_lbl = Label.new()
 	header_lbl.text = "Enchanting Scrolls"
-	Styler.style_parchment_label(header_lbl, Styler.COLOR_GOLD)
+	Styler.style_parchment_label(header_lbl, Styler.COLOR_SECTION_HDR)
 	_scroll_content.add_child(header_lbl)
 
 	if recipes.is_empty():
@@ -694,7 +709,7 @@ func _on_craft_pressed(recipe_id: String, recipe_name: String) -> void:
 	_confirm_dialog.setup(text)
 	add_child(_confirm_dialog)
 	_confirm_dialog.confirmed.connect(func():
-		SignalManager.signal_StartCraftActivity.emit(act, Account.location, recipe_id)
+		SignalManager.signal_StartCraftActivity.emit(act, Account.location, recipe_id, 1)
 	)
 	_confirm_dialog.tree_exited.connect(func(): _confirm_dialog = null, CONNECT_ONE_SHOT)
 
