@@ -486,8 +486,8 @@ func _build_alchemy_content(data: Dictionary) -> void:
 				_craft_header_label.text = "Crafting: %s" % recipe.get("name", "Unknown")
 				if _last_crafting_steps_max == 0:
 					_last_crafting_steps_max = int(recipe.get("base_steps", 0))
-					_last_crafting_target_qty = int(Account.statuses.get("crafting_target_qty", 0))
-					_last_crafting_batch_done = 0
+					_last_crafting_target_qty = Account.crafting_target_qty
+					_last_crafting_batch_done = Account.crafting_batch_done
 					_update_craft_progress()
 				break
 
@@ -518,8 +518,8 @@ func _build_enchanting_content(data: Dictionary) -> void:
 				_craft_header_label.text = "Enchanting: %s" % recipe.get("name", "Unknown")
 				if _last_crafting_steps_max == 0:
 					_last_crafting_steps_max = int(recipe.get("base_steps", 0))
-					_last_crafting_target_qty = int(Account.statuses.get("crafting_target_qty", 0))
-					_last_crafting_batch_done = 0
+					_last_crafting_target_qty = Account.crafting_target_qty
+					_last_crafting_batch_done = Account.crafting_batch_done
 					_update_craft_progress()
 				break
 

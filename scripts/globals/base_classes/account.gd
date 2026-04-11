@@ -190,10 +190,16 @@ var avatar_id: int = 0
 var travel_destination
 var travel_steps
 var travel_steps_max
+var travel_route: Array = []
+var travel_route_index: int = 0
+var travel_current_hop_steps: int = 0
+var travel_current_hop_max: int = 0
 
 # crafting statuses
 var crafting_recipe_id: String = ""
 var crafting_steps: int = 0
+var crafting_target_qty: int = 0
+var crafting_batch_done: int = 0
 
 var variance
 var vit_crit_soften
