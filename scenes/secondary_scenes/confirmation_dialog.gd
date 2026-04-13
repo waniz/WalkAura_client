@@ -89,12 +89,13 @@ func _ready() -> void:
 	if _text != "":
 		_label.text = _text
 
-	# Backdrop tap → cancel
-	gui_input.connect(_on_backdrop_input)
-
 	# Fade in
 	modulate.a = 0.0
 	create_tween().tween_property(self, "modulate:a", 1.0, 0.15)
+
+	# Backdrop tap → cancel (deferred so the emulated mouse click from the
+	# same touch that opened this dialog doesn't immediately close it)
+	get_tree().process_frame.connect(func(): gui_input.connect(_on_backdrop_input), CONNECT_ONE_SHOT)
 
 
 func _on_confirm() -> void:
@@ -109,4 +110,6 @@ func _on_cancel() -> void:
 
 func _on_backdrop_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_on_cancel()
+	elif event is InputEventScreenTouch and event.pressed:
 		_on_cancel()

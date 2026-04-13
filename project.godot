@@ -15,7 +15,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="WalkAura"
-config/version="0.2.3.154"
+config/version="0.2.4.162"
 run/main_scene="uid://dlfywtlps2ee4"
 config/features=PackedStringArray("4.6", "Mobile")
 boot_splash/bg_color=Color(0.14117648, 0.14117648, 0.14117648, 0.18039216)
@@ -50,7 +50,7 @@ window/version="0.2.0.127"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/GodotAndroidPlugin/plugin.cfg")
+enabled=PackedStringArray("res://addons/GodotAndroidPlugin/plugin.cfg", "res://addons/radial_progress/plugin.cfg")
 
 [file_customization]
 

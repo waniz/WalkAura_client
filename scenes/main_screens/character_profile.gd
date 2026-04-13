@@ -120,6 +120,9 @@ const SUSTAIN_KEYS = [
 	{"k":"healing_amp_rating",         "n":"Healing Power",         "p": "healing_amp"},
 ]
 
+var ATTR_RING_COLORS = {}
+var PROF_GROUP_RING_COLORS = {}
+
 const PROFESSION_GROUPS = [
 	{
 		"name": "Gathering",
@@ -145,6 +148,21 @@ const PROFESSION_GROUPS = [
 		]
 	},
 ]
+
+const PRIMARY_TOOLTIPS = {
+	"Strength":
+		"Physical ATK (×3), Phys DEF (×4),\nArmor Pen (×5.1), Crit Dmg (×2),\nAGI synergy (×1.5).",
+	"Agility":
+		"Hit Rating (×2.8), Crit Chance (×4),\nHaste (×6), Dodge (×3),\nCrit Dmg (×2), Phys DEF (×1.5).",
+	"Vitality":
+		"HP pool, Shield pool,\nDmg Reduction (×2), Versatility (×3),\nSoftens incoming crits.",
+	"Intellect":
+		"Magic ATK (×3), Magic DEF (×4),\nMagic Pen (×5.1), Crit Dmg (×2.5),\nHaste (×0.4).",
+	"Spirit":
+		"MP pool, Magic DEF (×1.5),\nMagic ATK (×1.5),\nBoosts walking regeneration.",
+	"Luck":
+		"Crit Chance (×1), Crit Dmg (×1),\nDodge (×0.55), Hit (×0.7),\nDmg Reduction (×0.55), Phys DEF (×0.8).",
+}
 
 const STAT_TOOLTIPS = {
 	# ── Offense ──────────────────────────────────────────────────────────────
@@ -238,6 +256,19 @@ var _professions_vbox: VBoxContainer = null
 
 
 func _ready() -> void:
+	ATTR_RING_COLORS = {
+		"Strength"  : Styler.RING_COLOR_STRENGTH,
+		"Agility"   : Styler.RING_COLOR_AGILITY,
+		"Vitality"  : Styler.RING_COLOR_VITALITY,
+		"Intellect" : Styler.RING_COLOR_INTELLECT,
+		"Spirit"    : Styler.RING_COLOR_SPIRIT,
+		"Luck"      : Styler.RING_COLOR_LUCK,
+	}
+	PROF_GROUP_RING_COLORS = {
+		"Gathering" : Styler.RING_COLOR_GATHERING,
+		"Crafting"  : Styler.RING_COLOR_CRAFTING,
+		"Battle"    : Styler.RING_COLOR_BATTLE,
+	}
 	$VBoxContainer.offset_top = Styler.content_top
 	$VBoxContainer.offset_bottom = Styler.content_bottom
 
@@ -287,6 +318,48 @@ func set_stats(d: Dictionary) -> void:
 		_populate_professions(d)
 
 # ---------- UI Builders ----------
+func _create_icon_ring(icon_size: int, radius: float, thickness: float,
+		pct: int, _ring_color: Color, is_max_level: bool) -> Control:
+	var wrapper_size = int(radius * 2.0)
+	var wrapper = Control.new()
+	wrapper.custom_minimum_size = Vector2(wrapper_size, wrapper_size)
+	wrapper.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var rp = RadialProgress.new()
+	rp.ring = true
+	rp.radius = radius
+	rp.thickness = thickness
+	rp.max_value = 100.0
+	rp.bg_color = Color(1.0, 1.0, 1.0, 0.15)
+	rp.border_width = 1.0
+	rp.border_color = Color(0, 0, 0, 0.4)
+	rp.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if is_max_level:
+		rp.progress = 100.0
+		rp.bar_color = Color.WHITE
+	else:
+		rp.progress = 0.0
+		rp.bar_color = Color.WHITE
+	rp.position = Vector2(radius, radius)
+	wrapper.add_child(rp)
+
+	var icon = TextureRect.new()
+	icon.custom_minimum_size = Vector2(icon_size, icon_size)
+	icon.name = "Icon"
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	var offset = (wrapper_size - icon_size) / 2.0
+	icon.position = Vector2(offset, offset)
+	wrapper.add_child(icon)
+
+	# Animate ring from 0 to actual pct (skip for max level, already at 100)
+	if not is_max_level and pct > 0:
+		var tween = rp.create_tween()
+		tween.tween_property(rp, "progress", float(pct), 0.5).from(0.0)
+
+	return wrapper
+
 func _make_mini_card_primary(stat_name: String, lvl: int, xp: int, bonus: int, accent: Color) -> Control:
 	# --- parse & split value into whole + fractional parts ---
 	var floor_exp: int = STATS_TOTAL_TO_LEVEL.get(str(lvl),     xp)
@@ -300,7 +373,7 @@ func _make_mini_card_primary(stat_name: String, lvl: int, xp: int, bonus: int, a
 
 	# --- card container ---
 	var panel = PanelContainer.new()
-	panel.custom_minimum_size = Vector2(150, 60)
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var _sb = StyleBoxFlat.new()
 	_sb.bg_color     = Color(0.0, 0.0, 0.0, 0.06)
 	_sb.border_color = Color(0.0, 0.0, 0.0, 0.20)
@@ -314,19 +387,11 @@ func _make_mini_card_primary(stat_name: String, lvl: int, xp: int, bonus: int, a
 	main_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	panel.add_child(main_hbox)
 
-	# --- icon position ---
-	var icon_box = VBoxContainer.new()
-	icon_box.custom_minimum_size.x = 46
-	icon_box.size_flags_vertical   = Control.SIZE_EXPAND_FILL
-	main_hbox.add_child(icon_box)
-
-	var icon = TextureRect.new()
-	icon.custom_minimum_size = Vector2(42, 42)
-	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	icon.name = "Icon"
-	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	# --- icon with radial ring (2x size) ---
+	var is_max = (next_exp < 0)
+	var ring_color = ATTR_RING_COLORS.get(stat_name, accent)
+	var ring_wrapper = _create_icon_ring(84, 48.0, 6.0, pct, ring_color, is_max)
+	ring_wrapper.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 
 	var icon_key = {
 		"Strength" : "attributes_strength",
@@ -337,67 +402,113 @@ func _make_mini_card_primary(stat_name: String, lvl: int, xp: int, bonus: int, a
 		"Luck"     : "attributes_luck",
 	}
 
-	icon.texture = ItemDB.get_icon(icon_key.get(stat_name))
-	icon_box.add_child(icon)
+	ring_wrapper.get_node("Icon").texture = ItemDB.get_icon(icon_key.get(stat_name))
+	main_hbox.add_child(ring_wrapper)
 
-	# --- first line: name + value ---
+	# --- name + level ---
 	var vb = VBoxContainer.new()
 	vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vb.size_flags_vertical   = Control.SIZE_EXPAND_FILL
+	vb.size_flags_vertical   = Control.SIZE_SHRINK_CENTER
+	vb.add_theme_constant_override("separation", 2)
 	main_hbox.add_child(vb)
-
-	var hb = HBoxContainer.new()
-	hb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	hb.alignment = BoxContainer.ALIGNMENT_CENTER
-	vb.add_child(hb)
 
 	var n_lbl = Label.new()
 	n_lbl.text = stat_name
 	n_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	n_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	n_lbl.add_theme_font_size_override("font_size", 18)
 	n_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	n_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
-	hb.add_child(n_lbl)
+	vb.add_child(n_lbl)
 
 	var v_lbl = Label.new()
-	v_lbl.text = str(whole) + " + " + str(bonus)
-	v_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	v_lbl.add_theme_font_size_override("font_size", 18)
+	v_lbl.text = "Lv %d + %d" % [whole, bonus]
+	v_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v_lbl.add_theme_font_size_override("font_size", 22)
 	v_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 	v_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
-	hb.add_child(v_lbl)
+	vb.add_child(v_lbl)
 
-	# --- second line: fractional progress bar (0..100) ---
-	var pb = ProgressBar.new()
-	pb.min_value = 0
-	pb.max_value = 100
-	pb.value = pct
-	pb.show_percentage = false
-	pb.custom_minimum_size = Vector2(0, 18)
-	var _pb_bg = StyleBoxFlat.new()
-	_pb_bg.bg_color = Color(0, 0, 0, 0.2)
-	_pb_bg.set_corner_radius_all(4)
-	pb.add_theme_stylebox_override("background", _pb_bg)
-	var _pb_fill = StyleBoxFlat.new()
-	_pb_fill.bg_color = accent
-	_pb_fill.set_corner_radius_all(4)
-	pb.add_theme_stylebox_override("fill", _pb_fill)
-	vb.add_child(pb)
-
-	var pct_lbl = Label.new()
-	pct_lbl.text = str(pct) + "%"
-	pct_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	pct_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	pct_lbl.add_theme_font_size_override("font_size", 12)
-	pct_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
-	pct_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
-	pct_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
-	pb.add_child(pct_lbl)
+	# --- tap/click tooltip ---
+	var tip_text = PRIMARY_TOOLTIPS.get(stat_name, "")
+	if not tip_text.is_empty():
+		panel.mouse_filter = Control.MOUSE_FILTER_STOP
+		panel.gui_input.connect(func(event: InputEvent):
+			if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+				_show_tooltip_popup(panel, stat_name, tip_text)
+		)
 
 	return panel
 
-func _make_mini_card(stat_name: String, lvl: int, activity_exp: int, accent: Color) -> Control:
+
+var _active_tooltip: Control = null
+
+func _show_tooltip_popup(anchor: Control, title: String, body: String) -> void:
+	# Dismiss any existing tooltip
+	if _active_tooltip and is_instance_valid(_active_tooltip):
+		_active_tooltip.queue_free()
+		_active_tooltip = null
+
+	# Full-screen dismiss layer
+	var overlay = Control.new()
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	overlay.z_index = 10
+	get_tree().current_scene.add_child(overlay)
+	_active_tooltip = overlay
+
+	# Tap anywhere to dismiss
+	overlay.gui_input.connect(func(event: InputEvent):
+		if event is InputEventMouseButton and event.pressed:
+			if _active_tooltip and is_instance_valid(_active_tooltip):
+				_active_tooltip.queue_free()
+				_active_tooltip = null
+	)
+
+	# Tooltip panel
+	var tip_panel = PanelContainer.new()
+	var sb = StyleBoxFlat.new()
+	sb.bg_color = Styler.COLOR_PARCHMENT
+	sb.border_color = Color(0.0, 0.0, 0.0, 0.3)
+	sb.set_border_width_all(2)
+	sb.set_corner_radius_all(8)
+	sb.shadow_color = Color(0, 0, 0, 0.3)
+	sb.shadow_size = 6
+	sb.content_margin_left = 12
+	sb.content_margin_right = 12
+	sb.content_margin_top = 8
+	sb.content_margin_bottom = 8
+	tip_panel.add_theme_stylebox_override("panel", sb)
+	tip_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	overlay.add_child(tip_panel)
+
+	var vb = VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 4)
+	tip_panel.add_child(vb)
+
+	var title_lbl = Label.new()
+	title_lbl.text = title
+	Styler.style_parchment_label(title_lbl, Styler.COLOR_SECTION_HDR, 18)
+	vb.add_child(title_lbl)
+
+	var body_lbl = Label.new()
+	body_lbl.text = body
+	Styler.style_parchment_label(body_lbl, Styler.COLOR_TEXT_DARK, 14)
+	vb.add_child(body_lbl)
+
+	# Position near the anchor
+	await get_tree().process_frame
+	var anchor_rect = anchor.get_global_rect()
+	var vp_size = get_viewport().get_visible_rect().size
+	var tip_size = tip_panel.size
+	var x = clamp(anchor_rect.position.x, 8.0, vp_size.x - tip_size.x - 8.0)
+	var y = anchor_rect.end.y + 4.0
+	if y + tip_size.y > vp_size.y - 8.0:
+		y = anchor_rect.position.y - tip_size.y - 4.0
+	tip_panel.global_position = Vector2(x, y)
+
+
+func _make_mini_card(stat_name: String, lvl: int, activity_exp: int, accent: Color, group_name: String = "") -> Control:
 	# --- parse & split value into whole + fractional parts ---
 	var next_exp:  int = ACTIVITY_TOTAL_TO_LEVEL.get(str(lvl + 1), -1)
 	var lvl_current:  int = max(0, activity_exp)
@@ -420,14 +531,11 @@ func _make_mini_card(stat_name: String, lvl: int, activity_exp: int, accent: Col
 	main_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	panel.add_child(main_hbox)
 
-	# --- icon (left-aligned, no expand) ---
-	var icon = TextureRect.new()
-	icon.custom_minimum_size = Vector2(52, 52)
-	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	icon.name = "Icon"
-	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	# --- icon with radial ring (2x size) ---
+	var is_max = (next_exp <= 0)
+	var ring_color = PROF_GROUP_RING_COLORS.get(group_name, accent)
+	var ring_wrapper = _create_icon_ring(104, 60.0, 6.0, pct, ring_color, is_max)
+	ring_wrapper.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 
 	var icon_key = {
 		"Herbalism"    : "herbalism",
@@ -440,19 +548,15 @@ func _make_mini_card(stat_name: String, lvl: int, activity_exp: int, accent: Col
 		"Rift Explorer": "rift",
 	}
 
-	icon.texture = ItemDB.get_icon(icon_key.get(stat_name))
-	main_hbox.add_child(icon)
+	ring_wrapper.get_node("Icon").texture = ItemDB.get_icon(icon_key.get(stat_name))
+	main_hbox.add_child(ring_wrapper)
 
-	# --- name (centered) + level + progress bar below ---
+	# --- name + level ---
 	var vb = VBoxContainer.new()
 	vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vb.size_flags_vertical   = Control.SIZE_EXPAND_FILL
+	vb.size_flags_vertical   = Control.SIZE_SHRINK_CENTER
+	vb.add_theme_constant_override("separation", 2)
 	main_hbox.add_child(vb)
-
-	var hb = HBoxContainer.new()
-	hb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hb.alignment = BoxContainer.ALIGNMENT_CENTER
-	vb.add_child(hb)
 
 	var n_lbl = Label.new()
 	n_lbl.text = stat_name
@@ -461,42 +565,15 @@ func _make_mini_card(stat_name: String, lvl: int, activity_exp: int, accent: Col
 	n_lbl.add_theme_font_size_override("font_size", 18)
 	n_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 	n_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
-	hb.add_child(n_lbl)
+	vb.add_child(n_lbl)
 
 	var v_lbl = Label.new()
-	v_lbl.text = str(whole)
-	v_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	v_lbl.text = "Lv %d" % whole
+	v_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v_lbl.add_theme_font_size_override("font_size", 22)
 	v_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 	v_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
-	hb.add_child(v_lbl)
-
-	# --- second line: fractional progress bar (0..100) ---
-	var pb = ProgressBar.new()
-	pb.min_value = 0
-	pb.max_value = 100
-	pb.value = pct
-	pb.show_percentage = false
-	pb.custom_minimum_size = Vector2(0, 18)
-	var _pb_bg = StyleBoxFlat.new()
-	_pb_bg.bg_color = Color(0, 0, 0, 0.2)
-	_pb_bg.set_corner_radius_all(4)
-	pb.add_theme_stylebox_override("background", _pb_bg)
-	var _pb_fill = StyleBoxFlat.new()
-	_pb_fill.bg_color = accent
-	_pb_fill.set_corner_radius_all(4)
-	pb.add_theme_stylebox_override("fill", _pb_fill)
-	vb.add_child(pb)
-
-	var pct_lbl = Label.new()
-	pct_lbl.text = str(pct) + "%"
-	pct_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	pct_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	pct_lbl.add_theme_font_size_override("font_size", 12)
-	pct_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
-	pct_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
-	pct_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
-	pb.add_child(pct_lbl)
+	vb.add_child(v_lbl)
 
 	# Click handler — open profession detail overlay
 	var prof_key_map = {
@@ -664,7 +741,7 @@ func _make_row(label_text: String, value: String, percent_: String, accent: Colo
 	hb.add_child(val_lbl)
 	return hb
 	
-func _style_section_card(card: PanelContainer, title: String, _accent: Color) -> void:
+func _style_section_card(card: PanelContainer, _title: String, _accent: Color) -> void:
 	var sb = StyleBoxFlat.new()
 	sb.bg_color     = Color(0.0, 0.0, 0.0, 0.06)
 	sb.border_color = Color(0.0, 0.0, 0.0, 0.20)
@@ -676,12 +753,6 @@ func _style_section_card(card: PanelContainer, title: String, _accent: Color) ->
 		var vb = VBoxContainer.new()
 		card.remove_child(grid)
 		card.add_child(vb)
-		var hdr = Label.new()
-		hdr.text = title
-		hdr.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
-		hdr.add_theme_font_size_override("font_size", 22)
-		hdr.add_theme_font_override("font", Styler.JANDA_FONT)
-		vb.add_child(hdr)
 		vb.add_child(grid)
 		
 func _clear(node: Node) -> void:
@@ -784,7 +855,6 @@ func _populate_stats_list(d: Dictionary) -> void:
 	_clear(_stats_list_vbox)
 	match _current_stats_mode:
 		0:
-			_stats_list_vbox.add_child(_make_section_header("Offense"))
 			for i in range(OFFENSE_KEYS.size()):
 				var entry = OFFENSE_KEYS[i]
 				var p_key = entry.get("p", 0)
@@ -797,7 +867,6 @@ func _populate_stats_list(d: Dictionary) -> void:
 				_stats_list_vbox.add_child(_make_stat_row(entry.n, display, i, false))
 			_stats_list_vbox.add_child(_make_magic_group("Damage Amplifiers", MAGIC_DAMAGE_KEYS, d))
 		1:
-			_stats_list_vbox.add_child(_make_section_header("Defense"))
 			for i in range(DEFENSE_KEYS.size()):
 				var entry = DEFENSE_KEYS[i]
 				var p_key = entry.get("p", 0)
@@ -969,9 +1038,8 @@ func _make_stat_row(stat_name: String, value: String, idx: int, show_icon: bool 
 func _make_section_header(title: String) -> Control:
 	var lbl = Label.new()
 	lbl.text = title
-	lbl.add_theme_font_override("font", Styler.JANDA_FONT)
-	lbl.add_theme_font_size_override("font_size", 16)
-	lbl.add_theme_color_override("font_color", Styler.COLOR_GOLD)
+	lbl.add_theme_font_size_override("font_size", 18)
+	lbl.add_theme_color_override("font_color", Styler.COLOR_SECTION_HDR)
 	var margin = MarginContainer.new()
 	margin.add_theme_constant_override("margin_top", 6)
 	margin.add_theme_constant_override("margin_bottom", 2)
@@ -1034,7 +1102,7 @@ func _populate_professions(d: Dictionary) -> void:
 		var hdr = Label.new()
 		hdr.text = group.name
 		hdr.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
-		hdr.add_theme_font_size_override("font_size", 16)
+		hdr.add_theme_font_size_override("font_size", 22)
 		hdr.add_theme_font_override("font", Styler.JANDA_FONT)
 		frame_vb.add_child(hdr)
 
@@ -1047,13 +1115,13 @@ func _populate_professions(d: Dictionary) -> void:
 			frame_vb.add_child(row)
 
 			var e1 = entries[row_start]
-			var card1 = _make_mini_card(e1.n, int(d.get(e1.k, 0)), int(d.get(e1.exp, 0)), Styler.COL_PRIMARY)
+			var card1 = _make_mini_card(e1.n, int(d.get(e1.k, 0)), int(d.get(e1.exp, 0)), Styler.COL_PRIMARY, group.name)
 			card1.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			row.add_child(card1)
 
 			if row_start + 1 < entries.size():
 				var e2 = entries[row_start + 1]
-				var card2 = _make_mini_card(e2.n, int(d.get(e2.k, 0)), int(d.get(e2.exp, 0)), Styler.COL_PRIMARY)
+				var card2 = _make_mini_card(e2.n, int(d.get(e2.k, 0)), int(d.get(e2.exp, 0)), Styler.COL_PRIMARY, group.name)
 				card2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 				row.add_child(card2)
 			else:

@@ -15,6 +15,8 @@ class_name CharacterHUD extends Control
 @onready var level_label: Label = $Avatar/LevelBadge/LevelLabel
 
 var _shield_overlay: ProgressBar = null
+var _level_ring: RadialProgress = null
+var _level_ring_label: Label = null
 
 
 func _ready() -> void:
@@ -80,14 +82,68 @@ func _ready() -> void:
 	avatar.add_child(border_panel)
 	avatar.move_child(border_panel, 0)
 
-	# ── Level badge: dark panel with thick border ──────────────────────────
-	var badge_style = StyleBoxFlat.new()
-	badge_style.bg_color = Color.from_rgba8(16, 18, 24, 255)
-	badge_style.border_color = Color.from_rgba8(60, 50, 40, 255)
-	badge_style.set_border_width_all(5)
-	badge_style.set_corner_radius_all(10)
-	badge_style.set_content_margin_all(4)
-	level_badge.add_theme_stylebox_override("panel", badge_style)
+	# ── Level badge: replace rectangle with circular radial ring ──────────
+	level_badge.visible = false
+
+	var ring_size = 50
+	var ring_radius = 24.0
+	var ring_thickness = 6.0
+
+	var ring_wrapper = Control.new()
+	ring_wrapper.custom_minimum_size = Vector2(ring_size, ring_size)
+	ring_wrapper.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ring_wrapper.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	ring_wrapper.offset_left = -30
+	ring_wrapper.offset_top = -30
+	ring_wrapper.offset_right = 20
+	ring_wrapper.offset_bottom = 20
+	avatar.add_child(ring_wrapper)
+
+	# Dark circular background behind the ring
+	var bg_circle = Control.new()
+	bg_circle.position = Vector2(ring_size / 2.0, ring_size / 2.0)
+	bg_circle.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bg_circle.set_script(null)
+	ring_wrapper.add_child(bg_circle)
+	# Draw dark circle via _draw override - use a simple RadialProgress for this
+	var bg_disc = RadialProgress.new()
+	bg_disc.ring = false
+	bg_disc.radius = ring_radius + 2.0
+	bg_disc.thickness = ring_radius + 2.0
+	bg_disc.max_value = 100.0
+	bg_disc.progress = 100.0
+	bg_disc.bg_color = Color.from_rgba8(16, 18, 24, 255)
+	bg_disc.bar_color = Color.from_rgba8(16, 18, 24, 255)
+	bg_disc.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bg_disc.position = Vector2(ring_size / 2.0, ring_size / 2.0)
+	ring_wrapper.add_child(bg_disc)
+
+	# XP progress ring
+	_level_ring = RadialProgress.new()
+	_level_ring.ring = true
+	_level_ring.radius = ring_radius
+	_level_ring.thickness = ring_thickness
+	_level_ring.max_value = 100.0
+	_level_ring.progress = 0.0
+	_level_ring.bg_color = Color(1, 1, 1, 0.15)
+	_level_ring.bar_color = Styler.COL_PRIMARY
+	_level_ring.border_width = 1.0
+	_level_ring.border_color = Color(0, 0, 0, 0.5)
+	_level_ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_level_ring.position = Vector2(ring_size / 2.0, ring_size / 2.0)
+	ring_wrapper.add_child(_level_ring)
+
+	# Level number label centered
+	_level_ring_label = Label.new()
+	_level_ring_label.text = "1"
+	_level_ring_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_level_ring_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_level_ring_label.add_theme_font_override("font", Styler.JANDA_FONT)
+	_level_ring_label.add_theme_font_size_override("font_size", 14)
+	_level_ring_label.add_theme_color_override("font_color", Styler.COL_PRIMARY)
+	_level_ring_label.size = Vector2(ring_size, ring_size)
+	_level_ring_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ring_wrapper.add_child(_level_ring_label)
 
 	_update_character_hud(true)
 
@@ -111,6 +167,33 @@ func _set_bar(bar: ProgressBar, label: Label, cur: int, maxv: int) -> void:
 	var tw = create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	tw.tween_property(bar, "value", clamp(cur, 0, maxv), 0.25)
 	
+func _update_level_ring() -> void:
+	if _level_ring == null:
+		return
+	var lvl = int(Account.level)
+	var xp = int(Account.level_exp) if Account.level_exp != null else 0
+	_level_ring_label.text = str(lvl)
+
+	var table = ServerParams.ACCOUNT_PROGRESSION_LEVELS
+	if table == null:
+		_level_ring.progress = 0.0
+		return
+
+	var floor_xp = int(table.get(str(lvl), 0))
+	var next_xp = int(table.get(str(lvl + 1), -1))
+	if next_xp <= 0:
+		# Max level
+		_level_ring.progress = 100.0
+		_level_ring.bar_color = Styler.COL_PRIMARY
+		return
+
+	var current = max(0, xp - floor_xp)
+	var needed = max(1, next_xp - floor_xp)
+	var pct = clamp(float(current) / float(needed) * 100.0, 0.0, 100.0)
+
+	var tween = _level_ring.create_tween()
+	tween.tween_property(_level_ring, "progress", pct, 0.4).from(_level_ring.progress)
+
 func _on_avatar_changed(id: int) -> void:
 	var tex = ItemDB.AVATARS.get(str(id), ItemDB.AVATARS.get("0"))
 	if tex != null:
@@ -165,6 +248,7 @@ func _update_character_hud(_value):
 	)
 	name_level.text = "[color=orange]{0}[/color]".format([Account.username])
 	level_label.text = str(Account.level)
+	_update_level_ring()
 	var current_activity_name: String = GameTextEn.activities_texts.get(Account.activity, "")
 	if current_activity_name.is_empty():
 		panel_container.visible = false

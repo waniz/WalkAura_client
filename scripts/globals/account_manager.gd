@@ -54,7 +54,7 @@ func parse_message(message):
 		show_activity_progress(json.data)
 	elif cmd in ["steps_update_cheat", "steps_update_android"]:
 		var steps_amount = int(json.data.get("data", {}).get("steps", 0))
-		if steps_amount > 0:
+		if steps_amount > 0 and Account.activity == 0:
 			SignalManager.signal_StepToastUpdate.emit(steps_amount, {}, {}, [])
 	elif cmd == "inventory":
 		update_inventory(json.data)
@@ -74,6 +74,14 @@ func parse_message(message):
 		signal_TalentsConfigReceived.emit(json.data.data)
 	elif cmd in ["talents_data", "talent_allocate", "talent_respec", "talent_points_earned"]:
 		signal_TalentsDataReceived.emit(json.data.data)
+	elif cmd == "travel_cost":
+		var data = json.data.get("data", {})
+		SignalManager.signal_TravelCostReceived.emit(
+			int(data.get("location", 0)),
+			int(data.get("steps", 0))
+		)
+	elif cmd == "travel_passing_through":
+		_handle_travel_passing_through(json.data)
 	elif cmd.begins_with("error:"):
 		_handle_server_error(json.data)
 		
@@ -192,8 +200,10 @@ func get_account_attrs(json_msg):
 	for key in ["rift_id", "rift_steps", "rift_steps_max",
 				 "rift_milestone_index", "rift_total_milestones",
 				 "travel_destination", "travel_steps", "travel_steps_max",
-				 "avatar_id", "crafting_steps"]:
+				 "travel_route_index", "travel_current_hop_steps", "travel_current_hop_max",
+				 "avatar_id", "crafting_steps", "crafting_target_qty", "crafting_batch_done"]:
 		Account.set(key, int(st.get(key, 0)))
+	Account.travel_route = st.get("travel_route", [])
 
 	Account.rift_instance_id = str(st.get("rift_instance_id", ""))
 	Account.rift_pending_fight = bool(st.get("rift_pending_fight", false))
@@ -256,3 +266,9 @@ func handle_disenchant_result(json_msg) -> void:
 
 func handle_profession_info(json_msg) -> void:
 	SignalManager.signal_ProfessionInfoReceived.emit(json_msg.data)
+
+func _handle_travel_passing_through(json_msg) -> void:
+	var data = json_msg.get("data", {})
+	var loc_name = data.get("location_name", "")
+	if loc_name != "":
+		SignalManager.signal_TravelPassingThrough.emit(loc_name)

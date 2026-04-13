@@ -1,14 +1,14 @@
 extends CanvasLayer
 
-const PAGE_LABELS = ["Profile", "Location", "Inventory", "Skills", ""]
+const PAGE_LABELS = ["Profile", "Inventory", "Location", "Skills", "Quests"]
 const PAGE_ICONS = [
 	"res://assets/general_icons/hud/buttom_hud_character_without_face.png",
-	"res://assets/general_icons/hud/buttom_hud_location.png",
 	"res://assets/general_icons/hud/buttom_hud_inventory.png",
-	"",
-	"",
+	"res://assets/general_icons/hud/buttom_hud_location.png",
+	"res://assets/general_icons/hud/buttom_hud_skills.png",
+	"res://assets/general_icons/hud/buttom_hud_quest.png",
 ]
-const NAV_COUNT = 4
+const NAV_COUNT = 4  # Quests (index 4) shows icon+label but is disabled until a Quests scene exists
 
 @onready var _button_panel: PanelContainer = $ButtonPanel
 
@@ -30,7 +30,7 @@ func _ready() -> void:
 	_precache_styleboxes()
 	_build_buttons()
 	SignalManager.signal_PageChanged.connect(_on_page_changed)
-	_on_page_changed(0)
+	_on_page_changed(2)
 
 
 func _precache_styleboxes() -> void:
@@ -109,13 +109,13 @@ func _make_slot(idx: int) -> Dictionary:
 
 	var vbox = VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	vbox.add_theme_constant_override("separation", 3)
+	vbox.alignment = BoxContainer.ALIGNMENT_END
+	vbox.add_theme_constant_override("separation", 1)
 	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	btn.add_child(vbox)
 
 	var icon = TextureRect.new()
-	icon.custom_minimum_size = Vector2(42, 42)
+	icon.custom_minimum_size = Vector2(48, 48)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER

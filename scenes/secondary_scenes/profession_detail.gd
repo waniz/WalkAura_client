@@ -7,19 +7,31 @@ const CONFIRMATION_DIALOG = preload("res://scenes/secondary_scenes/confirmation_
 var _profession_name: String = ""
 var _confirm_dialog: Control = null
 var _loading_label: Label
-var _xp_bar: ProgressBar
-var _xp_pct_label: Label
+var _radial_progress: Node
 var _details_xp_label: Label
 var _details_xp_next_label: Label
 var _details_total_steps_label: Label
 var _level_label: Label
 var _scroll_content: VBoxContainer
+
+const PROF_ICON_KEY = {
+	"herbalism"   : "herbalism",
+	"alchemy"     : "alchemy",
+	"enchanting"  : "enchanting",
+	"hunting"     : "hunting",
+	"mining"      : "mining",
+	"woodcutting" : "woodcutting",
+	"fishing"     : "fishing",
+}
 var _craft_progress_container: VBoxContainer
 var _craft_progress_bar: ProgressBar
 var _craft_progress_label: Label
+var _craft_steps_label: Label
 var _craft_header_label: Label
 var _craft_stop_btn: Button
 var _last_crafting_steps_max: int = 0
+var _last_crafting_target_qty: int = 0
+var _last_crafting_batch_done: int = 0
 
 
 func set_profession(prof_name: String) -> void:
@@ -100,45 +112,53 @@ func _build_ui() -> void:
 	top_row.add_theme_constant_override("separation", 8)
 	root_vbox.add_child(top_row)
 
-	# Left column: level label + xp bar stacked
+	# Left column: icon with radial ring + level label
 	var left_col = VBoxContainer.new()
-	left_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left_col.size_flags_stretch_ratio = 1.0
-	left_col.add_theme_constant_override("separation", 6)
+	left_col.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	left_col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	left_col.add_theme_constant_override("separation", 4)
 	top_row.add_child(left_col)
 
+	var ring_radius = 34.0
+	var ring_size = int(ring_radius * 2.0)
+	var ring_wrapper = Control.new()
+	ring_wrapper.custom_minimum_size = Vector2(ring_size, ring_size)
+	ring_wrapper.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	left_col.add_child(ring_wrapper)
+
+	_radial_progress = RadialProgress.new()
+	_radial_progress.ring = true
+	_radial_progress.radius = ring_radius
+	_radial_progress.thickness = 6.0
+	_radial_progress.max_value = 100.0
+	_radial_progress.progress = 0.0
+	_radial_progress.bg_color = Color(1.0, 1.0, 1.0, 0.15)
+	_radial_progress.bar_color = Color.WHITE
+	_radial_progress.border_width = 1.0
+	_radial_progress.border_color = Color(0, 0, 0, 0.4)
+	_radial_progress.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_radial_progress.position = Vector2(ring_radius, ring_radius)
+	ring_wrapper.add_child(_radial_progress)
+
+	var prof_icon = TextureRect.new()
+	prof_icon.custom_minimum_size = Vector2(52, 52)
+	prof_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	prof_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	prof_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var icon_offset = (ring_size - 52) / 2.0
+	prof_icon.position = Vector2(icon_offset, icon_offset)
+	var icon_id = PROF_ICON_KEY.get(_profession_name, "")
+	if not icon_id.is_empty():
+		prof_icon.texture = ItemDB.get_icon(icon_id)
+	ring_wrapper.add_child(prof_icon)
+
 	_level_label = Label.new()
-	_level_label.text = "Level: ..."
-	Styler.style_parchment_label(_level_label, Styler.COLOR_GOLD, 18)
+	_level_label.text = "..."
+	_level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	Styler.style_parchment_label(_level_label, Styler.COLOR_SECTION_HDR, 16)
 	left_col.add_child(_level_label)
 
-	_xp_bar = ProgressBar.new()
-	_xp_bar.custom_minimum_size = Vector2(0, 24)
-	_xp_bar.show_percentage = false
-	_xp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var pb_bg = StyleBoxFlat.new()
-	pb_bg.bg_color = Color(0.0, 0.0, 0.0, 0.2)
-	pb_bg.set_corner_radius_all(8)
-	_xp_bar.add_theme_stylebox_override("background", pb_bg)
-	var pb_fill = StyleBoxFlat.new()
-	pb_fill.bg_color = Styler.COL_PRIMARY
-	pb_fill.shadow_color = Color(0, 0, 0, 0.25)
-	pb_fill.shadow_size = 2
-	pb_fill.set_corner_radius_all(8)
-	_xp_bar.add_theme_stylebox_override("fill", pb_fill)
-	left_col.add_child(_xp_bar)
-
-	_xp_pct_label = Label.new()
-	_xp_pct_label.text = "0%"
-	_xp_pct_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_xp_pct_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_xp_pct_label.add_theme_font_size_override("font_size", 15)
-	_xp_pct_label.add_theme_font_override("font", Styler.QUADRAT_FONT)
-	_xp_pct_label.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
-	_xp_pct_label.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_xp_bar.add_child(_xp_pct_label)
-
-	# Right column: Overall Details frame (aligned with top of Level label)
+	# Right column: Overall Details frame
 	var details_panel = PanelContainer.new()
 	details_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	details_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
@@ -182,7 +202,7 @@ func _build_ui() -> void:
 
 	_craft_header_label = Label.new()
 	_craft_header_label.text = "Crafting in Progress"
-	Styler.style_parchment_label(_craft_header_label, Styler.COLOR_GOLD)
+	Styler.style_parchment_label(_craft_header_label, Styler.COLOR_SECTION_HDR)
 	_craft_progress_container.add_child(_craft_header_label)
 
 	_craft_progress_bar = ProgressBar.new()
@@ -198,10 +218,17 @@ func _build_ui() -> void:
 	_craft_progress_bar.add_theme_stylebox_override("fill", cpb_fill)
 	_craft_progress_container.add_child(_craft_progress_bar)
 
-	_craft_progress_label = Label.new()
+	_craft_progress_label = Label.new()  # Primary: "Batch: 7 / 20"
 	_craft_progress_label.text = ""
-	Styler.style_parchment_label(_craft_progress_label, Styler.COLOR_TEXT_DARK)
+	Styler.style_parchment_label(_craft_progress_label, Styler.COLOR_GOLD)
+	_craft_progress_label.add_theme_font_size_override("font_size", 18)
 	_craft_progress_container.add_child(_craft_progress_label)
+
+	_craft_steps_label = Label.new()  # Secondary: "Steps: 52 / 80"
+	_craft_steps_label.text = ""
+	Styler.style_parchment_label(_craft_steps_label, Styler.COLOR_TEXT_DARK)
+	_craft_steps_label.add_theme_font_size_override("font_size", 14)
+	_craft_progress_container.add_child(_craft_steps_label)
 
 	_craft_stop_btn = Button.new()
 	_craft_stop_btn.text = "STOP CRAFTING"
@@ -241,20 +268,18 @@ func _on_profession_info(data: Dictionary) -> void:
 	var xp: int = int(data.get("xp", 0))
 	var xp_to_next = data.get("xp_to_next", null)
 
-	_level_label.text = "Level %d" % lvl
+	_level_label.text = "Lv %d" % lvl
 
 	if xp_to_next != null and int(xp_to_next) > 0:
-		_xp_bar.max_value = int(xp_to_next)
-		_xp_bar.value = xp
+		var pct = int(round(float(xp) / float(int(xp_to_next)) * 100.0))
 		_details_xp_label.text = "XP: %d" % xp
 		_details_xp_next_label.text = "XP to next: %d" % int(xp_to_next)
-		var pct = int(round(float(xp) / float(int(xp_to_next)) * 100.0))
-		_xp_pct_label.text = str(pct) + "%"
+		var tween = _radial_progress.create_tween()
+		tween.tween_property(_radial_progress, "progress", float(pct), 0.5).from(0.0)
 	else:
-		_xp_bar.value = _xp_bar.max_value
 		_details_xp_label.text = "XP: MAX"
 		_details_xp_next_label.text = "Max level reached"
-		_xp_pct_label.text = "100%"
+		_radial_progress.progress = 100.0
 
 	var total_steps: int = int(data.get("total_profession_steps", 0))
 	_details_total_steps_label.text = "Total steps: %d" % total_steps
@@ -292,7 +317,7 @@ func _build_gathering_content(data: Dictionary) -> void:
 		act_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		act_lbl.add_theme_font_size_override("font_size", 18)
 		act_lbl.add_theme_font_override("font", Styler.JANDA_FONT)
-		act_lbl.add_theme_color_override("font_color", Styler.COLOR_GOLD)
+		act_lbl.add_theme_color_override("font_color", Styler.COLOR_SECTION_HDR)
 		_scroll_content.add_child(act_lbl)
 
 	# Two-column layout: Activity Details (left) + Loot (right)
@@ -323,7 +348,7 @@ func _build_gathering_content(data: Dictionary) -> void:
 
 	var details_header = Label.new()
 	details_header.text = "Activity Details"
-	Styler.style_parchment_label(details_header, Styler.COLOR_GOLD)
+	Styler.style_parchment_label(details_header, Styler.COLOR_SECTION_HDR)
 	left_vbox.add_child(details_header)
 
 	var steps_lbl = Label.new()
@@ -337,14 +362,20 @@ func _build_gathering_content(data: Dictionary) -> void:
 	left_vbox.add_child(cycles_lbl)
 
 	var spc_lbl = Label.new()
-	spc_lbl.text = "Steps per action: %d" % int(data.get("base_steps", 0))
+	var eff_steps = int(data.get("base_steps", 0))
+	var orig_steps = int(data.get("base_steps_original", eff_steps))
+	if orig_steps > eff_steps and orig_steps > 0:
+		var pct = int(round((1.0 - float(eff_steps) / float(orig_steps)) * 100.0))
+		spc_lbl.text = "Steps per action: %d  [-%d%% from stats, base %d]" % [eff_steps, pct, orig_steps]
+	else:
+		spc_lbl.text = "Steps per action: %d" % eff_steps
 	Styler.style_parchment_label(spc_lbl, Styler.COLOR_TEXT_DARK)
 	left_vbox.add_child(spc_lbl)
 
 	# Overall stats separator
 	var overall_header = Label.new()
 	overall_header.text = "Overall"
-	Styler.style_parchment_label(overall_header, Styler.COLOR_GOLD)
+	Styler.style_parchment_label(overall_header, Styler.COLOR_SECTION_HDR)
 	left_vbox.add_child(overall_header)
 
 	var total_actions_lbl = Label.new()
@@ -379,7 +410,7 @@ func _build_gathering_content(data: Dictionary) -> void:
 
 	var loot_header = Label.new()
 	loot_header.text = "Loot"
-	Styler.style_parchment_label(loot_header, Styler.COLOR_GOLD)
+	Styler.style_parchment_label(loot_header, Styler.COLOR_SECTION_HDR)
 	right_vbox.add_child(loot_header)
 
 	if loot_items.is_empty():
@@ -461,12 +492,14 @@ func _build_alchemy_content(data: Dictionary) -> void:
 				_craft_header_label.text = "Crafting: %s" % recipe.get("name", "Unknown")
 				if _last_crafting_steps_max == 0:
 					_last_crafting_steps_max = int(recipe.get("base_steps", 0))
+					_last_crafting_target_qty = Account.crafting_target_qty
+					_last_crafting_batch_done = Account.crafting_batch_done
 					_update_craft_progress()
 				break
 
 	var header_lbl = Label.new()
 	header_lbl.text = "Recipes"
-	Styler.style_parchment_label(header_lbl, Styler.COLOR_GOLD)
+	Styler.style_parchment_label(header_lbl, Styler.COLOR_SECTION_HDR)
 	_scroll_content.add_child(header_lbl)
 
 	if recipes.is_empty():
@@ -491,12 +524,14 @@ func _build_enchanting_content(data: Dictionary) -> void:
 				_craft_header_label.text = "Enchanting: %s" % recipe.get("name", "Unknown")
 				if _last_crafting_steps_max == 0:
 					_last_crafting_steps_max = int(recipe.get("base_steps", 0))
+					_last_crafting_target_qty = Account.crafting_target_qty
+					_last_crafting_batch_done = Account.crafting_batch_done
 					_update_craft_progress()
 				break
 
 	var header_lbl = Label.new()
 	header_lbl.text = "Enchanting Scrolls"
-	Styler.style_parchment_label(header_lbl, Styler.COLOR_GOLD)
+	Styler.style_parchment_label(header_lbl, Styler.COLOR_SECTION_HDR)
 	_scroll_content.add_child(header_lbl)
 
 	if recipes.is_empty():
@@ -634,7 +669,14 @@ func _build_recipe_card(recipe: Dictionary) -> PanelContainer:
 	info_hbox.add_child(out_lbl)
 
 	var steps_lbl = Label.new()
-	steps_lbl.text = "%d steps  %d XP" % [int(recipe.get("base_steps", 0)), int(recipe.get("base_xp", 0))]
+	var r_eff = int(recipe.get("base_steps", 0))
+	var r_orig = int(recipe.get("base_steps_original", r_eff))
+	var r_xp = int(recipe.get("base_xp", 0))
+	if r_orig > r_eff and r_orig > 0:
+		var r_pct = int(round((1.0 - float(r_eff) / float(r_orig)) * 100.0))
+		steps_lbl.text = "%d steps  (-%d%%, base %d)  %d XP" % [r_eff, r_pct, r_orig, r_xp]
+	else:
+		steps_lbl.text = "%d steps  %d XP" % [r_eff, r_xp]
 	steps_lbl.add_theme_font_size_override("font_size", 15)
 	steps_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 	steps_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
@@ -653,16 +695,27 @@ func _build_recipe_card(recipe: Dictionary) -> PanelContainer:
 		eff_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 		vbox.add_child(eff_lbl)
 
-	# Craft button (for crafting professions: alchemy, enchanting)
+	# Craft row (for crafting professions: alchemy, enchanting)
 	if _profession_name in ["alchemy", "enchanting"]:
 		var current_craft_activity = ACTIVITY_ENCHANTING if _profession_name == "enchanting" else ACTIVITY_ALCHEMY
+		var max_qty: int = _compute_max_craft_qty(ingredients)
+
+		var craft_row = HBoxContainer.new()
+		craft_row.add_theme_constant_override("separation", 6)
+		craft_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		vbox.add_child(craft_row)
+
 		var craft_btn = Button.new()
+		craft_btn.custom_minimum_size = Vector2(120, 0)
+		craft_row.add_child(craft_btn)
+
+		# LOCKED: show button only, no qty controls
 		if not unlocked:
 			craft_btn.text = "LOCKED"
 			craft_btn.disabled = true
 			Styler.style_button_small(craft_btn, Color.from_rgba8(160, 155, 150))
 		elif not can_craft:
-			craft_btn.text = "MISSING INGREDIENTS"
+			craft_btn.text = "MISSING"
 			craft_btn.disabled = true
 			Styler.style_button_small(craft_btn, Color.from_rgba8(200, 160, 100))
 		elif Account.activity == current_craft_activity:
@@ -672,29 +725,109 @@ func _build_recipe_card(recipe: Dictionary) -> PanelContainer:
 		else:
 			craft_btn.text = "CRAFT"
 			Styler.style_button_small(craft_btn, Color.from_rgba8(60, 130, 70))
-			var rid: String = recipe.get("recipe_id", "")
-			var rname: String = recipe.get("name", "Unknown")
-			craft_btn.pressed.connect(func(): _on_craft_pressed(rid, rname))
-		vbox.add_child(craft_btn)
+
+		# Quantity control — only shown when unlocked; disabled when BUSY or MISSING
+		if unlocked:
+			var minus_btn = Button.new()
+			minus_btn.text = "−"
+			minus_btn.custom_minimum_size = Vector2(36, 0)
+			Styler.style_button_small(minus_btn, Styler.COLOR_GOLD)
+			craft_row.add_child(minus_btn)
+
+			var qty_edit = LineEdit.new()
+			qty_edit.text = "1"
+			qty_edit.alignment = HORIZONTAL_ALIGNMENT_CENTER
+			qty_edit.custom_minimum_size = Vector2(60, 0)
+			qty_edit.add_theme_color_override("font_color", Styler.COLOR_GOLD)
+			qty_edit.add_theme_font_override("font", Styler.QUADRAT_FONT)
+			qty_edit.add_theme_font_size_override("font_size", 18)
+			qty_edit.virtual_keyboard_type = LineEdit.KEYBOARD_TYPE_NUMBER
+			craft_row.add_child(qty_edit)
+
+			var plus_btn = Button.new()
+			plus_btn.text = "+"
+			plus_btn.custom_minimum_size = Vector2(36, 0)
+			Styler.style_button_small(plus_btn, Styler.COLOR_GOLD)
+			craft_row.add_child(plus_btn)
+
+			var max_btn = Button.new()
+			max_btn.text = "MAX"
+			max_btn.custom_minimum_size = Vector2(56, 0)
+			Styler.style_button_small(max_btn, Styler.COLOR_GOLD)
+			craft_row.add_child(max_btn)
+
+			var disable_qty: bool = (not can_craft) or (Account.activity == current_craft_activity) or (max_qty <= 0)
+
+			var clamp_qty := func(n: int) -> int:
+				if max_qty <= 0:
+					return 1
+				return clampi(n, 1, max_qty)
+
+			minus_btn.pressed.connect(func():
+				qty_edit.text = str(clamp_qty.call(int(qty_edit.text) - 1))
+			)
+			plus_btn.pressed.connect(func():
+				qty_edit.text = str(clamp_qty.call(int(qty_edit.text) + 1))
+			)
+			max_btn.pressed.connect(func():
+				qty_edit.text = str(maxi(1, max_qty))
+			)
+			qty_edit.text_submitted.connect(func(_s: String):
+				qty_edit.text = str(clamp_qty.call(int(qty_edit.text)))
+				qty_edit.release_focus()
+			)
+			qty_edit.focus_exited.connect(func():
+				qty_edit.text = str(clamp_qty.call(int(qty_edit.text)))
+			)
+
+			minus_btn.disabled = disable_qty
+			plus_btn.disabled = disable_qty
+			max_btn.disabled = disable_qty or max_qty == 0
+			qty_edit.editable = not disable_qty
+
+			# Wire the CRAFT press last so it captures the live qty_edit
+			if craft_btn.text == "CRAFT":
+				var rid: String = recipe.get("recipe_id", "")
+				var rname: String = recipe.get("name", "Unknown")
+				craft_btn.pressed.connect(func():
+					var q: int = clamp_qty.call(int(qty_edit.text))
+					_on_craft_pressed(rid, rname, q)
+				)
 
 	return panel
 
 
-func _on_craft_pressed(recipe_id: String, recipe_name: String) -> void:
+func _compute_max_craft_qty(ingredients: Array) -> int:
+	var result: int = 999999
+	for ing in ingredients:
+		var have: int = int(ing.get("qty_have", 0))
+		var need: int = int(ing.get("qty_needed", 1))
+		if need <= 0:
+			continue
+		@warning_ignore("integer_division")
+		result = mini(result, have / need)
+	if result < 0:
+		result = 0
+	return result
+
+
+func _on_craft_pressed(recipe_id: String, recipe_name: String, target_qty: int = 1) -> void:
 	if _confirm_dialog and is_instance_valid(_confirm_dialog):
 		return
 	var act = ACTIVITY_ENCHANTING if _profession_name == "enchanting" else ACTIVITY_ALCHEMY
+	var qty: int = maxi(1, target_qty)
+	var qty_name: String = ("%dx %s" % [qty, recipe_name]) if qty > 1 else recipe_name
 	var text: String
 	if Account.activity:
 		var current_name: String = GameTextEn.activities_texts.get(Account.activity, "Activity")
-		text = "Stop %s and Craft %s?" % [current_name, recipe_name]
+		text = "Stop %s and Craft %s?" % [current_name, qty_name]
 	else:
-		text = "Craft %s?" % recipe_name
+		text = "Craft %s?" % qty_name
 	_confirm_dialog = CONFIRMATION_DIALOG.instantiate()
 	_confirm_dialog.setup(text)
 	add_child(_confirm_dialog)
 	_confirm_dialog.confirmed.connect(func():
-		SignalManager.signal_StartCraftActivity.emit(act, Account.location, recipe_id)
+		SignalManager.signal_StartCraftActivity.emit(act, Account.location, recipe_id, qty)
 	)
 	_confirm_dialog.tree_exited.connect(func(): _confirm_dialog = null, CONNECT_ONE_SHOT)
 
@@ -710,6 +843,10 @@ func _on_activity_progress(data: Dictionary) -> void:
 	var d: Dictionary = raw.get("data", raw)
 	if d.has("crafting_steps_max"):
 		_last_crafting_steps_max = int(d["crafting_steps_max"])
+	if d.has("crafting_target_qty"):
+		_last_crafting_target_qty = int(d["crafting_target_qty"])
+	if d.has("crafting_batch_done"):
+		_last_crafting_batch_done = int(d["crafting_batch_done"])
 	_update_craft_progress()
 	# Refresh recipe data to update ingredient counts
 	var craft_active = (
@@ -736,9 +873,14 @@ func _update_craft_progress() -> void:
 	if _last_crafting_steps_max > 0:
 		_craft_progress_bar.max_value = _last_crafting_steps_max
 		_craft_progress_bar.value = steps
-		_craft_progress_label.text = "Steps: %d / %d" % [steps, _last_crafting_steps_max]
+		_craft_steps_label.text = "Steps: %d / %d" % [steps, _last_crafting_steps_max]
 	else:
-		_craft_progress_label.text = "Steps: %d" % steps
+		_craft_steps_label.text = "Steps: %d" % steps
+
+	if _last_crafting_target_qty > 1:
+		_craft_progress_label.text = "Batch: %d / %d" % [_last_crafting_batch_done, _last_crafting_target_qty]
+	else:
+		_craft_progress_label.text = ""
 
 
 func _quality_color(quality: int) -> Color:

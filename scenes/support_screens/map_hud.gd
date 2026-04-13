@@ -45,6 +45,17 @@ var _big_player_marker: TextureRect = null
 
 var _avatar_shader: Shader = preload("res://shaders/avatar_shader.gdshader")
 
+# Route preview line
+var _route_line: Line2D = null
+var _route_glow: Line2D = null
+var _active_route: Array = []  # location IDs of current travel route
+var _active_route_index: int = 0
+
+# Passing-through toast
+var _toast_panel: PanelContainer = null
+var _toast_label: Label = null
+var _toast_tween: Tween = null
+
 # Pan / zoom state
 var _offset: Vector2 = Vector2.ZERO
 var _scale: float = 1.0
@@ -92,8 +103,32 @@ func _ready() -> void:
 	_apply_circle_shader(_big_player_marker, Vector2(64, 64))
 	map_canvas.add_child(_big_player_marker)
 
+	# Route preview line (glow layer behind, main line on top)
+	_route_glow = Line2D.new()
+	_route_glow.width = 8.0
+	_route_glow.default_color = Color(0.18, 0.55, 0.24, 0.3)
+	_route_glow.antialiased = true
+	_route_glow.z_index = 0
+	_route_glow.visible = false
+	map_canvas.add_child(_route_glow)
+
+	_route_line = Line2D.new()
+	_route_line.width = 4.0
+	_route_line.default_color = Color(0.18, 0.55, 0.24, 0.7)
+	_route_line.antialiased = true
+	_route_line.z_index = 1
+	_route_line.visible = false
+	_route_line.texture = _create_dash_texture()
+	_route_line.texture_mode = Line2D.LINE_TEXTURE_TILE
+	_route_line.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	map_canvas.add_child(_route_line)
+
+	# Passing-through toast
+	_create_toast()
+
 	AccountManager.signal_AccountDataReceived.connect(_on_account_data_received)
 	SignalManager.signal_AvatarChanged.connect(_on_avatar_changed_signal)
+	SignalManager.signal_TravelPassingThrough.connect(_on_travel_passing_through)
 	_update_avatar_texture()
 	if Account.location != null:
 		update_location(_location_to_map_ratio(Account.location))
@@ -337,6 +372,30 @@ func _build_waypoints() -> void:
 		btn.mouse_exited.connect(_hide_tooltip)
 		map_canvas.add_child(btn)
 
+		# Location name label below the waypoint
+		var loc_id: int = ItemDB.WAYPOINT_LOCATION_IDS.get(id, -1)
+		var loc_name: String = ItemDB.LOCATION_NAMES.get(loc_id, display_name)
+		var label_w: float = 160.0
+		var name_label = Label.new()
+		name_label.text = loc_name
+		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		name_label.custom_minimum_size = Vector2(label_w, 0)
+		name_label.size = Vector2(label_w, 20)
+		name_label.add_theme_font_override("font", load("res://assets/fonts/janda.ttf"))
+		name_label.add_theme_font_size_override("font_size", 13)
+		name_label.add_theme_color_override("font_color", Color(1.0, 0.82, 0.33, 0.95))
+		name_label.add_theme_color_override("font_outline_color", Color(0.07, 0.05, 0.04, 1.0))
+		name_label.add_theme_constant_override("outline_size", 3)
+		name_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.6))
+		name_label.add_theme_constant_override("shadow_offset_x", 1)
+		name_label.add_theme_constant_override("shadow_offset_y", 1)
+		name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		name_label.position = Vector2(
+			btn.position.x + btn.size.x / 2.0 - label_w / 2.0,
+			btn.position.y + btn.size.y + 2.0
+		)
+		map_canvas.add_child(name_label)
+
 
 func _update_tooltip_pos() -> void:
 	var mp = get_viewport().get_mouse_position()
@@ -426,6 +485,15 @@ func _center_on_player() -> void:
 func _on_account_data_received(_value) -> void:
 	update_location(_location_to_map_ratio(Account.location))
 	_update_avatar_texture()
+	# Update route progress during travel
+	var route: Array = Account.travel_route
+	var route_index: int = Account.travel_route_index
+	if route.size() >= 2 and Account.activity == 8:
+		if _active_route != route:
+			show_route_preview(route)
+		update_route_progress(route_index)
+	elif _active_route.size() > 0 and Account.activity != 8:
+		clear_route_preview()
 
 
 func _on_avatar_changed_signal(_id: int) -> void:
@@ -464,18 +532,45 @@ func _on_waypoint_pressed(waypoint_id: String) -> void:
 		return
 	if _confirm_dialog and is_instance_valid(_confirm_dialog):
 		return
+	if location_id == int(Account.location):
+		return
+
 	var location_name: String = ItemDB.LOCATION_NAMES.get(location_id, "Unknown")
+
+	# Request travel cost from server with a timeout
+	var result: Dictionary = {"steps": -1, "done": false}
+	SignalManager.signal_TravelCostRequest.emit(location_id)
+
+	var cost_cb = func(recv_loc: int, recv_steps: int):
+		if recv_loc == location_id:
+			result["steps"] = recv_steps
+			result["done"] = true
+	SignalManager.signal_TravelCostReceived.connect(cost_cb, CONNECT_ONE_SHOT)
+	var timeout_timer = get_tree().create_timer(2.0)
+	while not result["done"] and timeout_timer.time_left > 0:
+		await get_tree().process_frame
+	if not result["done"] and SignalManager.signal_TravelCostReceived.is_connected(cost_cb):
+		SignalManager.signal_TravelCostReceived.disconnect(cost_cb)
+
+	var travel_steps: int = result["steps"]
 	var text: String
+	var distance_line: String = "Distance: %d steps" % travel_steps if travel_steps >= 0 else ""
 	if Account.activity:
 		var current_name: String = GameTextEn.activities_texts.get(Account.activity, "Activity")
 		text = "Stop %s and Travel to %s?" % [current_name, location_name]
 	else:
 		text = "Travel to %s?" % location_name
+	if distance_line != "":
+		text += "\n" + distance_line
+
 	_confirm_dialog = CONFIRMATION_DIALOG.instantiate()
 	_confirm_dialog.setup(text)
 	add_child(_confirm_dialog)
 	_confirm_dialog.confirmed.connect(func():
 		full_map_overlay.visible = false
+		_menu_btn.visible = true
+		if _dev_btn != null:
+			_dev_btn.visible = true
 		_hide_tooltip()
 		SignalManager.signal_TravelRequest.emit(location_id)
 	)
@@ -575,3 +670,198 @@ func _on_exit() -> void:
 		_confirm_dialog = null
 		ServerConnector.suppress_reconnect_overlay = false
 	, CONNECT_ONE_SHOT)
+
+
+func _on_travel_passing_through(location_name: String) -> void:
+	show_toast("Passing through %s" % location_name)
+
+
+# ── Route preview line ────────────────────────────────────────────────────────
+
+func _create_dash_texture() -> ImageTexture:
+	var dash_len: int = 16
+	var gap_len: int = 12
+	var w: int = dash_len + gap_len
+	var h: int = 4
+	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
+	for x in w:
+		for y in h:
+			if x < dash_len:
+				img.set_pixel(x, y, Color.WHITE)
+			else:
+				img.set_pixel(x, y, Color(0, 0, 0, 0))
+	var tex = ImageTexture.create_from_image(img)
+	return tex
+
+func show_route_preview(route_ids: Array) -> void:
+	"""Draw animated golden route line on the full map."""
+	if not map_texture or route_ids.size() < 2:
+		clear_route_preview()
+		return
+
+	_active_route = route_ids
+	var points: PackedVector2Array = PackedVector2Array()
+	for loc_id in route_ids:
+		var wp_id = _location_id_to_waypoint(loc_id)
+		if wp_id == "":
+			continue
+		var ratio: Vector2 = ItemDB.WAYPOINTS.get(wp_id, Vector2.ZERO)
+		points.append(map_texture.get_size() * ratio)
+
+	if points.size() < 2:
+		clear_route_preview()
+		return
+
+	# Set points on both glow and main line
+	_route_glow.clear_points()
+	_route_line.clear_points()
+	for pt in points:
+		_route_glow.add_point(pt)
+		_route_line.add_point(pt)
+
+	_route_glow.visible = true
+	_route_line.visible = true
+
+	# Animate the line drawing (0.5s)
+	_route_line.modulate.a = 0.0
+	_route_glow.modulate.a = 0.0
+	var tween = create_tween().set_parallel(true)
+	tween.tween_property(_route_line, "modulate:a", 1.0, 0.5)
+	tween.tween_property(_route_glow, "modulate:a", 1.0, 0.5)
+
+
+func clear_route_preview() -> void:
+	"""Remove the route line from the map."""
+	_active_route = []
+	_active_route_index = 0
+	if _route_line:
+		_route_line.visible = false
+		_route_line.clear_points()
+	if _route_glow:
+		_route_glow.visible = false
+		_route_glow.clear_points()
+
+
+func update_route_progress(route_index: int) -> void:
+	"""Dim completed segments of the route line."""
+	_active_route_index = route_index
+	if not _route_line or _route_line.get_point_count() < 2:
+		return
+	# Rebuild line colors: completed segments are dimmed
+	var gradient = Gradient.new()
+	var total_points = _route_line.get_point_count()
+	if total_points < 2:
+		return
+	# Use gradient to dim completed parts
+	var completed_ratio = float(route_index - 1) / float(total_points - 1) if total_points > 1 else 0.0
+	completed_ratio = clampf(completed_ratio, 0.0, 1.0)
+	var dimmed = Color(0.18, 0.55, 0.24, 0.25)
+	var bright = Color(0.18, 0.55, 0.24, 0.7)
+	gradient.set_offset(0, 0.0)
+	gradient.set_color(0, dimmed)
+	if completed_ratio > 0.01 and completed_ratio < 0.99:
+		gradient.add_point(completed_ratio, dimmed)
+		gradient.add_point(completed_ratio + 0.01, bright)
+	gradient.set_offset(gradient.get_point_count() - 1, 1.0)
+	gradient.set_color(gradient.get_point_count() - 1, bright)
+	_route_line.gradient = gradient
+
+
+func _fit_map_to_route(route_ids: Array) -> void:
+	"""Zoom and pan to show the full route with padding."""
+	if not map_texture or route_ids.size() < 2:
+		return
+	var min_pt = Vector2(INF, INF)
+	var max_pt = Vector2(-INF, -INF)
+	for loc_id in route_ids:
+		var wp_id = _location_id_to_waypoint(loc_id)
+		if wp_id == "":
+			continue
+		var ratio: Vector2 = ItemDB.WAYPOINTS.get(wp_id, Vector2.ZERO)
+		var pt = map_texture.get_size() * ratio
+		min_pt = Vector2(min(min_pt.x, pt.x), min(min_pt.y, pt.y))
+		max_pt = Vector2(max(max_pt.x, pt.x), max(max_pt.y, pt.y))
+
+	if min_pt.x == INF:
+		return
+
+	var padding = 100.0
+	min_pt -= Vector2(padding, padding)
+	max_pt += Vector2(padding, padding)
+	var route_size = max_pt - min_pt
+	var route_center = (min_pt + max_pt) / 2.0
+	var view_size = map_view.size
+
+	# Calculate scale to fit route in view
+	var scale_x = view_size.x / route_size.x if route_size.x > 0 else 1.0
+	var scale_y = view_size.y / route_size.y if route_size.y > 0 else 1.0
+	_scale = clampf(min(scale_x, scale_y), ZOOM_MIN, ZOOM_MAX)
+
+	# Center on route
+	_offset = view_size * 0.5 - route_center * _scale
+	_apply_transform()
+
+
+func _location_id_to_waypoint(loc_id: int) -> String:
+	"""Convert a location ID to its waypoint string key."""
+	for key in ItemDB.WAYPOINT_LOCATION_IDS:
+		if ItemDB.WAYPOINT_LOCATION_IDS[key] == loc_id:
+			return key
+	return ""
+
+
+# ── Toast notification ────────────────────────────────────────────────────────
+
+func _create_toast() -> void:
+	_toast_panel = PanelContainer.new()
+	var sb = StyleBoxFlat.new()
+	sb.bg_color = Color(18.0 / 255.0, 14.0 / 255.0, 10.0 / 255.0, 230.0 / 255.0)
+	sb.border_color = Color(220.0 / 255.0, 175.0 / 255.0, 68.0 / 255.0, 1.0)
+	sb.set_border_width_all(2)
+	sb.set_corner_radius_all(8)
+	sb.shadow_color = Color(220.0 / 255.0, 175.0 / 255.0, 68.0 / 255.0, 0.4)
+	sb.shadow_size = 4
+	sb.content_margin_left = 16
+	sb.content_margin_right = 16
+	sb.content_margin_top = 8
+	sb.content_margin_bottom = 8
+	_toast_panel.add_theme_stylebox_override("panel", sb)
+	_toast_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	_toast_label = Label.new()
+	_toast_label.add_theme_font_override("font", load("res://assets/fonts/janda.ttf"))
+	_toast_label.add_theme_font_size_override("font_size", 14)
+	_toast_label.add_theme_color_override("font_color", Color(1.0, 0.82, 0.33, 0.95))
+	_toast_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	_toast_label.add_theme_constant_override("outline_size", 2)
+	_toast_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_toast_panel.add_child(_toast_label)
+
+	add_child(_toast_panel)
+	_toast_panel.visible = false
+
+
+func show_toast(text: String) -> void:
+	"""Show a passing-through notification at top-center."""
+	if not _toast_panel:
+		return
+	_toast_label.text = text
+	_toast_panel.visible = true
+
+	# Position top-center with safe area
+	await get_tree().process_frame
+	var vp_size = get_viewport().get_visible_rect().size
+	_toast_panel.position = Vector2(
+		(vp_size.x - _toast_panel.size.x) / 2.0,
+		60.0  # safe area offset for notch/status bar
+	)
+
+	# Animate: fade in, hold 3s, fade out
+	if _toast_tween and _toast_tween.is_valid():
+		_toast_tween.kill()
+	_toast_panel.modulate.a = 0.0
+	_toast_tween = create_tween()
+	_toast_tween.tween_property(_toast_panel, "modulate:a", 1.0, 0.2)
+	_toast_tween.tween_interval(3.0)
+	_toast_tween.tween_property(_toast_panel, "modulate:a", 0.0, 0.5)
+	_toast_tween.tween_callback(func(): _toast_panel.visible = false)

@@ -331,7 +331,7 @@ func _process_event(event: Dictionary) -> void:
 
 	# Auto-scroll to bottom
 	await get_tree().process_frame
-	_scroll.scroll_vertical = _scroll.get_v_scroll_bar().max_value
+	_scroll.scroll_vertical = int(_scroll.get_v_scroll_bar().max_value)
 
 
 func _format_single_event(event: Dictionary) -> String:

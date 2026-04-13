@@ -55,6 +55,7 @@ func _ready() -> void:
 	SignalManager.signal_RequestRiftFightLog.connect(_on_request_rift_fight_log)
 	SignalManager.signal_RequestRiftHistory.connect(_on_request_rift_history)
 	SignalManager.signal_TravelRequest.connect(_on_travel_request)
+	SignalManager.signal_TravelCostRequest.connect(_on_travel_cost_request)
 	SignalManager.signal_AvatarChanged.connect(_on_avatar_changed)
 	SignalManager.signal_RequestProfessionInfo.connect(_on_request_profession_info)
 	SignalManager.signal_StartCraftActivity.connect(_on_start_craft_activity)
@@ -273,7 +274,7 @@ func _on_step_counter_cheat_update(amount) -> void:
 	server_connector_message_bus.emit("[Client] Sending cheat steps: {0}".format([amount]))
 
 func _on_step_counter_android_request_last_ts(is_requested) -> void:
-	if not is_requested:
+	if not is_requested or not _was_authenticated:
 		return
 
 	var payload = {
@@ -428,6 +429,13 @@ func _on_request_rift_fight_log(rift_instance_id: String, fight_uid: String) -> 
 	socket.send_text(JSON.stringify(payload))
 	server_connector_message_bus.emit("[Client] Requesting fight log for fight: {0}".format([fight_uid]))
 
+func _on_travel_cost_request(location_id: int) -> void:
+	var payload = {
+		"cmd": "travel_cost",
+		"payload": {"location": location_id},
+	}
+	socket.send_text(JSON.stringify(payload))
+
 func _on_travel_request(location_id: int) -> void:
 	var payload = {
 		"cmd": "travel",
@@ -449,7 +457,7 @@ func _on_request_profession_info(profession: String) -> void:
 	socket.send_text(JSON.stringify(payload))
 	server_connector_message_bus.emit("[Client] Requesting profession info: %s" % profession)
 
-func _on_start_craft_activity(activity: int, activity_site: int, recipe_id: String) -> void:
+func _on_start_craft_activity(activity: int, activity_site: int, recipe_id: String, target_qty: int) -> void:
 	var payload = {
 		"cmd": "activity",
 		"payload": {
@@ -457,10 +465,11 @@ func _on_start_craft_activity(activity: int, activity_site: int, recipe_id: Stri
 			"activity_site": activity_site,
 			"action": "start",
 			"recipe_id": recipe_id,
+			"target_qty": target_qty,
 		}
 	}
 	socket.send_text(JSON.stringify(payload))
-	server_connector_message_bus.emit("[Client] Starting craft: %s" % recipe_id)
+	server_connector_message_bus.emit("[Client] Starting craft: %s x%d" % [recipe_id, target_qty])
 
 func _on_talent_allocate_request(talent_id: String) -> void:
 	var payload = {"cmd": "talents", "payload": {"action": "allocate", "talent_id": talent_id}}

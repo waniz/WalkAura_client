@@ -1,10 +1,281 @@
-[gd_scene format=3 uid="uid://c1uj7p2i64geq"]
+[gd_scene load_steps=5 format=3 uid="uid://c1uj7p2i64geq"]
 
 [ext_resource type="Script" path="res://scenes/main_screens/character_skills.gd" id="1_skills"]
 
-[node name="CharacterSkills" type="Control" unique_id=1825663956]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_1"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pts_badge"]
+bg_color = Color(0.91, 0.27, 0.38, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 10.0
+content_margin_top = 2.0
+content_margin_right = 10.0
+content_margin_bottom = 2.0
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_2"]
+
+[node name="CharacterSkills" type="Control"]
 layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+anchors_preset = 0
+clip_contents = true
 script = ExtResource("1_skills")
+
+[node name="VBoxRoot" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+
+[node name="TabHBox" type="HBoxContainer" parent="VBoxRoot"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="BtnTabSkills" type="Button" parent="VBoxRoot/TabHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Skills"
+
+[node name="BtnTabTalents" type="Button" parent="VBoxRoot/TabHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Talents"
+
+[node name="Body" type="PanelContainer" parent="VBoxRoot"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="SkillPanel" type="PanelContainer" parent="VBoxRoot/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="SkillMargin" type="MarginContainer" parent="VBoxRoot/Body/SkillPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="SkillVBoxOuter" type="VBoxContainer" parent="VBoxRoot/Body/SkillPanel/SkillMargin"]
+layout_mode = 2
+
+[node name="VBoxSkills" type="VBoxContainer" parent="VBoxRoot/Body/SkillPanel/SkillMargin/SkillVBoxOuter"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="TitleActiveSkills" type="Label" parent="VBoxRoot/Body/SkillPanel/SkillMargin/SkillVBoxOuter/VBoxSkills"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Active Skills"
+
+[node name="ActiveContainer" type="HBoxContainer" parent="VBoxRoot/Body/SkillPanel/SkillMargin/SkillVBoxOuter/VBoxSkills"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Separator" type="HSeparator" parent="VBoxRoot/Body/SkillPanel/SkillMargin/SkillVBoxOuter/VBoxSkills"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="TitleSpellbook" type="Label" parent="VBoxRoot/Body/SkillPanel/SkillMargin/SkillVBoxOuter/VBoxSkills"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Spellbook"
+
+[node name="HBoxBtnControl" type="HBoxContainer" parent="VBoxRoot/Body/SkillPanel/SkillMargin/SkillVBoxOuter/VBoxSkills"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="BtnSkillsMage" type="Button" parent="VBoxRoot/Body/SkillPanel/SkillMargin/SkillVBoxOuter/VBoxSkills/HBoxBtnControl"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Mage"
+
+[node name="BtnSkillsPaladin" type="Button" parent="VBoxRoot/Body/SkillPanel/SkillMargin/SkillVBoxOuter/VBoxSkills/HBoxBtnControl"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Paladin"
+
+[node name="BtnSkillsBuffs" type="Button" parent="VBoxRoot/Body/SkillPanel/SkillMargin/SkillVBoxOuter/VBoxSkills/HBoxBtnControl"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Utility"
+
+[node name="BtnSkillsBlood" type="Button" parent="VBoxRoot/Body/SkillPanel/SkillMargin/SkillVBoxOuter/VBoxSkills/HBoxBtnControl"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Blood"
+
+[node name="BtnSkillsDark" type="Button" parent="VBoxRoot/Body/SkillPanel/SkillMargin/SkillVBoxOuter/VBoxSkills/HBoxBtnControl"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Dark"
+
+[node name="BtnSkillsArcane" type="Button" parent="VBoxRoot/Body/SkillPanel/SkillMargin/SkillVBoxOuter/VBoxSkills/HBoxBtnControl"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Arcane"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxRoot/Body/SkillPanel/SkillMargin/SkillVBoxOuter"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="SpellbookPanelBase" type="PanelContainer" parent="VBoxRoot/Body/SkillPanel/SkillMargin/SkillVBoxOuter/ScrollContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_1")
+
+[node name="MagePanel" type="PanelContainer" parent="VBoxRoot/Body/SkillPanel/SkillMargin/SkillVBoxOuter/ScrollContainer/SpellbookPanelBase"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_2")
+
+[node name="MageGridSpellbook" type="HBoxContainer" parent="VBoxRoot/Body/SkillPanel/SkillMargin/SkillVBoxOuter/ScrollContainer/SpellbookPanelBase/MagePanel"]
+unique_name_in_owner = true
+layout_mode = 2
+alignment = 0
+
+[node name="PaladinPanel" type="PanelContainer" parent="VBoxRoot/Body/SkillPanel/SkillMargin/SkillVBoxOuter/ScrollContainer/SpellbookPanelBase"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_2")
+
+[node name="PaladinGridSpellbook" type="GridContainer" parent="VBoxRoot/Body/SkillPanel/SkillMargin/SkillVBoxOuter/ScrollContainer/SpellbookPanelBase/PaladinPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="BuffsPanel" type="PanelContainer" parent="VBoxRoot/Body/SkillPanel/SkillMargin/SkillVBoxOuter/ScrollContainer/SpellbookPanelBase"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_2")
+
+[node name="BuffsGridSpellbook" type="GridContainer" parent="VBoxRoot/Body/SkillPanel/SkillMargin/SkillVBoxOuter/ScrollContainer/SpellbookPanelBase/BuffsPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="BloodPanel" type="PanelContainer" parent="VBoxRoot/Body/SkillPanel/SkillMargin/SkillVBoxOuter/ScrollContainer/SpellbookPanelBase"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_2")
+
+[node name="BloodGridSpellbook" type="GridContainer" parent="VBoxRoot/Body/SkillPanel/SkillMargin/SkillVBoxOuter/ScrollContainer/SpellbookPanelBase/BloodPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="DarkPanel" type="PanelContainer" parent="VBoxRoot/Body/SkillPanel/SkillMargin/SkillVBoxOuter/ScrollContainer/SpellbookPanelBase"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_2")
+
+[node name="DarkGridSpellbook" type="GridContainer" parent="VBoxRoot/Body/SkillPanel/SkillMargin/SkillVBoxOuter/ScrollContainer/SpellbookPanelBase/DarkPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="ArcanePanel" type="PanelContainer" parent="VBoxRoot/Body/SkillPanel/SkillMargin/SkillVBoxOuter/ScrollContainer/SpellbookPanelBase"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_2")
+
+[node name="ArcaneGridSpellbook" type="GridContainer" parent="VBoxRoot/Body/SkillPanel/SkillMargin/SkillVBoxOuter/ScrollContainer/SpellbookPanelBase/ArcanePanel"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="TalentsPanel" type="PanelContainer" parent="VBoxRoot/Body"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TalentMargin" type="MarginContainer" parent="VBoxRoot/Body/TalentsPanel"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="TalentOuterVBox" type="VBoxContainer" parent="VBoxRoot/Body/TalentsPanel/TalentMargin"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="HeaderHBox" type="HBoxContainer" parent="VBoxRoot/Body/TalentsPanel/TalentMargin/TalentOuterVBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="TitleLabel" type="Label" parent="VBoxRoot/Body/TalentsPanel/TalentMargin/TalentOuterVBox/HeaderHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Talents"
+
+[node name="HeaderSpacer" type="Control" parent="VBoxRoot/Body/TalentsPanel/TalentMargin/TalentOuterVBox/HeaderHBox"]
+layout_mode = 2
+mouse_filter = 2
+size_flags_horizontal = 3
+
+[node name="TalentHeaderStreakLabel" type="Label" parent="VBoxRoot/Body/TalentsPanel/TalentMargin/TalentOuterVBox/HeaderHBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+
+[node name="PointsBadge" type="PanelContainer" parent="VBoxRoot/Body/TalentsPanel/TalentMargin/TalentOuterVBox/HeaderHBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_pts_badge")
+
+[node name="TalentHeaderPointsLabel" type="Label" parent="VBoxRoot/Body/TalentsPanel/TalentMargin/TalentOuterVBox/HeaderHBox/PointsBadge"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "0 pts"
+
+[node name="BottomHBox" type="HBoxContainer" parent="VBoxRoot/Body/TalentsPanel/TalentMargin/TalentOuterVBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="SpentBadge" type="PanelContainer" parent="VBoxRoot/Body/TalentsPanel/TalentMargin/TalentOuterVBox/BottomHBox"]
+layout_mode = 2
+
+[node name="TalentBottomUsedLabel" type="Label" parent="VBoxRoot/Body/TalentsPanel/TalentMargin/TalentOuterVBox/BottomHBox/SpentBadge"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "0 spent"
+
+[node name="BottomSpacer" type="Control" parent="VBoxRoot/Body/TalentsPanel/TalentMargin/TalentOuterVBox/BottomHBox"]
+layout_mode = 2
+mouse_filter = 2
+size_flags_horizontal = 3
+
+[node name="RespecBtn" type="Button" parent="VBoxRoot/Body/TalentsPanel/TalentMargin/TalentOuterVBox/BottomHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(80, 36)
+text = "Respec"
