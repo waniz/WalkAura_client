@@ -9,56 +9,93 @@ var PASSIVE_TOTAL_TO_LEVEL = {1: 0}
 var _active_slots: Array = [null, null, null, null, null]
 var _known_skills: Array = []
 
-# --- Node refs (set in _build_ui) ---
-var skill_panel: PanelContainer
-var talents_panel: PanelContainer
-var btn_tab_skills: Button
-var btn_tab_talents: Button
-var v_box_skills: VBoxContainer
-var title_active_skills: Label
-var active_container: HBoxContainer
-var h_separator: HSeparator
-var title_spellbook: Label
-var h_box_btn_control: HBoxContainer
-var btn_skills_mage: Button
-var btn_skills_paladin: Button
-var btn_skills_buffs: Button
-var spellbook_panel_base: PanelContainer
-var mage_panel: PanelContainer
-var paladin_panel: PanelContainer
-var buffs_panel: PanelContainer
-var btn_skills_blood: Button
-var blood_panel: PanelContainer
-var blood_grid_spellbook: GridContainer
-var btn_skills_dark: Button
-var dark_panel: PanelContainer
-var dark_grid_spellbook: GridContainer
-var btn_skills_arcane: Button
-var arcane_panel: PanelContainer
-var arcane_grid_spellbook: GridContainer
-var mage_grid_spellbook: HBoxContainer
-var paladin_grid_spellbook: GridContainer
-var buffs_grid_spellbook: GridContainer
-var talent_list: VBoxContainer
-var _talent_header_points_label: Label
-var _talent_header_streak_label: Label
-var _talent_bottom_used_label: Label
-var _talent_hint_label: Label
-var _talent_empty_label: Label
-var _current_filter: String = "all"
-var _filter_buttons: Dictionary = {}
-var _allocate_debounce: Dictionary = {}  # talent_id -> timestamp
+# --- Node refs (from scene tree) ---
+@onready var _vbox_root = %VBoxRoot
+@onready var btn_tab_skills = %BtnTabSkills
+@onready var btn_tab_talents = %BtnTabTalents
+@onready var skill_panel = %SkillPanel
+@onready var talents_panel = %TalentsPanel
+@onready var v_box_skills = %VBoxSkills
+@onready var title_active_skills = %TitleActiveSkills
+@onready var active_container = %ActiveContainer
+@onready var h_separator = %Separator
+@onready var title_spellbook = %TitleSpellbook
+@onready var h_box_btn_control = %HBoxBtnControl
+@onready var btn_skills_mage = %BtnSkillsMage
+@onready var btn_skills_paladin = %BtnSkillsPaladin
+@onready var btn_skills_buffs = %BtnSkillsBuffs
+@onready var btn_skills_blood = %BtnSkillsBlood
+@onready var btn_skills_dark = %BtnSkillsDark
+@onready var btn_skills_arcane = %BtnSkillsArcane
+@onready var spellbook_panel_base = %SpellbookPanelBase
+@onready var mage_panel = %MagePanel
+@onready var paladin_panel = %PaladinPanel
+@onready var buffs_panel = %BuffsPanel
+@onready var blood_panel = %BloodPanel
+@onready var dark_panel = %DarkPanel
+@onready var arcane_panel = %ArcanePanel
+@onready var mage_grid_spellbook = %MageGridSpellbook
+@onready var paladin_grid_spellbook = %PaladinGridSpellbook
+@onready var buffs_grid_spellbook = %BuffsGridSpellbook
+@onready var blood_grid_spellbook = %BloodGridSpellbook
+@onready var dark_grid_spellbook = %DarkGridSpellbook
+@onready var arcane_grid_spellbook = %ArcaneGridSpellbook
+@onready var _talent_header_points_label = %TalentHeaderPointsLabel
+@onready var _talent_header_streak_label = %TalentHeaderStreakLabel
+@onready var _talent_bottom_used_label = %TalentBottomUsedLabel
+@onready var _title_label = %TitleLabel
+@onready var _respec_btn = %RespecBtn
+
+var TALENT_WHEEL_SCRIPT = null
+var TALENT_OVERLAY_SCRIPT = null
+
+var _talent_wheel = null
+var _talent_overlay = null
+var _zoom_level: float = 1.8
+var _overlay_visible: bool = false
+var _overlay_talent_id: String = ""
+var _zoom_label: Label = null
+var _pan_offset: Vector2 = Vector2.ZERO
+var _touch_points: Dictionary = {}  # finger_index -> position
+var _pinch_start_dist: float = 0.0
+var _pinch_start_zoom: float = 1.0
+var _drag_start_pos: Vector2 = Vector2.ZERO
+var _drag_start_offset: Vector2 = Vector2.ZERO
+var _is_dragging: bool = false
 
 
 func _ready() -> void:
 	PASSIVE_TOTAL_TO_LEVEL = ServerParams.PASSIVE_TOTAL_TO_LEVEL
-	_build_ui()
 
+	# Dynamic offsets from Styler
+	_vbox_root.offset_top = Styler.content_top
+	_vbox_root.offset_bottom = Styler.content_bottom
+
+	# Connect signals
 	AccountManager.signal_AllSkillsReceived.connect(_update_game_skills)
 	AccountManager.signal_AccountSkillsReceived.connect(_update_skills)
-
 	AccountManager.signal_TalentsConfigReceived.connect(_on_talents_config)
 	AccountManager.signal_TalentsDataReceived.connect(_on_talents_data)
+
+	btn_tab_skills.pressed.connect(_on_btn_tab_skills_pressed)
+	btn_tab_talents.pressed.connect(_on_btn_tab_talents_pressed)
+	btn_skills_mage.pressed.connect(_on_btn_skills_mage_pressed)
+	btn_skills_paladin.pressed.connect(_on_btn_skills_paladin_pressed)
+	btn_skills_buffs.pressed.connect(_on_btn_skills_buffs_pressed)
+	btn_skills_blood.pressed.connect(_on_btn_skills_blood_pressed)
+	btn_skills_dark.pressed.connect(_on_btn_skills_dark_pressed)
+	btn_skills_arcane.pressed.connect(_on_btn_skills_arcane_pressed)
+	_respec_btn.pressed.connect(_on_respec_pressed)
+
+	# Load talent scripts at runtime (not preload) to avoid parse-order issues
+	TALENT_WHEEL_SCRIPT = load("res://scripts/components/talent_wheel.gd")
+	TALENT_OVERLAY_SCRIPT = load("res://scripts/components/talent_detail_overlay.gd")
+
+	# Build astrolabe wheel (replaces old card-based talent list)
+	_setup_talent_wheel()
+
+	# Apply Styler-dependent theme overrides
+	_apply_theme()
 
 	if Account.raw_structures.all_server_skills != null and not Account.raw_structures.all_server_skills.is_empty():
 		_update_game_skills(Account.raw_structures.all_server_skills)
@@ -71,302 +108,256 @@ func _ready() -> void:
 	_refresh_talents()
 
 
-func _build_ui() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED and _vbox_root != null:
+		_vbox_root.offset_right = size.x
 
-	var vbox_root = VBoxContainer.new()
-	vbox_root.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	vbox_root.offset_left = Styler.CONTENT_MARGIN_H
-	vbox_root.offset_top = Styler.content_top
-	vbox_root.offset_right = -Styler.CONTENT_MARGIN_H
-	vbox_root.offset_bottom = Styler.content_bottom
-	add_child(vbox_root)
 
-	# --- Tab Buttons ---
-	var tab_hbox = HBoxContainer.new()
-	tab_hbox.add_theme_constant_override("separation", 4)
-	vbox_root.add_child(tab_hbox)
+func _setup_talent_wheel() -> void:
+	# Clip zoomed content to stay inside the panel
+	talents_panel.clip_contents = true
 
-	btn_tab_skills = Button.new()
-	btn_tab_skills.text = "Skills"
-	btn_tab_skills.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	tab_hbox.add_child(btn_tab_skills)
+	# Wheel lives directly in the panel. Zoom via scale property, no ScrollContainer.
+	_talent_wheel = Control.new()
+	_talent_wheel.set_script(TALENT_WHEEL_SCRIPT)
+	_talent_wheel.name = "TalentWheel"
+	_talent_wheel.mouse_filter = Control.MOUSE_FILTER_PASS
+	talents_panel.add_child(_talent_wheel)
+	# Move wheel to index 0 so it draws BEHIND the existing layout (header, bottom bar)
+	talents_panel.move_child(_talent_wheel, 0)
 
-	btn_tab_talents = Button.new()
-	btn_tab_talents.text = "Talents"
-	btn_tab_talents.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	tab_hbox.add_child(btn_tab_talents)
+	# Connect wheel signals
+	_talent_wheel.talent_tapped.connect(_on_wheel_talent_tapped)
+	_talent_wheel.talent_allocate.connect(_on_wheel_talent_allocate)
 
-	# --- Body ---
-	var body = PanelContainer.new()
-	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	vbox_root.add_child(body)
+	# Zoom buttons added to BottomHBox next to Respec
+	var bottom_hbox = talents_panel.get_node_or_null("TalentMargin/TalentOuterVBox/BottomHBox")
+	if bottom_hbox != null:
+		var btn_out = Button.new()
+		btn_out.text = "-"
+		btn_out.custom_minimum_size = Vector2(36, 36)
+		btn_out.add_theme_font_size_override("font_size", 16)
+		btn_out.pressed.connect(_on_zoom_out)
+		Styler.style_button_small(btn_out, Color(0.7, 0.23, 0.23))
+		bottom_hbox.add_child(btn_out)
 
-	# --- Skill Panel ---
-	skill_panel = PanelContainer.new()
-	skill_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body.add_child(skill_panel)
+		_zoom_label = Label.new()
+		_zoom_label.custom_minimum_size = Vector2(44, 36)
+		_zoom_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_zoom_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_zoom_label.add_theme_font_size_override("font_size", 9)
+		_zoom_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.6))
+		_zoom_label.text = "Zoom"
+		bottom_hbox.add_child(_zoom_label)
 
-	var skill_margin = MarginContainer.new()
-	skill_margin.add_theme_constant_override("margin_left", 10)
-	skill_margin.add_theme_constant_override("margin_top", 10)
-	skill_margin.add_theme_constant_override("margin_right", 10)
-	skill_margin.add_theme_constant_override("margin_bottom", 10)
-	skill_panel.add_child(skill_margin)
+		var btn_in = Button.new()
+		btn_in.text = "+"
+		btn_in.custom_minimum_size = Vector2(36, 36)
+		btn_in.add_theme_font_size_override("font_size", 16)
+		btn_in.pressed.connect(_on_zoom_in)
+		Styler.style_button_small(btn_in, Color(0.7, 0.23, 0.23))
+		bottom_hbox.add_child(btn_in)
 
-	var skill_vbox_outer = VBoxContainer.new()
-	skill_margin.add_child(skill_vbox_outer)
+	# Detail overlay — added to scene root (not talents_panel) so PanelContainer auto-sizes
+	_talent_overlay = PanelContainer.new()
+	_talent_overlay.set_script(TALENT_OVERLAY_SCRIPT)
+	_talent_overlay.name = "TalentDetailOverlay"
+	add_child(_talent_overlay)
+	_talent_overlay.allocate_pressed.connect(_on_wheel_talent_allocate)
+	_talent_overlay.dismissed.connect(_on_overlay_dismissed)
 
-	v_box_skills = VBoxContainer.new()
-	skill_vbox_outer.add_child(v_box_skills)
+	talents_panel.resized.connect(_on_talents_panel_resized)
+	# Apply initial zoom after a frame so layout has settled
+	call_deferred("_apply_zoom")
 
-	title_active_skills = Label.new()
-	title_active_skills.text = "Active Skills"
-	v_box_skills.add_child(title_active_skills)
 
-	active_container = HBoxContainer.new()
-	v_box_skills.add_child(active_container)
+func _on_talents_panel_resized() -> void:
+	if _talent_wheel == null:
+		return
+	if talents_panel.size.x < 1 or talents_panel.size.y < 1:
+		return
+	_talent_wheel.size = talents_panel.size
+	_talent_wheel.pivot_offset = talents_panel.size * 0.5
+	_apply_zoom_and_pan()
 
-	h_separator = HSeparator.new()
-	v_box_skills.add_child(h_separator)
 
-	title_spellbook = Label.new()
-	title_spellbook.text = "Spellbook"
-	v_box_skills.add_child(title_spellbook)
+func _on_zoom_in() -> void:
+	_set_zoom(min(_zoom_level + 0.2, 3.0))
 
-	h_box_btn_control = HBoxContainer.new()
-	v_box_skills.add_child(h_box_btn_control)
 
-	btn_skills_mage = Button.new()
-	btn_skills_mage.text = "Mage"
-	h_box_btn_control.add_child(btn_skills_mage)
+func _on_zoom_out() -> void:
+	_set_zoom(max(_zoom_level - 0.2, 0.75))
+	if _zoom_level <= 1.0:
+		_pan_offset = Vector2.ZERO
 
-	btn_skills_paladin = Button.new()
-	btn_skills_paladin.text = "Paladin"
-	h_box_btn_control.add_child(btn_skills_paladin)
 
-	btn_skills_buffs = Button.new()
-	btn_skills_buffs.text = "Utility"
-	h_box_btn_control.add_child(btn_skills_buffs)
+func _set_zoom(new_zoom: float) -> void:
+	_zoom_level = new_zoom
+	_clamp_pan()
+	_apply_zoom_and_pan()
 
-	btn_skills_blood = Button.new()
-	btn_skills_blood.text = "Blood"
-	h_box_btn_control.add_child(btn_skills_blood)
 
-	btn_skills_dark = Button.new()
-	btn_skills_dark.text = "Dark"
-	h_box_btn_control.add_child(btn_skills_dark)
+func _apply_zoom_and_pan() -> void:
+	if _talent_wheel == null:
+		return
+	_talent_wheel.pivot_offset = talents_panel.size * 0.5
+	_talent_wheel.scale = Vector2(_zoom_level, _zoom_level)
+	_talent_wheel.position = _pan_offset
 
-	btn_skills_arcane = Button.new()
-	btn_skills_arcane.text = "Arcane"
-	h_box_btn_control.add_child(btn_skills_arcane)
 
-	for btn in [btn_skills_mage, btn_skills_paladin, btn_skills_buffs, btn_skills_blood, btn_skills_dark, btn_skills_arcane]:
-		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+func _clamp_pan() -> void:
+	# Limit pan so the wheel center stays roughly visible
+	var max_pan = talents_panel.size * (_zoom_level - 1.0) * 0.5
+	_pan_offset.x = clamp(_pan_offset.x, -max_pan.x, max_pan.x)
+	_pan_offset.y = clamp(_pan_offset.y, -max_pan.y, max_pan.y)
+	# At zoom <= 1.0, no panning needed
+	if _zoom_level <= 1.0:
+		_pan_offset = Vector2.ZERO
 
-	var scroll_container = ScrollContainer.new()
-	scroll_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll_container.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	skill_vbox_outer.add_child(scroll_container)
 
-	spellbook_panel_base = PanelContainer.new()
-	spellbook_panel_base.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	spellbook_panel_base.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	spellbook_panel_base.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
-	scroll_container.add_child(spellbook_panel_base)
+func _input(event: InputEvent) -> void:
+	if not talents_panel.visible:
+		return
 
-	mage_panel = PanelContainer.new()
-	mage_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	mage_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
-	spellbook_panel_base.add_child(mage_panel)
+	# Dismiss tooltip on tap outside
+	if _overlay_visible and (event is InputEventScreenTouch or event is InputEventMouseButton):
+		if event.pressed and _touch_points.size() <= 1:
+			if _talent_overlay != null and _talent_overlay.visible:
+				var overlay_rect = Rect2(_talent_overlay.global_position, _talent_overlay.size)
+				var tap_pos = event.position if event is InputEventScreenTouch else event.global_position
+				if not overlay_rect.has_point(tap_pos):
+					_on_overlay_dismissed()
 
-	mage_grid_spellbook = HBoxContainer.new()
-	mage_grid_spellbook.alignment = BoxContainer.ALIGNMENT_BEGIN
-	mage_panel.add_child(mage_grid_spellbook)
+	# Mouse wheel zoom (desktop/emulator)
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
+			_on_zoom_in()
+			get_viewport().set_input_as_handled()
+			return
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
+			_on_zoom_out()
+			get_viewport().set_input_as_handled()
+			return
 
-	paladin_panel = PanelContainer.new()
-	paladin_panel.visible = false
-	paladin_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	paladin_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
-	spellbook_panel_base.add_child(paladin_panel)
+	# Touch: track fingers for pinch-to-zoom + drag-to-pan
+	if event is InputEventScreenTouch:
+		if event.pressed:
+			_touch_points[event.index] = event.position
+			if _touch_points.size() == 2:
+				var pts = _touch_points.values()
+				_pinch_start_dist = pts[0].distance_to(pts[1])
+				_pinch_start_zoom = _zoom_level
+				_is_dragging = false
+			elif _touch_points.size() == 1:
+				_drag_start_pos = event.position
+				_drag_start_offset = _pan_offset
+				_is_dragging = false  # only becomes true after movement threshold
+		else:
+			_touch_points.erase(event.index)
+			if _touch_points.size() < 2:
+				_pinch_start_dist = 0.0
+			if _touch_points.size() == 0:
+				_is_dragging = false
 
-	paladin_grid_spellbook = GridContainer.new()
-	paladin_panel.add_child(paladin_grid_spellbook)
+	if event is InputEventScreenDrag:
+		_touch_points[event.index] = event.position
+		if _touch_points.size() >= 2:
+			# Pinch zoom — always consume to prevent scroll/swipe
+			var pts = _touch_points.values()
+			var dist = pts[0].distance_to(pts[1])
+			if _pinch_start_dist > 10.0:
+				var ratio = dist / _pinch_start_dist
+				_set_zoom(clamp(_pinch_start_zoom * ratio, 0.75, 3.0))
+			get_viewport().set_input_as_handled()
+		elif _touch_points.size() == 1 and _zoom_level > 1.05:
+			# Single finger drag to pan when zoomed in
+			var delta = event.position - _drag_start_pos
+			if not _is_dragging and delta.length() > 12.0:
+				_is_dragging = true
+			if _is_dragging:
+				_pan_offset = _drag_start_offset + delta
+				_clamp_pan()
+				_apply_zoom_and_pan()
+				get_viewport().set_input_as_handled()
 
-	buffs_panel = PanelContainer.new()
-	buffs_panel.visible = false
-	buffs_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
-	spellbook_panel_base.add_child(buffs_panel)
 
-	buffs_grid_spellbook = GridContainer.new()
-	buffs_panel.add_child(buffs_grid_spellbook)
+func _on_wheel_talent_tapped(talent_id: String) -> void:
+	var alloc_info = talent_data.get("talents", {}).get(talent_id, {}).duplicate()
+	alloc_info["_unspent"] = talent_data.get("unspent", 0)
+	# Merge config info (tier descriptions etc)
+	for t in talent_config:
+		if str(t.get("id", "")) == talent_id:
+			for key in ["tier1_desc", "tier2_desc", "tier3_desc", "per_level", "name", "type"]:
+				if t.has(key) and not alloc_info.has(key):
+					alloc_info[key] = t[key]
+			break
 
-	blood_panel = PanelContainer.new()
-	blood_panel.visible = false
-	blood_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	blood_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
-	spellbook_panel_base.add_child(blood_panel)
+	var config_by_id = {}
+	for t in talent_config:
+		config_by_id[str(t.get("id", ""))] = t
 
-	blood_grid_spellbook = GridContainer.new()
-	blood_panel.add_child(blood_grid_spellbook)
+	# Get tapped node's global position for tooltip placement
+	var tap_global = get_viewport().get_visible_rect().size * 0.5
+	if _talent_wheel != null and _talent_wheel._node_map.has(talent_id):
+		var node_ctrl = _talent_wheel._node_map[talent_id]
+		var node_size = node_ctrl.size * _zoom_level
+		tap_global = node_ctrl.global_position + node_size * 0.5
 
-	dark_panel = PanelContainer.new()
-	dark_panel.visible = false
-	dark_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	dark_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
-	spellbook_panel_base.add_child(dark_panel)
+	_talent_overlay._tap_global_pos = tap_global
+	_talent_overlay._panel_rect = talents_panel.get_global_rect()
+	_talent_overlay.show_talent(
+		talent_id, alloc_info, synergy_config,
+		talent_data.get("talents", {}), config_by_id
+	)
+	_overlay_visible = true
+	_overlay_talent_id = talent_id
 
-	dark_grid_spellbook = GridContainer.new()
-	dark_panel.add_child(dark_grid_spellbook)
 
-	arcane_panel = PanelContainer.new()
-	arcane_panel.visible = false
-	arcane_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	arcane_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
-	spellbook_panel_base.add_child(arcane_panel)
+func _on_overlay_dismissed() -> void:
+	_overlay_visible = false
+	_overlay_talent_id = ""
+	_talent_overlay.hide_overlay()
 
-	arcane_grid_spellbook = GridContainer.new()
-	arcane_panel.add_child(arcane_grid_spellbook)
 
-	# --- Talents Panel ---
-	talents_panel = PanelContainer.new()
-	talents_panel.visible = false
-	talents_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body.add_child(talents_panel)
+func _on_wheel_talent_allocate(talent_id: String) -> void:
+	SignalManager.signal_TalentAllocate.emit(talent_id)
 
-	var talent_margin = MarginContainer.new()
-	talent_margin.add_theme_constant_override("margin_left", 10)
-	talent_margin.add_theme_constant_override("margin_top", 10)
-	talent_margin.add_theme_constant_override("margin_right", 10)
-	talent_margin.add_theme_constant_override("margin_bottom", 10)
-	talents_panel.add_child(talent_margin)
 
-	var talent_outer_vbox = VBoxContainer.new()
-	talent_outer_vbox.add_theme_constant_override("separation", 8)
-	talent_margin.add_child(talent_outer_vbox)
+func _refresh_open_tooltip() -> void:
+	if not _overlay_visible or _overlay_talent_id == "":
+		return
+	# Re-show the tooltip with updated data, keeping the same position
+	var old_pos = _talent_overlay._tap_global_pos
+	_on_wheel_talent_tapped(_overlay_talent_id)
+	_talent_overlay._tap_global_pos = old_pos
+	call_deferred("_reposition_tooltip")
 
-	# --- Header HBox ---
-	var header_hbox = HBoxContainer.new()
-	header_hbox.add_theme_constant_override("separation", 8)
-	talent_outer_vbox.add_child(header_hbox)
 
-	var title_lbl = Label.new()
-	title_lbl.text = "Talents"
-	title_lbl.add_theme_font_override("font", Styler.GROBOLT_FONT)
-	title_lbl.add_theme_font_size_override("font_size", Styler.FONT_SECTION)
-	title_lbl.add_theme_color_override("font_color", Color.BLACK)
-	header_hbox.add_child(title_lbl)
+func _reposition_tooltip() -> void:
+	if _talent_overlay != null:
+		_talent_overlay._position_tooltip()
 
-	var header_spacer = Control.new()
-	header_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header_hbox.add_child(header_spacer)
 
-	_talent_header_streak_label = Label.new()
-	_talent_header_streak_label.text = ""
-	_talent_header_streak_label.visible = false
-	_talent_header_streak_label.add_theme_font_size_override("font_size", Styler.FONT_SMALL)
-	_talent_header_streak_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
-	header_hbox.add_child(_talent_header_streak_label)
-
-	# Points badge (red pill)
-	var points_badge = PanelContainer.new()
-	var pts_sb = StyleBoxFlat.new()
-	pts_sb.bg_color = Color(0.91, 0.27, 0.38)
-	pts_sb.set_corner_radius_all(12)
-	pts_sb.content_margin_left = 10
-	pts_sb.content_margin_right = 10
-	pts_sb.content_margin_top = 2
-	pts_sb.content_margin_bottom = 2
-	points_badge.add_theme_stylebox_override("panel", pts_sb)
-	header_hbox.add_child(points_badge)
-
-	_talent_header_points_label = Label.new()
-	_talent_header_points_label.text = "0 pts"
-	_talent_header_points_label.add_theme_font_size_override("font_size", Styler.FONT_SMALL)
-	_talent_header_points_label.add_theme_color_override("font_color", Color.WHITE)
-	points_badge.add_child(_talent_header_points_label)
-
-	# --- Filter tabs HBox ---
-	var filter_hbox = HBoxContainer.new()
-	filter_hbox.add_theme_constant_override("separation", 4)
-	talent_outer_vbox.add_child(filter_hbox)
-
-	var filter_names = ["My Build", "All", "Offense", "Defense", "Magic", "Cross"]
-	var filter_keys = ["my_build", "all", "offense", "defense", "magic", "cross"]
-	for i in range(filter_names.size()):
-		var fbtn = Button.new()
-		fbtn.text = filter_names[i]
-		fbtn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		fbtn.custom_minimum_size.y = 32
-		var fkey = filter_keys[i]
-		_filter_buttons[fkey] = fbtn
-		fbtn.pressed.connect(_on_filter_pressed.bind(fkey))
-		filter_hbox.add_child(fbtn)
-		# Style filter buttons
-		var fb_base = Color(0.16, 0.16, 0.24) if fkey != "all" else Color(0.25, 0.25, 0.38)
-		Styler.style_button_small(fbtn, fb_base)
-		fbtn.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8))
-
-	# --- Empty state label (hidden by default) ---
-	_talent_empty_label = Label.new()
-	_talent_empty_label.text = "Walk to earn talent points!"
-	_talent_empty_label.visible = false
-	_talent_empty_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_talent_empty_label.add_theme_font_size_override("font_size", Styler.FONT_BODY)
-	_talent_empty_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.6))
-	talent_outer_vbox.add_child(_talent_empty_label)
-
-	# --- Hint label (hidden by default) ---
-	_talent_hint_label = Label.new()
-	_talent_hint_label.text = "Tap + to invest your first talent point!"
-	_talent_hint_label.visible = false
-	_talent_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_talent_hint_label.add_theme_font_size_override("font_size", Styler.FONT_BODY)
-	_talent_hint_label.add_theme_color_override("font_color", Color(0.65, 1.0, 0.21))
-	talent_outer_vbox.add_child(_talent_hint_label)
-
-	# --- ScrollContainer with talent list ---
-	var talent_scroll = ScrollContainer.new()
-	talent_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	talent_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	talent_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	talent_outer_vbox.add_child(talent_scroll)
-
-	talent_list = VBoxContainer.new()
-	talent_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	talent_list.add_theme_constant_override("separation", 6)
-	talent_scroll.add_child(talent_list)
-
-	# --- Bottom HBox ---
-	var bottom_hbox = HBoxContainer.new()
-	bottom_hbox.add_theme_constant_override("separation", 8)
-	talent_outer_vbox.add_child(bottom_hbox)
-
-	_talent_bottom_used_label = Label.new()
-	_talent_bottom_used_label.text = "0 / 100 used"
-	_talent_bottom_used_label.add_theme_font_size_override("font_size", Styler.FONT_SMALL)
-	_talent_bottom_used_label.add_theme_color_override("font_color", Color(0.45, 0.45, 0.45))
-	bottom_hbox.add_child(_talent_bottom_used_label)
-
-	var bottom_spacer = Control.new()
-	bottom_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bottom_hbox.add_child(bottom_spacer)
-
-	var respec_btn = Button.new()
-	respec_btn.text = "Respec"
-	respec_btn.custom_minimum_size = Vector2(80, 36)
-	Styler.style_button_small(respec_btn, Color(0.7, 0.23, 0.23))
-	respec_btn.add_theme_color_override("font_color", Color.WHITE)
-	respec_btn.pressed.connect(_on_respec_pressed)
-	bottom_hbox.add_child(respec_btn)
-
-	# --- Style ---
+func _apply_theme() -> void:
+	# Tab buttons
 	Styler.style_button(btn_tab_skills, Color.from_rgba8(64, 180, 255))
 	Styler.style_button(btn_tab_talents, Color.from_rgba8(64, 180, 255))
 	_set_skills_tab_active(btn_tab_skills)
 
-	# Parchment theme for talents panel (matches profile/skills panels)
+	# Skill class buttons
+	Styler.style_button(btn_skills_blood, Styler.COL_BLOOD)
+	Styler.style_button(btn_skills_dark, Styler.COL_DARK)
+	Styler.style_button(btn_skills_arcane, Styler.COL_ARCANE)
+	Styler.style_button(btn_skills_mage, Styler.COL_FIRE.lerp(Styler.COL_FROST, 0.5))
+	Styler.style_button(btn_skills_paladin, Styler.COL_HOLY)
+	Styler.style_button(btn_skills_buffs, Styler.COL_UTILITY)
+
+	# Talents title label (Styler font)
+	_title_label.add_theme_font_override("font", Styler.GROBOLT_FONT)
+	_title_label.add_theme_font_size_override("font_size", Styler.FONT_SECTION)
+	_title_label.add_theme_color_override("font_color", Color.BLACK)
+
+	# Parchment theme for talents panel
 	var talents_sb = StyleBoxFlat.new()
 	talents_sb.bg_color = Styler.COLOR_PARCHMENT
 	talents_sb.set_corner_radius_all(4)
@@ -379,24 +370,24 @@ func _build_ui() -> void:
 	talents_sb.shadow_color = Color(0, 0, 0, 0.3)
 	talents_panel.add_theme_stylebox_override("panel", talents_sb)
 
-	# --- Connect ---
-	btn_tab_skills.pressed.connect(_on_btn_tab_skills_pressed)
-	btn_tab_talents.pressed.connect(_on_btn_tab_talents_pressed)
-	btn_skills_mage.pressed.connect(_on_btn_skills_mage_pressed)
-	btn_skills_paladin.pressed.connect(_on_btn_skills_paladin_pressed)
-	btn_skills_buffs.pressed.connect(_on_btn_skills_buffs_pressed)
-	btn_skills_blood.pressed.connect(_on_btn_skills_blood_pressed)
-	btn_skills_dark.pressed.connect(_on_btn_skills_dark_pressed)
-	btn_skills_arcane.pressed.connect(_on_btn_skills_arcane_pressed)
+	# Respec button
+	Styler.style_button_small(_respec_btn, Color(0.7, 0.23, 0.23))
+	_respec_btn.add_theme_color_override("font_color", Color.WHITE)
 
-	# Blood button gets crimson color to stand out
-	Styler.style_button(btn_skills_blood, Styler.COL_BLOOD)
-	Styler.style_button(btn_skills_dark, Styler.COL_DARK)
-	Styler.style_button(btn_skills_arcane, Styler.COL_ARCANE)
-	# Mage button gets a fire/frost blended color
-	Styler.style_button(btn_skills_mage, Styler.COL_FIRE.lerp(Styler.COL_FROST, 0.5))
-	Styler.style_button(btn_skills_paladin, Styler.COL_HOLY)
-	Styler.style_button(btn_skills_buffs, Styler.COL_UTILITY)
+	# Green badge for spent points (matching red PointsBadge style)
+	var spent_badge = talents_panel.get_node_or_null("TalentMargin/TalentOuterVBox/BottomHBox/SpentBadge")
+	if spent_badge != null:
+		var sb_green = StyleBoxFlat.new()
+		sb_green.bg_color = Color(0.24, 0.78, 0.31, 1.0)
+		sb_green.corner_radius_top_left = 12
+		sb_green.corner_radius_top_right = 12
+		sb_green.corner_radius_bottom_left = 12
+		sb_green.corner_radius_bottom_right = 12
+		sb_green.content_margin_left = 10.0
+		sb_green.content_margin_right = 10.0
+		sb_green.content_margin_top = 4.0
+		sb_green.content_margin_bottom = 4.0
+		spent_badge.add_theme_stylebox_override("panel", sb_green)
 
 
 func _on_btn_tab_skills_pressed() -> void:
@@ -433,13 +424,9 @@ func _update_skills(server_json) -> void:
 
 
 func _refresh_talents() -> void:
-	_clear(talent_list)
-
-	var total_allocated: int = talent_data.get("total_allocated", 0)
+	var total_spent: int = talent_data.get("total_points_spent", 0)
 	var unspent: int = talent_data.get("unspent", 0)
-	var max_points: int = talent_data.get("max_allocated", 100)
 	var streak: int = talent_data.get("walking_streak", 0)
-	var allocations: Dictionary = talent_data.get("talents", {})
 
 	# Update header badges
 	_talent_header_points_label.text = str(unspent) + " pts"
@@ -449,46 +436,14 @@ func _refresh_talents() -> void:
 	else:
 		_talent_header_streak_label.visible = false
 
-	# Update bottom used label
-	_talent_bottom_used_label.text = str(total_allocated) + " / " + str(max_points) + " used"
+	# Update bottom label (no cap)
+	_talent_bottom_used_label.text = str(total_spent) + " spent"
 
-	# Empty state
-	if unspent == 0 and total_allocated == 0:
-		_talent_empty_label.visible = true
-		_talent_hint_label.visible = false
-	elif total_allocated == 0 and unspent > 0:
-		_talent_empty_label.visible = false
-		_talent_hint_label.visible = true
-	else:
-		_talent_empty_label.visible = false
-		_talent_hint_label.visible = false
-
-	# Build talent cards
-	for talent_info in talent_config:
-		var talent_id: String = talent_info.get("id", "")
-		var alloc_info: Dictionary = allocations.get(talent_id, {})
-		var allocated: int = alloc_info.get("allocated", 0)
-		var effective: int = alloc_info.get("effective", allocated)
-		var tier: int = alloc_info.get("tier", 0)
-		var talent_type: String = talent_info.get("type", "")
-
-		# Filter: My Build — skip unallocated
-		if _current_filter == "my_build" and allocated == 0:
-			continue
-
-		# Filter: type-based
-		if _current_filter == "offense" and talent_type != "offense":
-			continue
-		if _current_filter == "defense" and talent_type != "defense":
-			continue
-		if _current_filter == "magic" and not talent_type.begins_with("magic_"):
-			continue
-		if _current_filter == "cross" and talent_type != "cross_system":
-			continue
-
-		var card = _make_talent_card(talent_info, allocated, effective, tier)
-
-		talent_list.add_child(card)
+	# Setup wheel with config (first time) or update data
+	if _talent_wheel != null:
+		if talent_config.size() > 0 and _talent_wheel._talent_config.size() == 0:
+			_talent_wheel.setup(talent_config, synergy_config)
+		_talent_wheel.update_talents(talent_data)
 
 
 func _clear(node: Node) -> void:
@@ -496,288 +451,6 @@ func _clear(node: Node) -> void:
 		c.queue_free()
 
 
-func _get_talent_type_color(talent_type: String) -> Color:
-	match talent_type:
-		"offense":
-			return Color(0.91, 0.27, 0.38)
-		"defense":
-			return Color(0.29, 0.62, 1.0)
-		"magic_fire":
-			return Styler.COL_FIRE
-		"magic_frost":
-			return Styler.COL_FROST
-		"magic_holy":
-			return Styler.COL_HOLY
-		"magic_dark":
-			return Styler.COL_DARK
-		"magic_arcane":
-			return Styler.COL_ARCANE
-		"utility":
-			return Color(0.48, 0.72, 1.0)
-		"cross_system":
-			return Color(0.65, 1.0, 0.21)
-		_:
-			return Color(0.6, 0.6, 0.7)
-
-
-func _make_talent_card(info: Dictionary, allocated: int, effective: int, tier: int) -> Control:
-	var talent_id: String = info.get("id", "")
-	var talent_name: String = info.get("name", "Unknown")
-	var talent_type: String = info.get("type", "")
-	var max_rank: int = info.get("max_rank", 50)
-	var icon_key: String = info.get("icon", "")
-	var synergies: Array = info.get("synergies", [])
-	var per_level: float = info.get("per_level", 0.0)
-	var tier1_desc: String = info.get("tier1_desc", "")
-	var tier2_desc: String = info.get("tier2_desc", "")
-	var tier3_desc: String = info.get("tier3_desc", "")
-	var accent = _get_talent_type_color(talent_type)
-
-	# Build tooltip
-	var tip = talent_name + " [" + talent_type.replace("_", " ") + "]\n"
-	if effective > 0:
-		var current_value = effective * per_level * 100.0
-		tip += "Current: +" + ("%.1f" % current_value) + "%%\n"
-	tip += "\nTier 1: " + tier1_desc
-	tip += "\nTier 2 (rank 16): " + tier2_desc
-	tip += "\nTier 3 (rank 31): " + tier3_desc
-	if tier >= 2:
-		tip += "\n\nTier 2 ACTIVE"
-	if tier >= 3:
-		tip += " | Tier 3 ACTIVE"
-
-	# Card panel
-	var panel = PanelContainer.new()
-	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-
-	var card_sb = StyleBoxFlat.new()
-	card_sb.bg_color = Color(0.102, 0.102, 0.243)  # #1a1a3e
-	card_sb.border_color = Color(0.165, 0.165, 0.369)  # #2a2a5e
-	card_sb.set_border_width_all(1)
-	card_sb.set_corner_radius_all(12)
-	panel.add_theme_stylebox_override("panel", card_sb)
-
-	# Margin
-	var margin = MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 8)
-	margin.add_theme_constant_override("margin_right", 8)
-	margin.add_theme_constant_override("margin_top", 8)
-	margin.add_theme_constant_override("margin_bottom", 8)
-	panel.add_child(margin)
-
-	# Main HBox
-	var main_hbox = HBoxContainer.new()
-	main_hbox.add_theme_constant_override("separation", 8)
-	margin.add_child(main_hbox)
-
-	# --- Icon with element-colored border ---
-	var icon_border = PanelContainer.new()
-	icon_border.custom_minimum_size = Vector2(72, 72)
-	var ib_sb = StyleBoxFlat.new()
-	ib_sb.bg_color = Color.TRANSPARENT
-	ib_sb.set_border_width_all(2)
-	ib_sb.border_color = accent
-	ib_sb.set_corner_radius_all(6)
-	icon_border.add_theme_stylebox_override("panel", ib_sb)
-
-	var icon_rect = TextureRect.new()
-	icon_rect.custom_minimum_size = Vector2(68, 68)
-	icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	if icon_key != "" and ItemDB.has_icon(icon_key):
-		icon_rect.texture = ItemDB.get_icon(icon_key)
-	icon_border.add_child(icon_rect)
-	main_hbox.add_child(icon_border)
-
-	# --- Info VBox ---
-	var info_vbox = VBoxContainer.new()
-	info_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	info_vbox.add_theme_constant_override("separation", 3)
-	main_hbox.add_child(info_vbox)
-
-	# Name + Rank row
-	var name_row = HBoxContainer.new()
-	name_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	info_vbox.add_child(name_row)
-
-	var name_lbl = Label.new()
-	name_lbl.text = talent_name
-	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	name_lbl.add_theme_font_override("font", Styler.GROBOLT_FONT)
-	name_lbl.add_theme_font_size_override("font_size", 15)
-	name_lbl.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
-	name_row.add_child(name_lbl)
-
-	var rank_lbl = Label.new()
-	rank_lbl.text = str(effective) + "/" + str(max_rank)
-	rank_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	rank_lbl.add_theme_font_size_override("font_size", Styler.FONT_SMALL + 1)
-	rank_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8))
-	name_row.add_child(rank_lbl)
-
-	# Tier dots
-	var tier_row = HBoxContainer.new()
-	tier_row.add_theme_constant_override("separation", 4)
-	info_vbox.add_child(tier_row)
-	for t in range(3):
-		var dot = ColorRect.new()
-		dot.custom_minimum_size = Vector2(8, 8)
-		if t < tier:
-			dot.color = accent
-		else:
-			dot.color = Color(0.3, 0.3, 0.4)
-		tier_row.add_child(dot)
-
-	# Progress bar
-	var pct: float = 0.0
-	if max_rank > 0:
-		pct = float(effective) / float(max_rank) * 100.0
-	var pb = ProgressBar.new()
-	pb.min_value = 0
-	pb.max_value = 100
-	pb.value = pct
-	pb.show_percentage = false
-	pb.custom_minimum_size = Vector2(0, 4)
-	pb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-
-	var bg_style = StyleBoxFlat.new()
-	bg_style.bg_color = Color(0.15, 0.15, 0.25)
-	bg_style.set_corner_radius_all(2)
-	pb.add_theme_stylebox_override("background", bg_style)
-
-	var fill_style = StyleBoxFlat.new()
-	fill_style.bg_color = accent
-	fill_style.set_corner_radius_all(2)
-	pb.add_theme_stylebox_override("fill", fill_style)
-	info_vbox.add_child(pb)
-
-	# Tier descriptions
-	var desc_color = Color(0.55, 0.55, 0.65)
-	var active_color = Color(0.65, 1.0, 0.21)
-	var t1_lbl = Label.new()
-	t1_lbl.text = tier1_desc
-	t1_lbl.add_theme_font_size_override("font_size", Styler.FONT_CAPTION + 1)
-	t1_lbl.add_theme_color_override("font_color", active_color if tier >= 1 and effective > 0 else desc_color)
-	t1_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	info_vbox.add_child(t1_lbl)
-	if effective > 0:
-		var current_value = effective * per_level * 100.0
-		var val_lbl = Label.new()
-		val_lbl.text = "Current: +" + ("%.1f" % current_value) + "%"
-		val_lbl.add_theme_font_size_override("font_size", Styler.FONT_CAPTION + 1)
-		val_lbl.add_theme_color_override("font_color", Color(1.0, 0.78, 0.26))
-		info_vbox.add_child(val_lbl)
-
-	# Synergy badges
-	if not synergies.is_empty():
-		var syn_row = HBoxContainer.new()
-		syn_row.add_theme_constant_override("separation", 4)
-		info_vbox.add_child(syn_row)
-
-		for syn_id in synergies:
-			var syn_info = _get_synergy_info(syn_id)
-			var syn_name: String = syn_info.get("name", str(syn_id))
-			var syn_active: bool = syn_info.get("active", false)
-
-			var syn_badge = PanelContainer.new()
-			var syn_sb = StyleBoxFlat.new()
-			syn_sb.set_corner_radius_all(8)
-			syn_sb.content_margin_left = 6
-			syn_sb.content_margin_right = 6
-			syn_sb.content_margin_top = 1
-			syn_sb.content_margin_bottom = 1
-			if syn_active:
-				syn_sb.bg_color = Color(0.2, 0.5, 0.2, 0.8)
-			else:
-				syn_sb.bg_color = Color(0.25, 0.25, 0.3, 0.8)
-			syn_badge.add_theme_stylebox_override("panel", syn_sb)
-
-			var syn_lbl = Label.new()
-			syn_lbl.text = syn_name
-			syn_lbl.add_theme_font_size_override("font_size", Styler.FONT_CAPTION)
-			syn_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7) if not syn_active else Color(0.6, 1.0, 0.6))
-			syn_badge.add_child(syn_lbl)
-
-			syn_row.add_child(syn_badge)
-
-	# T2/T3 tier descriptions (always visible)
-	var t2_lbl = Label.new()
-	t2_lbl.text = "T2 (rank 16): " + tier2_desc
-	t2_lbl.add_theme_font_size_override("font_size", Styler.FONT_CAPTION + 1)
-	t2_lbl.add_theme_color_override("font_color", active_color if tier >= 2 else desc_color)
-	t2_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	info_vbox.add_child(t2_lbl)
-
-	var t3_lbl = Label.new()
-	t3_lbl.text = "T3 (rank 31): " + tier3_desc
-	t3_lbl.add_theme_font_size_override("font_size", Styler.FONT_CAPTION + 1)
-	t3_lbl.add_theme_color_override("font_color", active_color if tier >= 3 else desc_color)
-	t3_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	info_vbox.add_child(t3_lbl)
-
-	# --- Allocate "+" button ---
-	var alloc_btn = Button.new()
-	alloc_btn.text = "+"
-	alloc_btn.custom_minimum_size = Vector2(44, 44)
-
-	var btn_sb = StyleBoxFlat.new()
-	btn_sb.bg_color = Color(0.91, 0.27, 0.38)
-	btn_sb.set_corner_radius_all(22)
-	alloc_btn.add_theme_stylebox_override("normal", btn_sb)
-
-	var btn_hover = btn_sb.duplicate()
-	btn_hover.bg_color = Color(1.0, 0.35, 0.45)
-	alloc_btn.add_theme_stylebox_override("hover", btn_hover)
-
-	var btn_pressed = btn_sb.duplicate()
-	btn_pressed.bg_color = Color(0.75, 0.2, 0.3)
-	alloc_btn.add_theme_stylebox_override("pressed", btn_pressed)
-
-	var btn_disabled = btn_sb.duplicate()
-	btn_disabled.bg_color = Color(0.3, 0.15, 0.18)
-	alloc_btn.add_theme_stylebox_override("disabled", btn_disabled)
-
-	alloc_btn.add_theme_color_override("font_color", Color.WHITE)
-	alloc_btn.add_theme_color_override("font_hover_color", Color.WHITE)
-	alloc_btn.add_theme_color_override("font_pressed_color", Color.WHITE)
-	alloc_btn.add_theme_color_override("font_disabled_color", Color(1, 1, 1, 0.4))
-	alloc_btn.add_theme_font_size_override("font_size", 22)
-	alloc_btn.pressed.connect(_on_allocate_pressed.bind(talent_id))
-	var btn_row = HBoxContainer.new()
-	btn_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	btn_row.alignment = BoxContainer.ALIGNMENT_END
-	btn_row.add_child(alloc_btn)
-	info_vbox.add_child(btn_row)
-
-	return panel
-
-
-func _get_synergy_info(syn_id) -> Dictionary:
-	for syn in synergy_config:
-		if syn.get("id", "") == str(syn_id):
-			return syn
-	return {"name": str(syn_id), "active": false}
-
-
-func _on_allocate_pressed(talent_id: String) -> void:
-	var now = Time.get_ticks_msec()
-	var last_press: int = _allocate_debounce.get(talent_id, 0)
-	if now - last_press < 300:
-		return  # debounce
-	_allocate_debounce[talent_id] = now
-	SignalManager.signal_TalentAllocate.emit(talent_id)
-
-
-func _on_filter_pressed(filter_name: String) -> void:
-	_current_filter = filter_name
-	# Update filter button visual states
-	for key in _filter_buttons:
-		var fbtn: Button = _filter_buttons[key]
-		var base_col = Color(0.25, 0.25, 0.38) if key == filter_name else Color(0.16, 0.16, 0.24)
-		Styler.style_button_small(fbtn, base_col)
-		var font_col = Color(1.0, 1.0, 1.0) if key == filter_name else Color(0.7, 0.7, 0.8)
-		fbtn.add_theme_color_override("font_color", font_col)
-	_refresh_talents()
 
 
 func _on_respec_pressed() -> void:
@@ -810,6 +483,7 @@ func _on_talents_config(data: Dictionary) -> void:
 func _on_talents_data(data: Dictionary) -> void:
 	talent_data = data
 	_refresh_talents()
+	_refresh_open_tooltip()
 
 
 func _on_talent_allocate(data: Dictionary) -> void:

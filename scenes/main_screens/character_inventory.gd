@@ -21,6 +21,11 @@ class_name Inventory extends Control
 @onready var character_model: TextureRect = $VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer/equipment_vbox/HBoxContainer/character_model
 @onready var col_right: VBoxContainer = $VBox_Root/Body/Gear_Panel/VBoxContainer/Equipment_Panel/MarginContainer/equipment_vbox/HBoxContainer/col_right
 
+# --- Paper Doll ---
+# Draw order: layers added in this order (later = drawn on top)
+const PAPER_DOLL_LAYER_ORDER = ["legs", "chest", "shoulder", "head", "gloves", "feet", "belt"]
+var _paper_doll_layers: Dictionary = {} # slot_name -> TextureRect
+
 @onready var btn_split_items: Button = $VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/Btn_Split_Items
 @onready var btn_split_currency: Button = $VBox_Root/Body/Gear_Panel/VBoxContainer/Inventory_Panel/MarginContainer/VBoxContainer/HBoxContainer/Btn_Split_Currency
 
@@ -163,9 +168,7 @@ func _ready() -> void:
 	
 	Styler.style_name_label(ilvl_label, Color.from_rgba8(255,215,128))
 	
-	var pirat_tex = load("res://assets/background/pirat.png") as Texture2D
-	if pirat_tex:
-		character_model.texture = pirat_tex
+	_setup_paper_doll()
 		
 	gold_texture.texture = ItemDB.get_icon("gold_coin")
 	gold_label.text = " Gold: {0}".format([str(int(Account.gold))])
@@ -736,6 +739,43 @@ func _refresh_inventory_slot_visuals(index: int) -> void:
 		slot_node.tooltip_text = nm + ("\n" + ds if ds != "" else "")
 		#slot_node.tooltip_text = def.get("name", id)
 
+# --- Paper Doll Setup & Update ---
+const BASE_BODY_PATH = "res://assets/equipment_overlays/base_body/base_body_female.png"
+
+func _make_paper_doll_layer(layer_name: String, tex: Texture2D = null) -> TextureRect:
+	var layer = TextureRect.new()
+	layer.name = layer_name
+	layer.texture = tex
+	layer.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	layer.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	character_model.add_child(layer)
+	return layer
+
+func _setup_paper_doll() -> void:
+	# Guard against double-setup (e.g., scene re-entry)
+	if not _paper_doll_layers.is_empty():
+		return
+
+	character_model.texture = null
+
+	# Base body layer (always visible)
+	var body_tex = load(BASE_BODY_PATH) as Texture2D
+	_make_paper_doll_layer("base_body", body_tex)
+
+	# Equipment overlay layers in draw order (later = on top)
+	for slot in PAPER_DOLL_LAYER_ORDER:
+		_paper_doll_layers[slot] = _make_paper_doll_layer(slot + "_layer")
+
+func _update_paper_doll_slot(slot_name: String, icon_key: String) -> void:
+	if not _paper_doll_layers.has(slot_name):
+		return
+	var layer = _paper_doll_layers[slot_name]
+	if icon_key.is_empty():
+		layer.texture = null
+	else:
+		layer.texture = ItemDB.get_item_overlay(icon_key)
+
 func _update_equipment_slot_visuals(slot_name: String) -> void:
 	if not _eq_slot_nodes.has(slot_name): return
 
@@ -757,6 +797,8 @@ func _update_equipment_slot_visuals(slot_name: String) -> void:
 			sb.border_color = Styler.QUALITY_COLORS.get(q, Styler.QUALITY_COLORS[1])
 		if lbl:
 			lbl.add_theme_color_override("font_color", Styler.GOLD_COLOR)
+		# Update paper doll overlay
+		_update_paper_doll_slot(slot_name, icon_key)
 	else:
 		var ph_key = SLOT_PLACEHOLDER_ICONS.get(slot_name, "")
 		icon.texture  = ItemDB.get_item_icon(ph_key, null) if ph_key != "" else null
@@ -765,6 +807,8 @@ func _update_equipment_slot_visuals(slot_name: String) -> void:
 			sb.border_color = Color(0.25, 0.25, 0.3)
 		if lbl:
 			lbl.add_theme_color_override("font_color", Color(0.55, 0.55, 0.55))
+		# Clear paper doll overlay
+		_update_paper_doll_slot(slot_name, "")
 
 
 # --- Signal Callbacks ---

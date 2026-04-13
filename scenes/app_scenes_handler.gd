@@ -7,7 +7,7 @@ class_name AppScenesHandler
 @export var anim_time = 0.18
 
 var _track: HBoxContainer = null
-var _page = 0
+var _page = 2
 var _pages = 0
 
 var _maybe_swipe = false       # pressed, but not sure it's a swipe yet
@@ -36,6 +36,7 @@ func _enter_tree() -> void:
 	_track = HBoxContainer.new()
 	_track.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_track.size_flags_vertical   = Control.SIZE_EXPAND_FILL
+	_track.add_theme_constant_override("separation", 0)
 	add_child(_track)
 
 func _ready() -> void:
@@ -80,14 +81,11 @@ func _show_progress_hud(payload):
 	# - First update after login (AFK catch-up)
 	# - Rift milestone fights happened
 	# - Rift completed or died
-	# - Level up
-	var has_milestone_fights = not d.get("milestone_fights", []).is_empty()
 	var rift_complete = d.get("rift_complete", false)
 	var rift_died = d.get("rift_died", false)
-	var leveled_up = int(d.get("levels_gained", 0)) > 0
-	var is_big_update = has_milestone_fights or rift_complete or rift_died or leveled_up
+	var is_rift_event = has_fights or rift_complete or rift_died
 
-	if _first_progress_after_login or is_big_update:
+	if _first_progress_after_login or is_rift_event:
 		_first_progress_after_login = false
 		overlay = ACTIVITY_PROGRESS_SCENE.instantiate()
 		add_child(overlay)

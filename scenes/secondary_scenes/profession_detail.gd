@@ -362,7 +362,13 @@ func _build_gathering_content(data: Dictionary) -> void:
 	left_vbox.add_child(cycles_lbl)
 
 	var spc_lbl = Label.new()
-	spc_lbl.text = "Steps per action: %d" % int(data.get("base_steps", 0))
+	var eff_steps = int(data.get("base_steps", 0))
+	var orig_steps = int(data.get("base_steps_original", eff_steps))
+	if orig_steps > eff_steps and orig_steps > 0:
+		var pct = int(round((1.0 - float(eff_steps) / float(orig_steps)) * 100.0))
+		spc_lbl.text = "Steps per action: %d  [-%d%% from stats, base %d]" % [eff_steps, pct, orig_steps]
+	else:
+		spc_lbl.text = "Steps per action: %d" % eff_steps
 	Styler.style_parchment_label(spc_lbl, Styler.COLOR_TEXT_DARK)
 	left_vbox.add_child(spc_lbl)
 
@@ -663,7 +669,14 @@ func _build_recipe_card(recipe: Dictionary) -> PanelContainer:
 	info_hbox.add_child(out_lbl)
 
 	var steps_lbl = Label.new()
-	steps_lbl.text = "%d steps  %d XP" % [int(recipe.get("base_steps", 0)), int(recipe.get("base_xp", 0))]
+	var r_eff = int(recipe.get("base_steps", 0))
+	var r_orig = int(recipe.get("base_steps_original", r_eff))
+	var r_xp = int(recipe.get("base_xp", 0))
+	if r_orig > r_eff and r_orig > 0:
+		var r_pct = int(round((1.0 - float(r_eff) / float(r_orig)) * 100.0))
+		steps_lbl.text = "%d steps  (-%d%%, base %d)  %d XP" % [r_eff, r_pct, r_orig, r_xp]
+	else:
+		steps_lbl.text = "%d steps  %d XP" % [r_eff, r_xp]
 	steps_lbl.add_theme_font_size_override("font_size", 15)
 	steps_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 	steps_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
@@ -791,6 +804,7 @@ func _compute_max_craft_qty(ingredients: Array) -> int:
 		var need: int = int(ing.get("qty_needed", 1))
 		if need <= 0:
 			continue
+		@warning_ignore("integer_division")
 		result = mini(result, have / need)
 	if result < 0:
 		result = 0

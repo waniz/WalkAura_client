@@ -1,5 +1,8 @@
 extends Node
 
+func _ready() -> void:
+	_build_overlay_paths()
+
 # ── Lazy-loaded texture registries ──────────────────────────────────────────
 # Paths are stored at startup; actual Texture2D objects are loaded on first access
 # and cached for subsequent lookups.  This avoids loading 200+ textures into RAM
@@ -128,10 +131,10 @@ var _item_icon_paths = {
 	"fadeleaf":          "res://assets/professions/herbalism/herb_fadeleaf.png",
 	"silverleaf":        "res://assets/professions/herbalism/herb_silverleaf.png",
 	"earthroot":         "res://assets/professions/herbalism/herb_earthroot.png",
-	# TODO: missing icon assets
 	"goldthorn":         "res://assets/professions/herbalism/herb_goldthorn.png",
 	"swampcap":          "res://assets/professions/herbalism/herb_swampcap.png",
 	"plaguebloom":       "res://assets/professions/herbalism/herb_plaguebloom.png",
+	# TODO: missing icon assets
 	"ghost_mushroom":    "res://assets/professions/herbalism/herb_ghost_mushroom.png",
 	"nightshade":        "res://assets/professions/herbalism/herb_nightshade.png",
 	"mountain_sage":     "res://assets/professions/herbalism/herb_mountain_sage.png",
@@ -169,6 +172,7 @@ var _item_icon_paths = {
 	"toad_skin":         "res://assets/professions/hunting/hunting_toad_skin.png",
 	"goat_horn":         "res://assets/professions/hunting/hunting_goat_horn.png",
 	"whelp_scale":       "res://assets/professions/hunting/hunting_whelp_scale.png",
+	
 	# Mining
 	"common_copper_ore": "res://assets/professions/mining/common_copper_ore.png",
 	"common_tin_ore":    "res://assets/professions/mining/common_tin_ore.png",
@@ -176,6 +180,7 @@ var _item_icon_paths = {
 	"iron_ore":          "res://assets/professions/mining/iron_ore.png",
 	"mithril_ore":       "res://assets/professions/mining/mithril_ore.png",
 	"dragonscale_ore":   "res://assets/professions/mining/dragonscale_ore.png",
+	
 	# Woodcutting
 	"common_birch_log":  "res://assets/professions/woodcutting/common_birch_log.png",
 	# TODO: missing icon assets
@@ -184,6 +189,7 @@ var _item_icon_paths = {
 	"maple_log":         "res://assets/professions/woodcutting/maple_log.png",
 	"tower_timber":      "res://assets/professions/woodcutting/tower_timber.png",
 	"enchanted_log":     "res://assets/professions/woodcutting/enchanted_log.png",
+	
 	# Fishing
 	"fish_0":            "res://assets/professions/fishing/fish_0.png",
 	"fish_1":            "res://assets/professions/fishing/fish_1.png",
@@ -192,6 +198,7 @@ var _item_icon_paths = {
 	"river_trout":       "res://assets/professions/fishing/river_trout.png",
 	"deep_sea_fish":     "res://assets/professions/fishing/deep_sea_fish.png",
 	"arcane_fish":       "res://assets/professions/fishing/arcane_fish.png",
+	
 	# Enchanting materials
 	"arcane_dust":       "res://assets/professions/enchanting/arcane_dust.jpg",
 	"mystic_essence":    "res://assets/professions/enchanting/mystic_essence.jpg",
@@ -199,6 +206,38 @@ var _item_icon_paths = {
 	"void_crystal":      "res://assets/professions/enchanting/void_crystal.jpg",
 }
 var _item_icon_cache = {}
+
+# ── Equipment overlay paths (derived from icon paths) ──────────────────────
+# Overlays are the same icon keys but stored under equipment_overlays/ instead
+# of equipment/. Only slots with visible paper doll layers are included.
+var _overlay_visible_slots = ["head", "shoulder", "chest", "belt", "gloves", "legs", "feet"]
+var _item_overlay_paths = {}
+var _item_overlay_cache = {}
+
+func _build_overlay_paths() -> void:
+	for key in _item_icon_paths:
+		var icon_path: String = _item_icon_paths[key]
+		if not icon_path.begins_with("res://assets/equipment/"):
+			continue
+		# Check if this key belongs to a visible overlay slot (delimiter-safe)
+		var is_visible = false
+		for slot in _overlay_visible_slots:
+			if key.begins_with(slot + "_") or key == slot:
+				is_visible = true
+				break
+		if not is_visible:
+			continue
+		var overlay_path = icon_path.replace("res://assets/equipment/", "res://assets/equipment_overlays/")
+		_item_overlay_paths[key] = overlay_path
+
+func get_item_overlay(key: String) -> Texture2D:
+	if _item_overlay_cache.has(key):
+		return _item_overlay_cache[key]
+	if _item_overlay_paths.has(key):
+		var tex = load(_item_overlay_paths[key]) as Texture2D
+		_item_overlay_cache[key] = tex
+		return tex
+	return null
 
 var _icon_paths = {
 	# global icons
@@ -213,19 +252,6 @@ var _icon_paths = {
 	"attributes_spirit":    "res://assets/general_icons/attributes/attribute_spirit.png",
 	"attributes_strength":  "res://assets/general_icons/attributes/attribute_strength.png",
 	"attributes_vitality":  "res://assets/general_icons/attributes/attribute_vitality.png",
-	"block_chance":         "res://assets/general_icons/attributes/block_chance.png",
-	"critical_chance":      "res://assets/general_icons/attributes/critical_chance.png",
-	"critical_damage":      "res://assets/general_icons/attributes/critical_damage.png",
-	"damage_reduction":     "res://assets/general_icons/attributes/damage_reduction.png",
-	"dodge":                "res://assets/general_icons/attributes/dodge.png",
-	"haste":                "res://assets/general_icons/attributes/haste.png",
-	"hit_rating":           "res://assets/general_icons/attributes/hit_rating.png",
-	"magical_attack":       "res://assets/general_icons/attributes/magical_attack.png",
-	"magical_defence":      "res://assets/general_icons/attributes/magical_defence.png",
-	"magical_penetration":  "res://assets/general_icons/attributes/magical_penetration.png",
-	"physical_attack":      "res://assets/general_icons/attributes/physical_attack.png",
-	"physical_defence":     "res://assets/general_icons/attributes/physical_defence.png",
-	"versatility":          "res://assets/general_icons/attributes/versatility.png",
 
 	"fire_spell_damage":    "res://assets/general_icons/attributes/fire.png",
 	"frost_spell_damage":   "res://assets/general_icons/attributes/frost.png",
@@ -268,13 +294,9 @@ var _icon_paths = {
 	"shadow_mastery":       "res://assets/skills/dark/shadow_mastery.png",
 	"arcane_mastery":       "res://assets/skills/arcane/arcane_mastery.png",
 	"blood_pact":           "res://assets/skills/blood/blood_pact.png",
-
-	# resistance icons (reuse elemental icons for spell damage; blood needs its own)
-	# TODO: missing blood resistance icon asset
 	"blood_spell_damage":   "res://assets/general_icons/attributes/blood.png",
 
 	# HUD icons
-	# TODO: missing skills HUD button icon asset
 	"buttom_hud_skills":    "res://assets/general_icons/hud/buttom_hud_skills.png",
 
 	# default / fallback
@@ -419,15 +441,15 @@ func has_icon(key: String) -> bool:
 # value : map position as ratio Vector2(x, y) in range 0.0–1.0
 var WAYPOINTS: Dictionary = {
 	"starter_village": Vector2(0.33, 0.42),
-	"ancient_forest":  Vector2(0.38, 0.31),
-	"dark_swamp":      Vector2(0.39, 0.55),
-	"mountains":       Vector2(0.57, 0.26),
-	"iron_mountain":   Vector2(0.68, 0.27),
-	"human_village":   Vector2(0.72, 0.35),
-	"tower":           Vector2(0.84, 0.56),
-	"sunken_harbor":   Vector2(0.49, 0.81),
-	"dragon_lair":     Vector2(0.58, 0.50),
-	"ancient_place":   Vector2(0.77, 0.74),
+	"ancient_forest":  Vector2(0.38, 0.36),
+	"dark_swamp":      Vector2(0.39, 0.57),
+	"mountains":       Vector2(0.57, 0.29),
+	"iron_mountain":   Vector2(0.71, 0.27),
+	"human_village":   Vector2(0.73, 0.42),
+	"tower":           Vector2(0.82, 0.61),
+	"sunken_harbor":   Vector2(0.52, 0.77),
+	"dragon_lair":     Vector2(0.59, 0.55),
+	"ancient_place":   Vector2(0.75, 0.78),
 }
 
 # Display names for server location IDs — mirrors server LOCATION_DICT
@@ -456,6 +478,19 @@ var WAYPOINT_LOCATION_IDS: Dictionary = {
 	"sunken_harbor":   8,
 	"dragon_lair":     9,
 	"ancient_place":   10,
+}
+
+# ── Location hub: backgrounds & activity markers ─────────────────────────────
+# Key = server location ID.  Markers use normalized positions (0.0–1.0).
+var LOCATION_BACKGROUNDS: Dictionary = {
+	1: "res://assets/locations/starter_village/background.png",
+}
+
+var LOCATION_MARKERS: Dictionary = {
+	1: [
+		{"activity_id": 1, "name": "Herbalist's Garden", "desc": "A fragrant garden where medicinal herbs grow wild.",         "texture": "res://assets/locations/starter_village/herbalism_button.png",  "pos": Vector2(0.85, 0.9)},
+		{"activity_id": 3, "name": "Hunter's Lodge",     "desc": "Supplies and tracking maps for the surrounding wilderness.", "texture": "res://assets/locations/starter_village/hunting_button.png",    "pos": Vector2(0.28, 0.9)},
+	]
 }
 
 # Equipment rows

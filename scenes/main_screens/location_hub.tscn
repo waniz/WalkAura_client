@@ -1,0 +1,95 @@
+[gd_scene format=3 uid="uid://btcl2d6jrea"]
+
+[ext_resource type="Script" uid="uid://dsdgsk74vkxts" path="res://scenes/main_screens/location_hub.gd" id="1_x2bqv"]
+[ext_resource type="Script" uid="uid://c7hm815icc26x" path="res://scripts/components/parallax_background.gd" id="2_xce3v"]
+
+[node name="LocationHub" type="Control" unique_id=138367420]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_x2bqv")
+
+[node name="BgFill" type="ColorRect" parent="." unique_id=257348729]
+unique_name_in_owner = true
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.12, 0.1, 0.07, 1)
+
+[node name="VBox" type="VBoxContainer" parent="." unique_id=98758744]
+unique_name_in_owner = true
+layout_mode = 0
+
+[node name="BackgroundContainer" type="Control" parent="VBox" unique_id=1385320000]
+unique_name_in_owner = true
+clip_contents = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="BackgroundRect" type="TextureRect" parent="VBox/BackgroundContainer" unique_id=395452787]
+unique_name_in_owner = true
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 6
+script = ExtResource("2_xce3v")
+
+[node name="StatusPanel" type="PanelContainer" parent="VBox" unique_id=31246572]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="VBox/StatusPanel" unique_id=1008688373]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
+
+[node name="StatusVBox" type="VBoxContainer" parent="VBox/StatusPanel/Margin" unique_id=538901052]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="StatusTitle" type="Label" parent="VBox/StatusPanel/Margin/StatusVBox" unique_id=1124353150]
+unique_name_in_owner = true
+layout_mode = 2
+text = "No Activity"
+
+[node name="StatusXPBar" type="ProgressBar" parent="VBox/StatusPanel/Margin/StatusVBox" unique_id=1895038527]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+show_percentage = false
+
+[node name="StatusXPLabel" type="Label" parent="VBox/StatusPanel/Margin/StatusVBox" unique_id=1735154529]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Separator" type="HSeparator" parent="VBox/StatusPanel/Margin/StatusVBox" unique_id=280576707]
+layout_mode = 2
+
+[node name="StatusStepsLabel" type="Label" parent="VBox/StatusPanel/Margin/StatusVBox" unique_id=1381395307]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Session steps: 0"
+
+[node name="StatusActionsLabel" type="Label" parent="VBox/StatusPanel/Margin/StatusVBox" unique_id=507671960]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Actions done: 0"
+
+[node name="StatusProgressLabel" type="Label" parent="VBox/StatusPanel/Margin/StatusVBox" unique_id=1573034250]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="BtnStop" type="Button" parent="VBox/StatusPanel/Margin/StatusVBox" unique_id=1170775010]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+text = "STOP"

@@ -53,6 +53,7 @@ const COLOR_TEXT_DARK   = Color(0.1, 0.1, 0.1, 1.0)    # Dark text
 var   COLOR_PANEL_DARK  = Color.from_rgba8(28,30,40,255)
 const COLOR_BORDER      = Color(0.2, 0.2, 0.2, 1.0)
 var   COLOR_GOLD        = Color.from_rgba8(255, 200, 66)  # Unified with COL_PRIMARY
+var   COLOR_SECTION_HDR = Color.from_rgba8(130, 75, 20)   # Dark brown — readable on parchment
 const COLOR_SLOT_BG     = Color(0.0, 0.0, 0.0, 0.15)   # Dark slot bg
 const COLOR_ACCENT      = Color(0.2, 0.2, 0.2, 1.0)
 const COLOR_CARD_BG     = Color(0.0, 0.0, 0.0, 0.05) # Faint inset for cards
@@ -64,6 +65,19 @@ var QUADRAT_FONT  = load("res://assets/fonts/quadrat_regular.ttf")
 
 # ------------------- Design constants -------------------
 # Semantic button colors
+# Radial ring colors — per-attribute (saturated for visibility on parchment)
+var RING_COLOR_STRENGTH  = Color.from_rgba8(230, 100, 160)
+var RING_COLOR_AGILITY   = Color.from_rgba8(230, 160, 40)
+var RING_COLOR_VITALITY  = Color.from_rgba8(160, 30, 30)
+var RING_COLOR_INTELLECT = Color.from_rgba8(150, 60, 240)
+var RING_COLOR_SPIRIT    = Color.from_rgba8(30, 50, 160)
+var RING_COLOR_LUCK      = Color.from_rgba8(30, 120, 50)
+
+# Radial ring colors — per-profession-group (saturated for visibility)
+var RING_COLOR_GATHERING = Color.from_rgba8(40, 180, 40)
+var RING_COLOR_CRAFTING  = Color.from_rgba8(140, 60, 210)
+var RING_COLOR_BATTLE    = Color.from_rgba8(210, 40, 40)
+
 var COLOR_BTN_PRIMARY    = Color.from_rgba8(64, 180, 255)     # Cyan — primary actions
 var COLOR_BTN_SECONDARY  = Color.from_rgba8(255, 200, 66)     # Gold — secondary actions
 var COLOR_BTN_DESTRUCTIVE = Color.from_rgba8(180, 60, 60)     # Red — stop/close/delete
@@ -222,6 +236,8 @@ func style_button_small(btn, base: Color) -> void:
 	btn.add_theme_font_size_override("font_size", 12)
 
 func wire_button_anim(btn: Button) -> void:
+	btn.resized.connect(func(): btn.pivot_offset = btn.size / 2)
+	btn.pivot_offset = btn.size / 2
 	btn.mouse_entered.connect(func():
 		var t = btn.create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		t.tween_property(btn, "scale", Vector2(1.03, 1.03), 0.12))

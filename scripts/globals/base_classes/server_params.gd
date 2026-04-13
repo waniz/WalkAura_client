@@ -4,6 +4,7 @@ var ACCOUNT_PROGRESSION_LEVELS
 var STATS_PROGRESSION_LEVELS
 var ACTIVITY_PROGRESSION_LEVELS
 var PASSIVE_TOTAL_TO_LEVEL
+var LOCATIONS: Dictionary = {}
 var ACTIVITIES_SITES
 var GATHERING_ACTIVITIES
 var CRAFTING_ACTIVITIES
@@ -31,6 +32,7 @@ func on_login_params_received(data):
 	ACTIVITY_PROGRESSION_LEVELS = data["data"]["activity_progression"]
 	PASSIVE_TOTAL_TO_LEVEL = data["data"]["passive_progression"]
 	
+	LOCATIONS = data["data"].get("locations", {})
 	ACTIVITIES_SITES = data["data"]["activities_sites"]
 	GATHERING_ACTIVITIES = data["data"]["gathering_activities"]
 	CRAFTING_ACTIVITIES = data["data"]["crafting_activities"]
