@@ -1,5 +1,14 @@
 extends Node
 
+# Fallback URL shown by the "Update Now" button in the version-mismatch modal.
+# Flip this to the Play Store listing once it goes live; one-line change.
+const UPDATE_URL = "https://walkaura.app/download"
+
+# Fetched lazily in client_version() so we don't pay the ProjectSettings read
+# on every send. ProjectSettings.get_setting() is cheap but it's still a dict
+# lookup we can memoize.
+var _client_version_cache: String = ""
+
 var ACCOUNT_PROGRESSION_LEVELS
 var STATS_PROGRESSION_LEVELS
 var ACTIVITY_PROGRESSION_LEVELS
@@ -12,6 +21,25 @@ var BATTLE_ACTIVITIES
 var LINEAR_CONSTANT
 var DIMINISHING_CONSTANT
 var SERVER_VERSION = ""
+
+
+# The app version declared in project.godot's config/version. Memoized on
+# first call. Shape is typically "0.2.5.169" (major.minor.patch.build).
+func client_version() -> String:
+	if _client_version_cache == "":
+		_client_version_cache = str(ProjectSettings.get_setting("application/config/version", ""))
+	return _client_version_cache
+
+
+# True when client's first 3 dotted version segments match server's. Mirrors
+# walkaura_server/version.py::compatible exactly so contract drift is a
+# contract-test failure, not a runtime bug.
+func version_compatible() -> bool:
+	var c = client_version().split(".")
+	var s = SERVER_VERSION.split(".")
+	if c.size() < 3 or s.size() < 3:
+		return false
+	return c[0] == s[0] and c[1] == s[1] and c[2] == s[2]
 
 # Talent system config (loaded from talents_config message)
 var TALENT_REGISTRY: Array = []

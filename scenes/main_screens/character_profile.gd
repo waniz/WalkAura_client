@@ -4,8 +4,16 @@ extends Control
 
 @onready var panel_attributes: PanelContainer = $VBoxContainer/body_panel/Attributes
 @onready var panel_professions: PanelContainer = $VBoxContainer/body_panel/Professions
+@onready var panel_achievements: PanelContainer = $VBoxContainer/body_panel/Achievements
+@onready var achievements_vbox: VBoxContainer = $VBoxContainer/body_panel/Achievements/Margin/Scroll/VBox
 @onready var btn_tab_attributes: Button = $VBoxContainer/Tab_Buttons/Btn_Tab_Attributes
 @onready var btn_tab_professions: Button = $VBoxContainer/Tab_Buttons/Btn_Tab_Professions
+@onready var btn_tab_achievements: Button = $VBoxContainer/Tab_Buttons/Btn_Tab_Achievements
+
+const AchievementTabScene = preload("res://scenes/secondary_scenes/achievement_tab.tscn")
+const StepStatsChartScene = preload("res://scenes/secondary_scenes/step_stats_chart.tscn")
+var _achievement_tab: Node = null
+var _achievements_ready_ids: Array = []
 
 @onready var primary_card: PanelContainer = $VBoxContainer/body_panel/Attributes/Margin/VBox/PrimaryCard
 @onready var primary_grid: GridContainer = $VBoxContainer/body_panel/Attributes/Margin/VBox/PrimaryCard/PrimaryGrid
@@ -273,6 +281,7 @@ func _ready() -> void:
 	$VBoxContainer.offset_bottom = Styler.content_bottom
 
 	AccountManager.signal_AccountDataReceived.connect(_update_character_data)
+	SignalManager.signal_AchievementReady.connect(set_achievement_ready_ids)
 
 	STATS_TOTAL_TO_LEVEL = ServerParams.STATS_PROGRESSION_LEVELS
 	ACTIVITY_TOTAL_TO_LEVEL = ServerParams.ACTIVITY_PROGRESSION_LEVELS
@@ -283,6 +292,8 @@ func _ready() -> void:
 	
 	Styler.style_button(btn_tab_attributes, Color.from_rgba8(64, 180, 255))
 	Styler.style_button(btn_tab_professions, Color.from_rgba8(64, 180, 255))
+	Styler.style_button(btn_tab_achievements, Color.from_rgba8(64, 180, 255))
+	Styler._apply_parchment_style(panel_achievements)
 	_on_btn_tab_attributes_pressed()
 	
 	_style_section_card(primary_card, "Primary", Styler.COL_PRIMARY)
@@ -509,85 +520,122 @@ func _show_tooltip_popup(anchor: Control, title: String, body: String) -> void:
 
 
 func _make_mini_card(stat_name: String, lvl: int, activity_exp: int, accent: Color, group_name: String = "") -> Control:
-	# --- parse & split value into whole + fractional parts ---
+	# --- parse XP ---
 	var next_exp:  int = ACTIVITY_TOTAL_TO_LEVEL.get(str(lvl + 1), -1)
 	var lvl_current:  int = max(0, activity_exp)
 	var lvl_progress: int = max(1, next_exp) if next_exp > 0 else 1
-
-	var whole = int(lvl)
+	var is_max = (next_exp <= 0)
 	var frac  = clamp(float(lvl_current) / float(lvl_progress), 0.0, 1.0)
-	var pct   = int(round(frac * 100.0))   # 0 .. 100
+	var pct   = int(round(frac * 100.0))
 
-	# --- card container ---
+	# --- check if this profession is currently active ---
+	var prof_activity_map = {
+		"Herbalism": 1, "Alchemy": 2, "Hunting": 3,
+		"Mining": 4, "Forester": 5, "Fishing": 6,
+		"Rift Explorer": 7, "Enchanting": 9,
+	}
+	var act_id = prof_activity_map.get(stat_name, -1)
+	var is_active = (act_id >= 0 and Account.activity == act_id)
+
+	# --- group accent color ---
+	var ring_color = PROF_GROUP_RING_COLORS.get(group_name, accent)
+
+	# --- card container with group-colored left border ---
 	var panel = PanelContainer.new()
 	var _sb = StyleBoxFlat.new()
-	_sb.bg_color     = Color(0.0, 0.0, 0.0, 0.06)
+	_sb.bg_color = Color(0.0, 0.0, 0.0, 0.06)
+	if is_active:
+		_sb.bg_color = Color(ring_color.r, ring_color.g, ring_color.b, 0.08)
 	_sb.border_color = Color(0.0, 0.0, 0.0, 0.20)
 	_sb.set_border_width_all(1)
+	_sb.border_width_left = 3
 	_sb.set_corner_radius_all(5)
+	var left_border_col = ring_color if (is_active or lvl > 1) else Color(0.0, 0.0, 0.0, 0.20)
+	_sb.border_color = left_border_col
 	panel.add_theme_stylebox_override("panel", _sb)
 
 	var main_hbox = HBoxContainer.new()
 	main_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	panel.add_child(main_hbox)
 
-	# --- icon with radial ring (2x size) ---
-	var is_max = (next_exp <= 0)
-	var ring_color = PROF_GROUP_RING_COLORS.get(group_name, accent)
-	var ring_wrapper = _create_icon_ring(104, 60.0, 6.0, pct, ring_color, is_max)
+	# --- icon with radial ring ---
+	var ring_wrapper = _create_icon_ring(90, 52.0, 5.0, pct, ring_color, is_max)
 	ring_wrapper.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 
 	var icon_key = {
-		"Herbalism"    : "herbalism",
-		"Alchemy"      : "alchemy",
-		"Enchanting"   : "enchanting",
-		"Hunting"      : "hunting",
-		"Mining"       : "mining",
-		"Forester"     : "woodcutting",
-		"Fishing"      : "fishing",
-		"Rift Explorer": "rift",
+		"Herbalism": "herbalism", "Alchemy": "alchemy", "Enchanting": "enchanting",
+		"Hunting": "hunting", "Mining": "mining", "Forester": "woodcutting",
+		"Fishing": "fishing", "Rift Explorer": "rift",
 	}
-
 	ring_wrapper.get_node("Icon").texture = ItemDB.get_icon(icon_key.get(stat_name))
 	main_hbox.add_child(ring_wrapper)
 
-	# --- name + level ---
+	# --- info column: name, level, XP bar, active badge ---
 	var vb = VBoxContainer.new()
 	vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vb.size_flags_vertical   = Control.SIZE_SHRINK_CENTER
-	vb.add_theme_constant_override("separation", 2)
+	vb.add_theme_constant_override("separation", 3)
 	main_hbox.add_child(vb)
 
 	var n_lbl = Label.new()
 	n_lbl.text = stat_name
 	n_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	n_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	n_lbl.add_theme_font_size_override("font_size", 18)
+	n_lbl.add_theme_font_size_override("font_size", 16)
 	n_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 	n_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	vb.add_child(n_lbl)
 
 	var v_lbl = Label.new()
-	v_lbl.text = "Lv %d" % whole
-	v_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	v_lbl.add_theme_font_size_override("font_size", 22)
-	v_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
+	v_lbl.text = "Lv %d" % int(lvl)
+	v_lbl.add_theme_font_size_override("font_size", 14)
+	v_lbl.add_theme_color_override("font_color", Styler.COLOR_SECTION_HDR)
 	v_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	vb.add_child(v_lbl)
 
-	# Click handler — open profession detail overlay
+	# XP progress bar
+	var xp_bar = ProgressBar.new()
+	xp_bar.custom_minimum_size = Vector2(0, 10)
+	xp_bar.show_percentage = false
+	xp_bar.max_value = lvl_progress
+	xp_bar.value = lvl_current
+	var xb_bg = StyleBoxFlat.new()
+	xb_bg.bg_color = Color(0.0, 0.0, 0.0, 0.12)
+	xb_bg.set_corner_radius_all(4)
+	xp_bar.add_theme_stylebox_override("background", xb_bg)
+	var xb_fill = StyleBoxFlat.new()
+	xb_fill.bg_color = ring_color
+	xb_fill.set_corner_radius_all(4)
+	xp_bar.add_theme_stylebox_override("fill", xb_fill)
+	if is_max:
+		xp_bar.max_value = 1
+		xp_bar.value = 1
+	vb.add_child(xp_bar)
+
+	# Active badge
+	if is_active:
+		var badge = Label.new()
+		badge.text = "ACTIVE"
+		badge.add_theme_font_size_override("font_size", 11)
+		badge.add_theme_color_override("font_color", Color.from_rgba8(60, 200, 100))
+		badge.add_theme_font_override("font", Styler.QUADRAT_FONT)
+		vb.add_child(badge)
+
+	# --- chevron ---
+	var chevron = Label.new()
+	chevron.text = "\u203A"
+	chevron.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	chevron.add_theme_font_size_override("font_size", 22)
+	chevron.add_theme_color_override("font_color", Color(0.0, 0.0, 0.0, 0.25))
+	main_hbox.add_child(chevron)
+
+	# --- click handler ---
 	var prof_key_map = {
-		"Herbalism":     "herbalism",
-		"Alchemy":       "alchemy",
-		"Enchanting":    "enchanting",
-		"Hunting":       "hunting",
-		"Mining":        "mining",
-		"Forester":      "woodcutting",
-		"Fishing":       "fishing",
-		"Rift Explorer": "rift",
+		"Herbalism": "herbalism", "Alchemy": "alchemy", "Enchanting": "enchanting",
+		"Hunting": "hunting", "Mining": "mining", "Forester": "woodcutting",
+		"Fishing": "fishing", "Rift Explorer": "rift",
 	}
 	var prof_key: String = prof_key_map.get(stat_name, "")
-	if prof_key in ["herbalism", "alchemy", "enchanting", "mining", "woodcutting", "fishing"]:
+	if not prof_key.is_empty():
 		panel.mouse_filter = Control.MOUSE_FILTER_STOP
 		panel.gui_input.connect(func(event: InputEvent):
 			if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
@@ -788,18 +836,69 @@ func _equalize_off_def_size(make_wider_px = 300.0) -> void:
 func _on_btn_tab_attributes_pressed() -> void:
 	panel_attributes.visible = true
 	panel_professions.visible = false
+	panel_achievements.visible = false
 	_set_profile_tab_active(btn_tab_attributes)
 
 func _on_btn_tab_professions_pressed() -> void:
 	panel_attributes.visible = false
 	panel_professions.visible = true
+	panel_achievements.visible = false
 	_set_profile_tab_active(btn_tab_professions)
 
+func _on_btn_tab_achievements_pressed() -> void:
+	panel_attributes.visible = false
+	panel_professions.visible = false
+	panel_achievements.visible = true
+	_set_profile_tab_active(btn_tab_achievements)
+	_ensure_achievement_tab_loaded()
+	_clear_achievement_tab_badge()
+
+func _ensure_achievement_tab_loaded() -> void:
+	if _achievement_tab == null:
+		_achievement_tab = AchievementTabScene.instantiate()
+		achievements_vbox.add_child(_achievement_tab)
+	if _achievement_tab.has_method("request_refresh"):
+		_achievement_tab.request_refresh()
+
 func _set_profile_tab_active(active_btn: Button) -> void:
-	for btn in [btn_tab_attributes, btn_tab_professions]:
+	for btn in [btn_tab_attributes, btn_tab_professions, btn_tab_achievements]:
 		var sb = btn.get_theme_stylebox("normal") as StyleBoxFlat
 		if sb:
 			sb.bg_color = Color.from_rgba8(64, 180, 255) if btn == active_btn else Color.from_rgba8(60, 60, 70)
+
+# Achievements ready notification dot on the Btn_Tab_Achievements button.
+# Server pushes {"cmd":"achievement_ready","data":{"ready_ids":[...]}} via
+# ServerConnector. Parent/ancestor scenes listen and call these helpers.
+func set_achievement_ready_ids(ids: Array) -> void:
+	_achievements_ready_ids = ids.duplicate()
+	_refresh_achievement_tab_badge()
+
+func _refresh_achievement_tab_badge() -> void:
+	if not btn_tab_achievements:
+		return
+	var has_ready = _achievements_ready_ids.size() > 0
+	if has_ready and not btn_tab_achievements.text.ends_with(" ●"):
+		btn_tab_achievements.text = "Achievements ●"
+	elif not has_ready and btn_tab_achievements.text.ends_with(" ●"):
+		btn_tab_achievements.text = "Achievements"
+
+func _clear_achievement_tab_badge() -> void:
+	_achievements_ready_ids.clear()
+	_refresh_achievement_tab_badge()
+
+# Called by the achievement_tab when the server confirms a title change.
+# Visual slot for active title rendering is TBD — hook here for integration.
+func set_active_title_display(active_title, titles_known: Array) -> void:
+	# Placeholder: print the title name for debugging. Replace with an on-screen
+	# label when the profile header title slot is added to the .tscn.
+	if active_title == null:
+		print("[character_profile] active title cleared")
+		return
+	for t in titles_known:
+		if int(t.get("title_id", 0)) == int(active_title):
+			print("[character_profile] active title: ", t.get("default_name", ""))
+			return
+	print("[character_profile] active title id: ", active_title)
 
 
 # ── Stats Dropdown Section ───────────────────────────────────────────────────
@@ -882,6 +981,9 @@ func _populate_stats_list(d: Dictionary) -> void:
 			for i in range(STEP_KEYS.size()):
 				var entry = STEP_KEYS[i]
 				_stats_list_vbox.add_child(_make_stat_row(entry.n, _fmt(d.get(entry.k, 0)), i))
+			var chart = StepStatsChartScene.instantiate()
+			chart.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			_stats_list_vbox.add_child(chart)
 		3:
 			for i in range(SUSTAIN_KEYS.size()):
 				var entry = SUSTAIN_KEYS[i]

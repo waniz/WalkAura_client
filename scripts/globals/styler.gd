@@ -59,6 +59,12 @@ const COLOR_ACCENT      = Color(0.2, 0.2, 0.2, 1.0)
 const COLOR_CARD_BG     = Color(0.0, 0.0, 0.0, 0.05) # Faint inset for cards
 const COLOR_CARD_BORDER = Color(0.0, 0.0, 0.0, 0.15)
 
+# Achievement tier colors (medals). Used for card borders, progress bars,
+# and Trophy Wall tile frames.
+var COLOR_TIER_BRONZE = Color.from_rgba8(184, 115, 51, 255)  # Easy
+var COLOR_TIER_SILVER = Color.from_rgba8(192, 192, 192, 255) # Medium
+# HARD tier reuses COLOR_GOLD for unity with the game's signature accent.
+
 var GROBOLT_FONT  = load("res://assets/fonts/grobolt.ttf")
 var JANDA_FONT    = load("res://assets/fonts/janda.ttf")
 var QUADRAT_FONT  = load("res://assets/fonts/quadrat_regular.ttf")
@@ -415,6 +421,25 @@ func _apply_parchment_style(panel: PanelContainer) -> void:
 	sb.shadow_color = Color(0,0,0,0.3)
 	
 	panel.add_theme_stylebox_override("panel", sb)
+
+
+func _apply_dark_panel_style(panel: PanelContainer, tier_color: Color = Color.TRANSPARENT) -> void:
+	if not panel: return
+	var sb = StyleBoxFlat.new()
+	sb.bg_color = COL_PANEL_BG
+	sb.set_corner_radius_all(6)
+	sb.border_width_left = 1
+	sb.border_width_right = 1
+	sb.border_width_top = 1
+	sb.border_width_bottom = 1
+	if tier_color.a > 0.0:
+		sb.border_color = Color(tier_color, 0.4)
+	else:
+		sb.border_color = COL_PANEL_BR
+	sb.shadow_size = 6
+	sb.shadow_color = Color(0, 0, 0, 0.4)
+	panel.add_theme_stylebox_override("panel", sb)
+
 
 func _get_slot_stylebox(is_hover: bool = false) -> StyleBoxFlat:
 	var sb = StyleBoxFlat.new()

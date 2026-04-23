@@ -38,6 +38,7 @@ func _ready() -> void:
 
 	SignalManager.signal_StepsReceivedFromServer.connect(_on_steps_received)
 	SignalManager.signal_StepToastUpdate.connect(_on_toast_update)
+	SignalManager.signal_GameNotification.connect(_on_game_notification)
 
 
 func _on_steps_received(amount: int) -> void:
@@ -48,6 +49,29 @@ func _on_steps_received(amount: int) -> void:
 
 func _on_toast_update(steps: int, loot: Dictionary, mapping: Dictionary, new_items: Array) -> void:
 	_show_toast(steps, loot, mapping, new_items)
+
+
+func _on_game_notification(message: String, color: Color) -> void:
+	for child in _vbox.get_children():
+		child.queue_free()
+	var lbl = Label.new()
+	lbl.text = message
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lbl.add_theme_font_size_override("font_size", 18)
+	lbl.add_theme_color_override("font_color", color)
+	lbl.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.8))
+	lbl.add_theme_constant_override("shadow_offset_x", 1)
+	lbl.add_theme_constant_override("shadow_offset_y", 1)
+	if "GROBOLT_FONT" in Styler:
+		lbl.add_theme_font_override("font", Styler.GROBOLT_FONT)
+	_vbox.add_child(lbl)
+	_vbox.modulate.a = 1.0
+	if _fade_tween and _fade_tween.is_valid():
+		_fade_tween.kill()
+	_fade_tween = create_tween()
+	_fade_tween.tween_interval(DISPLAY_TIME)
+	_fade_tween.tween_property(_vbox, "modulate:a", 0.0, FADE_TIME)
 
 
 func _show_toast(steps: int, loot: Dictionary, mapping: Dictionary, new_items: Array) -> void:

@@ -1,8 +1,14 @@
 extends Node
 
+var cached_rift_pending_monster: Dictionary = {}
+
 signal signal_LoginResult(ok: bool, error: String)
 signal signal_AccountDataReceived(result)
 signal signal_CreateUserResult(ok: bool, error: String)
+# Emitted when the server's client_hello reply says our version is out of
+# date. Payload is a Dictionary with keys: server_version, required,
+# client_version. Listened to by login_scene to show the update modal.
+signal signal_VersionMismatch(info: Dictionary)
 
 signal signal_LoginParamsReceived(data)
 signal signal_UserStepLastTSReceived(data)
@@ -43,7 +49,7 @@ func parse_message(message):
 	if cmd == "login_user":
 		check_login_result(json.data)
 	elif cmd == "create_user":
-		signal_CreateUserResult.emit(true, "")
+		_handle_create_user_result(json.data)
 	elif cmd == "login_params":
 		get_login_params(json.data)
 	elif cmd == "account_attributes":
@@ -62,6 +68,12 @@ func parse_message(message):
 		update_game_skills(json.data)
 	elif cmd == "skills_update":
 		update_skills(json.data)
+	elif cmd == "rift_pending_info":
+		var info = json.data.get("data", {})
+		cached_rift_pending_monster = info.get("pending_monster", {})
+		# Also emit for any already-connected listeners
+		var wrapped = {"data": {"data": info}}
+		signal_ActivityProgressReceived.emit(wrapped)
 	elif cmd == "rift_fights":
 		update_rift_fights(json.data)
 	elif cmd == "rift_history":
@@ -70,9 +82,25 @@ func parse_message(message):
 		handle_disenchant_result(json.data)
 	elif cmd == "profession_info":
 		handle_profession_info(json.data)
+	elif cmd == "achievements":
+		SignalManager.signal_AchievementsReceived.emit(json.data.get("data", {}))
+	elif cmd == "achievement_claimed":
+		SignalManager.signal_AchievementClaimed.emit(json.data.get("data", {}))
+	elif cmd == "achievement_ready":
+		var _ar = json.data.get("data", {})
+		if not (_ar is Dictionary): _ar = {}
+		SignalManager.signal_AchievementReady.emit(_ar.get("ready_ids", []))
+	elif cmd == "active_title_set":
+		var _at = json.data.get("data", {})
+		if not (_at is Dictionary): _at = {}
+		SignalManager.signal_ActiveTitleSet.emit(_at.get("active_title"))
+	elif cmd == "step_stats":
+		SignalManager.signal_StepStatsReceived.emit(json.data.get("data", {}))
 	elif cmd == "talents_config":
+		Account.raw_structures.talents_config = json.data.data
 		signal_TalentsConfigReceived.emit(json.data.data)
 	elif cmd in ["talents_data", "talent_allocate", "talent_respec", "talent_points_earned"]:
+		Account.raw_structures.talents_data = json.data.data
 		signal_TalentsDataReceived.emit(json.data.data)
 	elif cmd == "travel_cost":
 		var data = json.data.get("data", {})
@@ -82,29 +110,90 @@ func parse_message(message):
 		)
 	elif cmd == "travel_passing_through":
 		_handle_travel_passing_through(json.data)
+	elif cmd == "version_mismatch":
+		_handle_version_mismatch(json.data)
+	elif cmd == "client_hello_ack":
+		pass  # Handshake confirmed; nothing to do client-side.
 	elif cmd.begins_with("error:"):
 		_handle_server_error(json.data)
 		
 
 # router handlers
 func check_login_result(json_msg):
-	if json_msg.ok == true:
+	# Server now returns failures as {ok:false, cmd:"login_user", data:{code, message, ...}}.
+	# Legacy fallback reads `error` in case an older build is connected.
+	# Emits the raw error code (not display text) — consumers format it via
+	# GameTextEn.error_texts so the server contract stays machine-readable.
+	if json_msg.get("ok", false) == true:
 		signal_LoginResult.emit(true, "")
-	else:
-		var err: String = json_msg.get("error", "unknown")
-		signal_LoginResult.emit(false, err)
-		signal_AccountDataReceived.emit(true)
+		return
+	var data = json_msg.get("data", {})
+	var code: String = data.get("code", json_msg.get("error", "server_error"))
+	signal_LoginResult.emit(false, code)
+	signal_AccountDataReceived.emit(true)
 
+
+func _handle_create_user_result(json_msg) -> void:
+	if json_msg.get("ok", false) == true:
+		signal_CreateUserResult.emit(true, "")
+		return
+	var data = json_msg.get("data", {})
+	var code: String = data.get("code", "registration_failed")
+	signal_CreateUserResult.emit(false, code)
+
+
+func _handle_version_mismatch(json_msg) -> void:
+	var data = json_msg.get("data", {})
+	var info = {
+		"server_version": data.get("server_version", ""),
+		"required": data.get("required", ""),
+		"client_version": data.get("client_version", ""),
+	}
+	signal_VersionMismatch.emit(info)
+
+
+# Dispatch table for server error codes to client behavior. Kept as a flat
+# dict so a future code is one line to wire up. Unknown codes fall through to
+# a generic toast so nothing gets swallowed silently.
+const _ERROR_TOAST_CODES = {
+	"inventory_full":   Color(1.0, 0.39, 0.39),
+	"skill_too_low":    Color(0.9, 0.55, 0.35),
+	"rate_limited":     Color(1.0, 0.78, 0.26),
+	"server_error":     Color(1.0, 0.39, 0.39),
+	"bad_request":      Color(1.0, 0.39, 0.39),
+}
 
 func _handle_server_error(json_msg) -> void:
 	var data = json_msg.get("data", {})
 	var code: String = data.get("code", "")
-	var message: String = data.get("message", "Unknown error")
-	if code == "create_user_failed" or (code == "bad_request" and "password_hash" in message):
-		signal_CreateUserResult.emit(false, message)
-	elif code == "login_failed" or (code == "bad_request" and "password are" in message):
-		signal_LoginResult.emit(false, message)
-		signal_AccountDataReceived.emit(true)
+	var display: String = _display_for_error(code, data)
+	# Login/register failure responses route through their dedicated cmd
+	# handlers above — this path is for codes that arrive via the generic
+	# "error: ..." channel (rate limit, server error, inventory full, etc.).
+	if code in _ERROR_TOAST_CODES:
+		SignalManager.signal_GameNotification.emit(display, _ERROR_TOAST_CODES[code])
+	elif code == "version_mismatch":
+		_handle_version_mismatch(json_msg)
+	else:
+		# Unknown code — still show something so the user isn't left guessing.
+		SignalManager.signal_GameNotification.emit(display, Color(1.0, 0.5, 0.5))
+
+
+func _display_for_error(code: String, data: Dictionary) -> String:
+	# Prefer the localized string keyed by `code`. Fall back to the server
+	# message text, then to "Unknown error" so we never render an empty toast.
+	var text: String = GameTextEn.error_texts.get(code, "")
+	if text == "":
+		text = data.get("message", "Unknown error")
+	# Optional reason subcode overlay (e.g., username_invalid + too_short).
+	var reason: String = data.get("reason", "")
+	if reason != "" and GameTextEn.error_reason_texts.has(reason):
+		text = "%s %s" % [text, GameTextEn.error_reason_texts[reason]]
+	# Rate-limit specifically gets the countdown appended.
+	var retry_after = data.get("retry_after_seconds", 0)
+	if code == "rate_limited" and int(retry_after) > 0:
+		text = "%s (wait %ds)" % [text, int(retry_after)]
+	return text
 		
 func get_login_params(data):
 	signal_LoginParamsReceived.emit(data)
@@ -203,6 +292,10 @@ func get_account_attrs(json_msg):
 				 "travel_route_index", "travel_current_hop_steps", "travel_current_hop_max",
 				 "avatar_id", "crafting_steps", "crafting_target_qty", "crafting_batch_done"]:
 		Account.set(key, int(st.get(key, 0)))
+	if int(st.get("rift_id", 0)) > 0:
+		print("[RIFT DEBUG] account_manager parse: activity=%s rift_steps=%s/%s from server statuses=%s" % [
+			st.activity, st.get("rift_steps", "?"), st.get("rift_steps_max", "?"),
+			{"rift_id": st.get("rift_id"), "rift_steps": st.get("rift_steps"), "rift_steps_max": st.get("rift_steps_max"), "activity": st.activity}])
 	Account.travel_route = st.get("travel_route", [])
 
 	Account.rift_instance_id = str(st.get("rift_instance_id", ""))

@@ -6,7 +6,7 @@ var talent_data: Dictionary = {} # current talent allocations/ranks from server
 var synergy_config: Array = []   # synergy definitions from server
 
 var PASSIVE_TOTAL_TO_LEVEL = {1: 0}
-var _active_slots: Array = [null, null, null, null, null]
+var _active_slots: Array = [null, null, null, null, null, null]
 var _known_skills: Array = []
 
 # --- Node refs (from scene tree) ---
@@ -103,6 +103,12 @@ func _ready() -> void:
 	if Account.raw_structures.account_skills != null and not Account.raw_structures.account_skills.is_empty():
 		_update_skills(Account.raw_structures.account_skills)
 
+	if Account.raw_structures.talents_config != null and not Account.raw_structures.talents_config.is_empty():
+		_on_talents_config(Account.raw_structures.talents_config)
+
+	if Account.raw_structures.talents_data != null and not Account.raw_structures.talents_data.is_empty():
+		_on_talents_data(Account.raw_structures.talents_data)
+
 	_setup_skill_panel_structure()
 	_refresh_skills_ui()
 	_refresh_talents()
@@ -168,7 +174,7 @@ func _setup_talent_wheel() -> void:
 
 	talents_panel.resized.connect(_on_talents_panel_resized)
 	# Apply initial zoom after a frame so layout has settled
-	call_deferred("_apply_zoom")
+	call_deferred("_apply_zoom_and_pan")
 
 
 func _on_talents_panel_resized() -> void:
@@ -523,7 +529,7 @@ func _setup_skill_panel_structure() -> void:
 	title_active_skills.add_theme_color_override("font_color", Color(0.1, 0.1, 0.1))
 
 	active_container.alignment = BoxContainer.ALIGNMENT_CENTER
-	active_container.add_theme_constant_override("separation", 15)
+	active_container.add_theme_constant_override("separation", 8)
 
 	h_separator.modulate = Color(0, 0, 0, 0.3)
 
@@ -572,11 +578,11 @@ func _render_active_bar() -> void:
 	for c in active_container.get_children():
 		c.queue_free()
 
-	for i in range(5):
+	for i in range(6):
 		var skill_id = _active_slots[i]
 
 		var btn = Button.new()
-		btn.custom_minimum_size = Vector2(96, 96)
+		btn.custom_minimum_size = Vector2(72, 72)
 		btn.toggle_mode = false
 		btn.focus_mode = Control.FOCUS_NONE
 

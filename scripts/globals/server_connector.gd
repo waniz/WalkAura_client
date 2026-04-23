@@ -5,7 +5,7 @@ signal server_connector_message_bus(message: String)
 
 var cryptoUtil = UserCrypto.new()
 
-@export var websocket_url = "ws://91.98.164.230:8888/ws"
+@export var websocket_url = "wss://api.walkaura.app/ws"
 
 var _is_connected = false
 
@@ -27,12 +27,20 @@ var suppress_reconnect_overlay: bool = false
 # Part C: Reconnection overlay
 var _reconnect_overlay: CanvasLayer = null
 
+# Part E: Version mismatch state. Set when the server rejects our
+# client_hello. When true we stop auto-reconnecting — retrying would just
+# bounce against the same version gate forever.
+var _version_blocked: bool = false
+var _update_overlay: CanvasLayer = null
+
 func _ready() -> void:
 
 	connect_to_server()
 
 	SignalManager.signal_CreateUser.connect(_on_user_creating)
 	SignalManager.signal_LoginUser.connect(_on_user_login)
+	# Handshake failure stops auto-reconnect and shows the update modal.
+	AccountManager.signal_VersionMismatch.connect(_on_version_mismatch)
 
 	SignalManager.signal_UserActivity.connect(_on_user_activity)
 
@@ -62,6 +70,10 @@ func _ready() -> void:
 	SignalManager.signal_TalentAllocate.connect(_on_talent_allocate_request)
 	SignalManager.signal_TalentRespec.connect(_on_talent_respec_request)
 	SignalManager.signal_TalentCheatPoints.connect(_on_talent_cheat_points_request)
+	SignalManager.signal_RequestAchievements.connect(_on_request_achievements)
+	SignalManager.signal_ClaimAchievement.connect(_on_claim_achievement)
+	SignalManager.signal_SetActiveTitle.connect(_on_set_active_title)
+	SignalManager.signal_RequestStepStats.connect(_on_request_step_stats)
 
 
 func connect_to_server() -> void:
@@ -74,40 +86,50 @@ func connect_to_server() -> void:
 	if err != OK:
 		server_connector_message_bus.emit("[Client] ERROR: Cannot connect to server")
 		set_process(false)
-	else:
-		await get_tree().create_timer(1).timeout
-		server_connector_message_bus.emit("[Client] Connected to server ... ")
+
+func _drain_pending_packets() -> void:
+	# Drain buffered frames. Run BEFORE any state-specific handling so
+	# messages arriving just before the server closes (e.g., version_mismatch
+	# immediately followed by close()) are still parsed. Without this the
+	# 3s reconnect timer beats _on_version_mismatch to _version_blocked and
+	# the client bounces against the version gate forever.
+	while socket.get_available_packet_count():
+		var raw_msg = socket.get_packet().get_string_from_ascii()
+		if raw_msg.begins_with("[SERVER] "):
+			var json_str = raw_msg.substr(9)
+			var parsed = JSON.parse_string(json_str)
+			if parsed != null and parsed is Dictionary and parsed.get("cmd") == "heartbeat_ack":
+				_heartbeat_pending = false
+				_heartbeat_timeout_timer = 0.0
+				if not _connection_healthy:
+					_connection_healthy = true
+					_hide_reconnect_overlay()
+				continue
+		server_connector_message_bus.emit(raw_msg)
 
 func _process(_delta: float) -> void:
 	socket.poll()
 
 	var state = socket.get_ready_state()
 
+	# Drain packets regardless of state so close-followed-by-data is safe.
+	_drain_pending_packets()
+
 	if state == WebSocketPeer.STATE_OPEN:
 		if not _is_connected:
 			_is_connected = true
+			server_connector_message_bus.emit("[Client] Connected to server ... ")
 			# Reset heartbeat state on fresh connection
 			_heartbeat_timer = 0.0
 			_heartbeat_pending = false
 			_heartbeat_timeout_timer = 0.0
+			# Handshake: must be the first client->server frame. Server gates
+			# every other command behind this, so any later send (auto-login,
+			# heartbeat, etc.) would close the socket with version_mismatch.
+			_send_client_hello()
 			# Auto-login if we were previously authenticated
 			if _was_authenticated and _saved_username != "" and _saved_password != "":
 				_auto_login()
-
-		while socket.get_available_packet_count():
-			var raw_msg = socket.get_packet().get_string_from_ascii()
-			# Server messages are prefixed with "[SERVER] " (9 chars)
-			if raw_msg.begins_with("[SERVER] "):
-				var json_str = raw_msg.substr(9)
-				var parsed = JSON.parse_string(json_str)
-				if parsed != null and parsed is Dictionary and parsed.get("cmd") == "heartbeat_ack":
-					_heartbeat_pending = false
-					_heartbeat_timeout_timer = 0.0
-					if not _connection_healthy:
-						_connection_healthy = true
-						_hide_reconnect_overlay()
-					continue
-			server_connector_message_bus.emit(raw_msg)
 
 		# Heartbeat timer logic
 		_heartbeat_timer += _delta
@@ -136,6 +158,10 @@ func _process(_delta: float) -> void:
 				_show_reconnect_overlay()
 
 			await get_tree().create_timer(3.0).timeout
+			if _version_blocked:
+				# Client is out of date. Reconnecting would loop forever
+				# against the version gate — stop the process entirely.
+				return
 			connect_to_server()
 
 # Part C: Reconnection overlay methods
@@ -213,6 +239,19 @@ func send_message(data: Dictionary) -> void:
 		server_connector_message_bus.emit("[Client] ERROR: Not connected to server")
 		return
 	socket.send_text(JSON.stringify(data))
+
+# Sent unconditionally as the first frame after socket OPEN. Server rejects
+# every other command until it sees this; the response is either
+# client_hello_ack (we can proceed) or cmd=version_mismatch followed by a
+# socket close (client is out of date).
+func _send_client_hello() -> void:
+	var payload = {
+		"cmd": "client_hello",
+		"payload": {
+			"client_version": str(ProjectSettings.get_setting("application/config/version", "")),
+		}
+	}
+	socket.send_text(JSON.stringify(payload))
 
 func _on_user_creating(user, password) -> void:
 	if not _is_socket_open():
@@ -485,3 +524,125 @@ func _on_talent_cheat_points_request(points: int) -> void:
 	var payload = {"cmd": "talents", "payload": {"action": "cheat_points", "points": points}}
 	socket.send_text(JSON.stringify(payload))
 	server_connector_message_bus.emit("[Client] Cheat: adding %d talent points" % points)
+
+func _on_request_achievements() -> void:
+	if not _is_socket_open():
+		server_connector_message_bus.emit("[Client] ERROR: Not connected to server")
+		return
+	var payload = {"cmd": "get_achievements", "payload": {}}
+	socket.send_text(JSON.stringify(payload))
+	server_connector_message_bus.emit("[Client] Requesting achievements")
+
+func _on_request_step_stats(period: String) -> void:
+	if not _is_socket_open():
+		server_connector_message_bus.emit("[Client] ERROR: Not connected to server")
+		return
+	var payload = {"cmd": "get_step_stats", "payload": {"period": period}}
+	socket.send_text(JSON.stringify(payload))
+	server_connector_message_bus.emit("[Client] Requesting step stats: %s" % period)
+
+func _on_claim_achievement(achievement_id: int, chosen_attr) -> void:
+	if not _is_socket_open():
+		server_connector_message_bus.emit("[Client] ERROR: Not connected to server")
+		return
+	var body = {"achievement_id": achievement_id}
+	if chosen_attr != null and chosen_attr != "":
+		body["chosen_attr"] = chosen_attr
+	var payload = {"cmd": "claim_achievement", "payload": body}
+	socket.send_text(JSON.stringify(payload))
+	server_connector_message_bus.emit("[Client] Claiming achievement %d" % achievement_id)
+
+func _on_set_active_title(title_id) -> void:
+	if not _is_socket_open():
+		server_connector_message_bus.emit("[Client] ERROR: Not connected to server")
+		return
+	var body = {"title_id": title_id}   # null to clear
+	var payload = {"cmd": "set_active_title", "payload": body}
+	socket.send_text(JSON.stringify(payload))
+	server_connector_message_bus.emit("[Client] Setting active title %s" % str(title_id))
+
+
+# Part E: Version mismatch overlay
+func _on_version_mismatch(info: Dictionary) -> void:
+	_version_blocked = true
+	# Hide the "Reconnecting..." overlay if it's up — the update modal takes
+	# over as the authoritative message. Also suppress the reconnect overlay
+	# so no later close/reopen cycle flashes it.
+	_hide_reconnect_overlay()
+	suppress_reconnect_overlay = true
+	_show_update_overlay(info)
+
+func _show_update_overlay(info: Dictionary) -> void:
+	if _update_overlay != null:
+		return
+	_update_overlay = CanvasLayer.new()
+	_update_overlay.layer = 300  # above reconnect overlay
+	add_child(_update_overlay)
+
+	var bg = ColorRect.new()
+	bg.color = Color(0, 0, 0, 0.85)
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_update_overlay.add_child(bg)
+
+	var center = CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_update_overlay.add_child(center)
+
+	var panel = PanelContainer.new()
+	panel.custom_minimum_size = Vector2(420, 0)
+	center.add_child(panel)
+
+	var margin = MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 24)
+	margin.add_theme_constant_override("margin_right", 24)
+	margin.add_theme_constant_override("margin_top", 20)
+	margin.add_theme_constant_override("margin_bottom", 20)
+	panel.add_child(margin)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 12)
+	margin.add_child(vbox)
+
+	var title = Label.new()
+	title.text = "Update Required"
+	title.add_theme_font_size_override("font_size", 28)
+	title.add_theme_color_override("font_color", Color(1.0, 0.78, 0.26))
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(title)
+
+	var body = Label.new()
+	body.text = GameTextEn.error_texts.get("version_mismatch", "Your game version is out of date.")
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.custom_minimum_size = Vector2(380, 0)
+	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(body)
+
+	var versions = Label.new()
+	versions.text = "Your version: %s\nRequired: %s" % [
+		str(info.get("client_version", ServerParams.client_version())),
+		str(info.get("required", "")),
+	]
+	versions.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	versions.add_theme_color_override("font_color", Color(0.75, 0.75, 0.75))
+	vbox.add_child(versions)
+
+	var row = HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 12)
+	vbox.add_child(row)
+
+	var btn_update = Button.new()
+	btn_update.text = "Update Now"
+	btn_update.pressed.connect(_on_update_now_pressed)
+	row.add_child(btn_update)
+
+	var btn_close = Button.new()
+	btn_close.text = "Close Game"
+	btn_close.pressed.connect(_on_close_game_pressed)
+	row.add_child(btn_close)
+
+func _on_update_now_pressed() -> void:
+	OS.shell_open(ServerParams.UPDATE_URL)
+
+func _on_close_game_pressed() -> void:
+	get_tree().quit()

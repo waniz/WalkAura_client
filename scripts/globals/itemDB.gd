@@ -200,10 +200,10 @@ var _item_icon_paths = {
 	"arcane_fish":       "res://assets/professions/fishing/arcane_fish.png",
 	
 	# Enchanting materials
-	"arcane_dust":       "res://assets/professions/enchanting/arcane_dust.jpg",
-	"mystic_essence":    "res://assets/professions/enchanting/mystic_essence.jpg",
-	"enc_soul_shard":    "res://assets/professions/enchanting/enc_soul_shard.jpg",
-	"void_crystal":      "res://assets/professions/enchanting/void_crystal.jpg",
+	"arcane_dust":       "res://assets/professions/enchanting/arcane_dust.png",
+	"mystic_essence":    "res://assets/professions/enchanting/mystic_essence.png",
+	"enc_soul_shard":    "res://assets/professions/enchanting/enc_soul_shard.png",
+	"void_crystal":      "res://assets/professions/enchanting/void_crystal.png",
 }
 var _item_icon_cache = {}
 
@@ -397,6 +397,100 @@ var _icon_paths = {
 	"blood_presence":           "res://assets/skills/blood/blood_presence.png",
 	"blood_plague":             "res://assets/skills/blood/blood_plague.png",
 }
+
+# ── Monster icons ─────────────────────────────────────────────────────────────
+# Keyed by monster_id (matches server RIFT_MONSTER_TABLE keys).
+# Lazy-loaded via get_monster_icon().
+var _monster_icon_paths = {
+	# Legacy rift bosses
+	"rift_guardian":          "res://assets/monsters/rift_guardian.png",
+	"rift_sentinel":         "res://assets/monsters/rift_sentinel.png",
+	"rift_overlord":         "res://assets/monsters/rift_overlord.png",
+	"blood_wraith":          "res://assets/monsters/blood_wraith.png",
+	"crimson_golem":         "res://assets/monsters/crimson_golem.png",
+	# Tier 1
+	"forest_sprite":         "res://assets/monsters/forest_sprite.png",
+	"ancient_treant":        "res://assets/monsters/ancient_treant.png",
+	"swamp_crawler":         "res://assets/monsters/swamp_crawler.png",
+	"bog_witch":             "res://assets/monsters/bog_witch.png",
+	# Tier 2
+	"iron_golem":            "res://assets/monsters/iron_golem.png",
+	"forge_elemental":       "res://assets/monsters/forge_elemental.png",
+	"frost_wraith":          "res://assets/monsters/frost_wraith.png",
+	"arcane_sentinel":       "res://assets/monsters/arcane_sentinel.png",
+	# Tier 3
+	"dragon_whelp":          "res://assets/monsters/dragon_whelp.png",
+	"convergence_guardian":  "res://assets/monsters/convergence_guardian.png",
+	"void_horror":           "res://assets/monsters/void_horror.png",
+	"dragon_priest":         "res://assets/monsters/dragon_priest.png",
+	"convergence_avatar":    "res://assets/monsters/convergence_avatar.png",
+	# Battle monsters
+	"little_mice":           "res://assets/monsters/little_mice.png",
+	"little_rabbit":         "res://assets/monsters/little_rabbit.png",
+	"little_snake":          "res://assets/monsters/little_snake.png",
+	"little_wolf":           "res://assets/monsters/little_wolf.png",
+	"little_bear":           "res://assets/monsters/little_bear.png",
+	"swamp_toad":            "res://assets/monsters/swamp_toad.png",
+	"mountain_goat":         "res://assets/monsters/mountain_goat.png",
+}
+var _monster_icon_cache = {}
+
+func get_monster_icon(monster_id: String, default = null) -> Texture2D:
+	if _monster_icon_cache.has(monster_id):
+		return _monster_icon_cache[monster_id]
+	if _monster_icon_paths.has(monster_id):
+		var tex = load(_monster_icon_paths[monster_id]) as Texture2D
+		_monster_icon_cache[monster_id] = tex
+		return tex
+	return default
+
+func has_monster_icon(monster_id: String) -> bool:
+	return _monster_icon_paths.has(monster_id)
+
+# ── Rift icons ────────────────────────────────────────────────────────────────
+# Keyed by integer rift_id (matches server RAID_RIFT_TABLE keys and client RiftData.RIFT_TABLE).
+# Lazy-loaded via get_rift_icon().
+var _rift_icon_paths = {
+	2:  "res://assets/rifts/forest_breach.png",
+	3:  "res://assets/rifts/swamp_maw.png",
+	5:  "res://assets/rifts/iron_crucible.png",
+	7:  "res://assets/rifts/tower_ascent.png",
+	9:  "res://assets/rifts/dragons_fury.png",
+	10: "res://assets/rifts/the_convergence.png",
+}
+
+var _rift_icon_cache = {}
+
+func get_rift_icon(rift_id: int, default = null) -> Texture2D:
+	if _rift_icon_cache.has(rift_id):
+		return _rift_icon_cache[rift_id]
+	if _rift_icon_paths.has(rift_id):
+		var tex = load(_rift_icon_paths[rift_id]) as Texture2D
+		_rift_icon_cache[rift_id] = tex
+		return tex
+	return default
+
+func has_rift_icon(rift_id: int) -> bool:
+	return _rift_icon_paths.has(rift_id)
+
+
+# ── Achievement icons ──────────────────────────────────────────────────────────
+# Icons live at res://assets/achievements/<id>.png. 16 files, one per achievement_id.
+# If a png is missing, get_achievement_icon returns the default fallback (null
+# by default, safe to assign to TextureRect.texture).
+var _achievement_icon_cache = {}
+
+func get_achievement_icon(achievement_id: int, default = null) -> Texture2D:
+	if _achievement_icon_cache.has(achievement_id):
+		return _achievement_icon_cache[achievement_id]
+	var path = "res://assets/achievements/%d.png" % achievement_id
+	if ResourceLoader.exists(path):
+		var tex = load(path) as Texture2D
+		_achievement_icon_cache[achievement_id] = tex
+		return tex
+	_achievement_icon_cache[achievement_id] = default
+	return default
+
 var _icon_cache = {}
 
 # Avatars are only 6 textures — keep them eagerly loaded (always needed)
@@ -440,16 +534,26 @@ func has_icon(key: String) -> bool:
 # key   : unique location ID used in waypoint_pressed signal
 # value : map position as ratio Vector2(x, y) in range 0.0–1.0
 var WAYPOINTS: Dictionary = {
-	"starter_village": Vector2(0.33, 0.42),
-	"ancient_forest":  Vector2(0.38, 0.36),
-	"dark_swamp":      Vector2(0.39, 0.57),
-	"mountains":       Vector2(0.57, 0.29),
-	"iron_mountain":   Vector2(0.71, 0.27),
-	"human_village":   Vector2(0.73, 0.42),
-	"tower":           Vector2(0.82, 0.61),
-	"sunken_harbor":   Vector2(0.52, 0.77),
-	"dragon_lair":     Vector2(0.59, 0.55),
-	"ancient_place":   Vector2(0.75, 0.78),
+	"starter_village": Vector2(0.102, 0.108),
+	"ancient_forest":  Vector2(0.114, 0.072),
+	"dark_swamp":      Vector2(0.126, 0.143),
+	"mountains":       Vector2(0.170, 0.077),
+	"iron_mountain":   Vector2(0.213, 0.072),
+	"human_village":   Vector2(0.224, 0.112),
+	"tower":           Vector2(0.244, 0.149),
+	"sunken_harbor":   Vector2(0.146, 0.190),
+	"dragon_lair":     Vector2(0.185, 0.140),
+	"ancient_place":   Vector2(0.225, 0.190),
+	# v2 map locations — MeadowReach region and beyond
+	"meadow_reach":      Vector2(0.176, 0.272),
+	"saltspire_beacon":  Vector2(0.119, 0.301),
+	"timberfall":        Vector2(0.152, 0.336),
+	"barleydown":        Vector2(0.219, 0.302),
+	"merchants_rest":    Vector2(0.256, 0.305),
+	"hollow_spire":      Vector2(0.280, 0.321),
+	"craghold":          Vector2(0.288, 0.365),
+	"weizental":         Vector2(0.253, 0.364),
+	"aegis_stormfall":   Vector2(0.216, 0.380),
 }
 
 # Display names for server location IDs — mirrors server LOCATION_DICT
@@ -464,6 +568,16 @@ var LOCATION_NAMES: Dictionary = {
 	8:  "Sunken Harbor",
 	9:  "Dragon Lair",
 	10: "Ancient Place",
+	# New v2 map locations
+	11: "MeadowReach",
+	12: "Saltspire Beacon",
+	13: "Timberfall",
+	14: "Barleydown",
+	15: "Merchant's Rest",
+	16: "The Hollow Spire",
+	17: "Craghold",
+	18: "Weizental",
+	19: "Aegis of Stormfall",
 }
 
 # Maps waypoint string IDs -> server integer location IDs
@@ -478,6 +592,16 @@ var WAYPOINT_LOCATION_IDS: Dictionary = {
 	"sunken_harbor":   8,
 	"dragon_lair":     9,
 	"ancient_place":   10,
+	# New v2 map locations
+	"meadow_reach":     11,
+	"saltspire_beacon": 12,
+	"timberfall":       13,
+	"barleydown":       14,
+	"merchants_rest":   15,
+	"hollow_spire":     16,
+	"craghold":         17,
+	"weizental":        18,
+	"aegis_stormfall":  19,
 }
 
 # ── Location hub: backgrounds & activity markers ─────────────────────────────

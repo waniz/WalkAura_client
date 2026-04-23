@@ -1,5 +1,6 @@
 extends Control
 
+const FIGHTS_VIEWER = preload("res://scenes/secondary_scenes/rift_fights_viewer.gd")
 const RIFT_NAMES = {1: "Ancient Rift", 2: "Infernal Rift"}
 
 const QUALITY_COLORS = {
@@ -211,7 +212,13 @@ func _build_entry_card(entry: Dictionary) -> PanelContainer:
 	drill_btn.add_theme_color_override("font_color", Color.WHITE)
 	drill_btn.add_theme_color_override("font_hover_color", Color.WHITE)
 	drill_btn.add_theme_color_override("font_pressed_color", Color.WHITE)
-	drill_btn.pressed.connect(func(): SignalManager.signal_RequestRiftFights.emit(instance_id))
+	drill_btn.pressed.connect(func(): _open_fights_viewer(instance_id))
 	vbox.add_child(drill_btn)
 
 	return card
+
+
+func _open_fights_viewer(instance_id: String) -> void:
+	var viewer = FIGHTS_VIEWER.new()
+	viewer.rift_instance_id = instance_id
+	add_child(viewer)

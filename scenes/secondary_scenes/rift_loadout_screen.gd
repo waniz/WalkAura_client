@@ -154,14 +154,36 @@ func _build_ui() -> void:
 
 
 func _populate() -> void:
+	var is_raid: bool = pending_monster.get("is_raid", false)
+	var milestone_idx: int = int(pending_monster.get("milestone_index", 0))
+	var is_boss: bool = pending_monster.get("is_final_boss", false)
+
+	if is_raid:
+		_populate_raid(milestone_idx, is_boss)
+	else:
+		_populate_single(milestone_idx, is_boss)
+
+	# Milestone info
+	var milestone_lbl = get_node_or_null("*/*/milestone_label")
+	if milestone_lbl:
+		milestone_lbl.text = "Milestone %d" % (milestone_idx + 1)
+
+	# Player stats
+	var stats_lbl = get_node_or_null("*/*/stats_label")
+	if stats_lbl:
+		var hp_val: int = int(Account.hp) if Account.hp != null else 0
+		var mp_val: int = int(Account.mp) if Account.mp != null else 0
+		var shield_val: int = int(Account.shield) if Account.shield != null else 0
+		stats_lbl.text = "Your stats: HP %d  |  MP %d  |  Shield %d" % [hp_val, mp_val, shield_val]
+
+
+func _populate_single(milestone_idx: int, is_boss: bool) -> void:
 	var name_text: String = str(pending_monster.get("name", "Unknown"))
 	var level: int = int(pending_monster.get("level", 1))
 	var hp: int = int(pending_monster.get("hp", 0))
 	var atk = pending_monster.get("atk", 0)
 	var attack_type: String = str(pending_monster.get("attack_type", "p"))
 	var weaknesses: Dictionary = pending_monster.get("weaknesses", {})
-	var milestone_idx: int = int(pending_monster.get("milestone_index", 0))
-	var is_boss: bool = pending_monster.get("is_final_boss", false)
 
 	if is_boss:
 		_enemy_name_label.text = "BOSS: " + name_text
@@ -179,18 +201,53 @@ func _populate() -> void:
 			parts.append("Weak to %s (+%d%%)" % [str(element).capitalize(), pct])
 		_enemy_weakness_label.text = " | ".join(parts)
 
-	# Milestone info
-	var milestone_lbl = get_node_or_null("*/*/milestone_label")
-	if milestone_lbl:
-		milestone_lbl.text = "Milestone %d" % (milestone_idx + 1)
 
-	# Player stats
-	var stats_lbl = get_node_or_null("*/*/stats_label")
-	if stats_lbl:
-		var hp_val: int = int(Account.hp) if Account.hp != null else 0
-		var mp_val: int = int(Account.mp) if Account.mp != null else 0
-		var shield_val: int = int(Account.shield) if Account.shield != null else 0
-		stats_lbl.text = "Your stats: HP %d  |  MP %d  |  Shield %d" % [hp_val, mp_val, shield_val]
+func _populate_raid(milestone_idx: int, is_boss: bool) -> void:
+	var encounter_monsters: Array = pending_monster.get("encounter_monsters", [])
+	var rec_gear_score: int = int(pending_monster.get("recommended_gear_score", 0))
+	var rec_resistances: Array = pending_monster.get("recommended_resistances", [])
+
+	# Title: show encounter count
+	if is_boss:
+		_enemy_name_label.text = "FINAL ENCOUNTER (%d enemies)" % encounter_monsters.size()
+	else:
+		_enemy_name_label.text = "RAID ENCOUNTER (%d enemies)" % encounter_monsters.size()
+
+	# Enemy list
+	var enemy_names: Array = []
+	for em in encounter_monsters:
+		var role_text = ""
+		var r = em.get("role", "")
+		if r != "" and r != null:
+			role_text = " [%s]" % str(r).to_upper()
+		enemy_names.append("%s Lv%d%s" % [str(em.get("name", "?")), int(em.get("level", 1)), role_text])
+	_enemy_level_label.text = "\n".join(enemy_names)
+	_enemy_level_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+
+	# Total HP across all enemies
+	var total_hp: int = 0
+	for em in encounter_monsters:
+		total_hp += int(em.get("hp", 0))
+	_enemy_hp_label.text = "Total HP: %d" % total_hp
+
+	# Preparation checklist
+	var checklist_parts: Array = []
+
+	# Gear score check
+	if rec_gear_score > 0:
+		var raw_gs = Account.get("gear_score")
+		var player_gear_score: int = int(raw_gs) if raw_gs != null else 0
+		var gs_status = "OK" if player_gear_score >= rec_gear_score else "LOW"
+		checklist_parts.append("Gear Score: %d / %d  [%s]" % [player_gear_score, rec_gear_score, gs_status])
+
+	# Resistance check
+	for resist in rec_resistances:
+		checklist_parts.append("Recommended: %s resistance" % str(resist).capitalize())
+
+	if checklist_parts.is_empty():
+		_enemy_weakness_label.text = "No special preparation needed"
+	else:
+		_enemy_weakness_label.text = "\n".join(checklist_parts)
 
 
 func _on_fight_pressed() -> void:

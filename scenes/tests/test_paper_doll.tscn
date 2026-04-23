@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://o8a6d3bfpys7"]
 
-[ext_resource type="Script" path="res://scenes/tests/test_paper_doll.gd" id="1"]
+[ext_resource type="Script" uid="uid://w6oqgyepgf8u" path="res://scenes/tests/test_paper_doll.gd" id="1"]
 
-[node name="TestPaperDoll" type="Control"]
+[node name="TestPaperDoll" type="Control" unique_id=413013032]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0

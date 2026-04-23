@@ -47,6 +47,8 @@ var _tracked_activity: int = -1
 var _last_xp_into: int = 0
 var _last_xp_to_next: int = 0
 var _last_built_location: int = -1
+var _last_locked: bool = false
+var _last_req_skill: int = 0
 
 
 func _ready() -> void:
@@ -73,20 +75,21 @@ func _ready() -> void:
 # ==============================================================================
 
 func _apply_visual_theme() -> void:
-	_status_panel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	_status_panel.custom_minimum_size.x = size.x / 3.0
-	Styler._apply_parchment_style(_status_panel)
+	_status_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_status_panel.custom_minimum_size.x = 0
+	Styler._apply_dark_panel_style(_status_panel)
 
 	_status_title.add_theme_font_override("font", Styler.JANDA_FONT)
-	_status_title.add_theme_font_size_override("font_size", 16)
-	_status_title.add_theme_color_override("font_color", Color(0.13, 0.37, 0.13))
+	_status_title.add_theme_font_size_override("font_size", 18)
+	_status_title.add_theme_color_override("font_color", Styler.COL_PRIMARY)
 
-	Styler.style_mini_progress(_status_xp_bar, Color.from_rgba8(80, 160, 255))
+	Styler.style_mini_progress(_status_xp_bar, Styler.COL_PRIMARY)
 
+	var label_color = Color(1.0, 1.0, 1.0, 0.72)
 	for lbl in [_status_xp_label, _status_steps_label, _status_actions_label, _status_progress_label]:
 		lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 		lbl.add_theme_font_size_override("font_size", 14)
-		lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
+		lbl.add_theme_color_override("font_color", label_color)
 
 	Styler.style_button(_btn_stop, Color.from_rgba8(180, 60, 60))
 
@@ -240,12 +243,12 @@ func _highlight_active_marker() -> void:
 # ==============================================================================
 
 func _start_activity(activity_id: int) -> void:
-	if activity_id == Account.activity:
-		return
 	if _confirm_dialog and is_instance_valid(_confirm_dialog):
 		return
 	if activity_id == ACTIVITY_RIFT:
-		SignalManager.signal_ShowRift.emit()
+		SignalManager.signal_ShowRift.emit(Account.location)
+		return
+	if activity_id == Account.activity:
 		return
 	var new_name = GameTextEn.activities_texts.get(activity_id, "Activity")
 	var current_name = ""
@@ -299,6 +302,8 @@ func _on_activity_progress(data: Dictionary) -> void:
 
 	_last_xp_into = int(d.get("xp_into_level", 0))
 	_last_xp_to_next = int(d.get("xp_to_next", 0))
+	_last_locked = bool(d.get("locked", false))
+	_last_req_skill = int(d.get("req_skill", 0))
 	_update_status_panel()
 
 
@@ -311,6 +316,8 @@ func _update_status_panel() -> void:
 		_session_xp_gained = 0
 		_last_xp_into = 0
 		_last_xp_to_next = 0
+		_last_locked = false
+		_last_req_skill = 0
 		_tracked_activity = act
 
 	_highlight_active_marker()
@@ -344,6 +351,20 @@ func _update_status_panel() -> void:
 	var lvl = int(Account.get(prof + "_lvl"))
 	var display_name: String = GameTextEn.activities_texts.get(act, prof.capitalize())
 	_status_title.text = "%s — Level %d" % [display_name, lvl]
+
+	if _last_locked and _last_req_skill > 0:
+		_status_xp_bar.visible = false
+		_status_xp_label.text = ""
+		_status_steps_label.text = "⚠ Need %s level %d here" % [display_name, _last_req_skill]
+		_status_steps_label.add_theme_color_override("font_color", Color.from_rgba8(230, 120, 90))
+		_status_actions_label.text = "You are level %d — progress blocked." % lvl
+		_status_actions_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 0.72))
+		_status_progress_label.text = ""
+		_btn_stop.visible = true
+		return
+
+	# Unlocked state — restore default step label color if a prior lock tinted it
+	_status_steps_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 0.72))
 
 	if _last_xp_to_next > 0:
 		_status_xp_bar.visible = true

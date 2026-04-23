@@ -103,8 +103,20 @@ func _build_ui() -> void:
 	player_panel.add_theme_constant_override("separation", 4)
 	arena.add_child(player_panel)
 
+	# Player avatar icon
+	var avatar_key = str(Account.avatar_id)
+	var avatar_tex = ItemDB.AVATARS.get(avatar_key)
+	if avatar_tex:
+		var avatar_icon = TextureRect.new()
+		avatar_icon.texture = avatar_tex
+		avatar_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		avatar_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		avatar_icon.custom_minimum_size = Vector2(84, 84)
+		avatar_icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		player_panel.add_child(avatar_icon)
+
 	var player_title = Label.new()
-	player_title.text = "Player"
+	player_title.text = Account.username if Account.username else "Player"
 	Styler.style_parchment_label(player_title, Styler.COLOR_TEXT_DARK)
 	player_title.add_theme_font_size_override("font_size", 14)
 	player_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -157,7 +169,25 @@ func _build_ui() -> void:
 	monster_panel.add_theme_constant_override("separation", 4)
 	arena.add_child(monster_panel)
 
-	var monster_name: String = str(fight_meta.get("monster_id", "Monster")).replace("_", " ").capitalize()
+	# Monster icons
+	var monster_ids_str = str(fight_meta.get("monster_id", ""))
+	var monster_ids = monster_ids_str.split(",") if not monster_ids_str.is_empty() else []
+	if monster_ids.size() > 0:
+		var icon_row = HBoxContainer.new()
+		icon_row.alignment = BoxContainer.ALIGNMENT_CENTER
+		icon_row.add_theme_constant_override("separation", 4)
+		monster_panel.add_child(icon_row)
+		for mid in monster_ids:
+			var m_tex = ItemDB.get_monster_icon(mid.strip_edges())
+			if m_tex:
+				var m_icon = TextureRect.new()
+				m_icon.texture = m_tex
+				m_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+				m_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+				m_icon.custom_minimum_size = Vector2(60, 60)
+				icon_row.add_child(m_icon)
+
+	var monster_name: String = monster_ids_str.replace(",", " + ").replace("_", " ").capitalize() if not monster_ids_str.is_empty() else "Monster"
 	var monster_title = Label.new()
 	monster_title.text = monster_name
 	Styler.style_parchment_label(monster_title, Styler.COLOR_TEXT_DARK)

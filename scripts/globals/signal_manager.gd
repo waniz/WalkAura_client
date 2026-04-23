@@ -25,6 +25,8 @@ signal signal_StepsUpdatesCheats(amount)
 signal signal_StepsReceivedFromServer(amount)
 @warning_ignore("unused_signal")
 signal signal_StepToastUpdate(steps: int, loot: Dictionary, mapping: Dictionary, new_items: Array)
+@warning_ignore("unused_signal")
+signal signal_GameNotification(message: String, color: Color)
 
 # Inventory and equipment signals
 @warning_ignore("unused_signal")
@@ -70,7 +72,7 @@ signal signal_DisenchantResultReceived(data: Dictionary)
 
 # Rift signals
 @warning_ignore("unused_signal")
-signal signal_ShowRift
+signal signal_ShowRift(location_id: int)
 @warning_ignore("unused_signal")
 signal signal_RequestRiftFights(rift_instance_id: String)
 @warning_ignore("unused_signal")
@@ -87,6 +89,26 @@ signal signal_RequestProfessionInfo(profession: String)
 signal signal_ProfessionInfoReceived(data: Dictionary)
 @warning_ignore("unused_signal")
 signal signal_StartCraftActivity(activity: int, activity_site: int, recipe_id: String, target_qty: int)
+
+# ── Achievements ──────────────────────────────────────────────────────────────
+@warning_ignore("unused_signal")
+signal signal_RequestAchievements
+@warning_ignore("unused_signal")
+signal signal_ClaimAchievement(achievement_id: int, chosen_attr)
+@warning_ignore("unused_signal")
+signal signal_SetActiveTitle(title_id)   # null/0 clears
+@warning_ignore("unused_signal")
+signal signal_AchievementsReceived(data: Dictionary)
+@warning_ignore("unused_signal")
+signal signal_AchievementClaimed(data: Dictionary)
+@warning_ignore("unused_signal")
+signal signal_AchievementReady(ready_ids: Array)
+@warning_ignore("unused_signal")
+signal signal_ActiveTitleSet(active_title)
+@warning_ignore("unused_signal")
+signal signal_RequestStepStats(period: String)
+@warning_ignore("unused_signal")
+signal signal_StepStatsReceived(data: Dictionary)
 @warning_ignore("unused_signal")
 signal signal_TalentAllocate(talent_id: String)
 @warning_ignore("unused_signal")

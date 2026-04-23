@@ -168,7 +168,11 @@ func _on_create_pressed() -> void:
 			queue_free()
 		else:
 			_status_label.add_theme_color_override("font_color", Color.from_rgba8(200, 40, 40))
-			_status_label.text = error
+			# `error` is now a machine code (e.g. "username_taken") — map it
+			# to a localized string. Unknown codes fall through to the raw
+			# code so nothing gets swallowed silently.
+			var text: String = GameTextEn.error_texts.get(error, error)
+			_status_label.text = text
 			_btn_create.disabled = false
 	, CONNECT_ONE_SHOT)
 

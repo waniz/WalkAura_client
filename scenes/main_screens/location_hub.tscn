@@ -47,14 +47,14 @@ layout_mode = 2
 
 [node name="Margin" type="MarginContainer" parent="VBox/StatusPanel" unique_id=1008688373]
 layout_mode = 2
-theme_override_constants/margin_left = 10
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 10
-theme_override_constants/margin_bottom = 8
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 10
 
 [node name="StatusVBox" type="VBoxContainer" parent="VBox/StatusPanel/Margin" unique_id=538901052]
 layout_mode = 2
-theme_override_constants/separation = 4
+theme_override_constants/separation = 6
 
 [node name="StatusTitle" type="Label" parent="VBox/StatusPanel/Margin/StatusVBox" unique_id=1124353150]
 unique_name_in_owner = true
@@ -69,9 +69,6 @@ show_percentage = false
 
 [node name="StatusXPLabel" type="Label" parent="VBox/StatusPanel/Margin/StatusVBox" unique_id=1735154529]
 unique_name_in_owner = true
-layout_mode = 2
-
-[node name="Separator" type="HSeparator" parent="VBox/StatusPanel/Margin/StatusVBox" unique_id=280576707]
 layout_mode = 2
 
 [node name="StatusStepsLabel" type="Label" parent="VBox/StatusPanel/Margin/StatusVBox" unique_id=1381395307]
@@ -92,4 +89,5 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 4
+custom_minimum_size = Vector2(120, 0)
 text = "STOP"

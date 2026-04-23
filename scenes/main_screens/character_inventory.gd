@@ -40,6 +40,8 @@ var _paper_doll_layers: Dictionary = {} # slot_name -> TextureRect
 
 # --- Layout / Config ---
 @export_group("Grid Settings")
+# NOTE: server enforces INVENTORY_MAX_SLOTS = columns * rows (activities_base_config.py).
+# Update the server constant if you change these values.
 @export var columns: int = 5
 @export var rows: int = 6
 @export var slot_size: Vector2i = Vector2i(80, 110)

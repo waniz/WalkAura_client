@@ -212,6 +212,8 @@ var active_buffs: Dictionary = {}
 var raw_structures = {
 	"all_server_skills": null,
 	"account_skills": null,
+	"talents_config": null,
+	"talents_data": null,
 }
 
 func to_dict() -> Dictionary:
@@ -253,3 +255,5 @@ func clear() -> void:
 	# reset raw_structures dict values
 	raw_structures.all_server_skills = null
 	raw_structures.account_skills = null
+	raw_structures.talents_config = null
+	raw_structures.talents_data = null

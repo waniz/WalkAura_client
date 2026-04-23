@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://cl3wq7p4jilgq"]
+
+[ext_resource type="Script" path="res://scenes/secondary_scenes/selector_popup.gd" id="1"]
+
+[node name="SelectorPopup" type="CanvasLayer"]
+layer = 100
+script = ExtResource("1")

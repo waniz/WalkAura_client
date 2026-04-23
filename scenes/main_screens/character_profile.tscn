@@ -29,6 +29,11 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "Professions"
 
+[node name="Btn_Tab_Achievements" type="Button" parent="VBoxContainer/Tab_Buttons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Achievements"
+
 [node name="body_panel" type="PanelContainer" parent="VBoxContainer" unique_id=1066762943]
 layout_mode = 2
 size_flags_vertical = 3
@@ -111,5 +116,26 @@ layout_mode = 2
 [node name="ProfessionsGrid_Level2" type="GridContainer" parent="VBoxContainer/body_panel/Professions/Margin/VBox/ProfessionsCard/HBoxContainer" unique_id=274943974]
 layout_mode = 2
 
+[node name="Achievements" type="PanelContainer" parent="VBoxContainer/body_panel" unique_id=1900000001]
+visible = false
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="VBoxContainer/body_panel/Achievements" unique_id=1900000002]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="Scroll" type="ScrollContainer" parent="VBoxContainer/body_panel/Achievements/Margin" unique_id=1900000003]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="VBox" type="VBoxContainer" parent="VBoxContainer/body_panel/Achievements/Margin/Scroll" unique_id=1900000004]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
 [connection signal="pressed" from="VBoxContainer/Tab_Buttons/Btn_Tab_Attributes" to="." method="_on_btn_tab_attributes_pressed"]
 [connection signal="pressed" from="VBoxContainer/Tab_Buttons/Btn_Tab_Professions" to="." method="_on_btn_tab_professions_pressed"]
+[connection signal="pressed" from="VBoxContainer/Tab_Buttons/Btn_Tab_Achievements" to="." method="_on_btn_tab_achievements_pressed"]

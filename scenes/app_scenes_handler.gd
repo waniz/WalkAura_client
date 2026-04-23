@@ -18,7 +18,9 @@ var _last_t = 0.0
 var _velocity = 0.0
 
 const ACTIVITY_PROGRESS_SCENE = preload("uid://bjvtquos2r8cj")
-const RIFT_SCENE = preload("uid://cdghj6jcvmuy5")
+const RIFT_DETAIL_SCENE = preload("res://scenes/secondary_scenes/rift_detail.tscn")
+const RIFT_ACTIVE_SCENE = preload("res://scenes/secondary_scenes/rift_active.tscn")
+const RIFT_FIGHT_RESULT = preload("res://scenes/secondary_scenes/rift_fight_result.gd")
 const AVATARS_SCENE = preload("uid://dp38cogt60cii")
 const DISENCHANT_RESULT_SCENE = preload("res://scenes/support_screens/disenchant_result.tscn")
 const PROFESSION_DETAIL_SCENE = preload("res://scenes/secondary_scenes/profession_detail.tscn")
@@ -43,6 +45,7 @@ func _ready() -> void:
 	AccountManager.signal_ActivityProgressReceived.connect(_show_progress_hud)
 	SignalManager.signal_PageChanged.connect(_on_page_change)
 	SignalManager.signal_ShowRift.connect(_show_rift)
+	AccountManager.signal_AccountDataReceived.connect(_on_account_rift_check)
 	SignalManager.signal_ShowAvatars.connect(_show_avatars)
 	SignalManager.signal_DisenchantResultReceived.connect(_show_disenchant_result)
 	SignalManager.signal_ShowProfession.connect(_show_profession)
@@ -77,37 +80,61 @@ func _show_progress_hud(payload):
 			SignalManager.signal_StepToastUpdate.emit(steps_in, {}, {}, [])
 		return
 
-	# Big overlay triggers:
-	# - First update after login (AFK catch-up)
-	# - Rift milestone fights happened
-	# - Rift completed or died
+	# Rift fight results — show dedicated fight result screen
 	var rift_complete = d.get("rift_complete", false)
 	var rift_died = d.get("rift_died", false)
 	var is_rift_event = has_fights or rift_complete or rift_died
 
-	if _first_progress_after_login or is_rift_event:
+	if is_rift_event and has_fights:
+		_first_progress_after_login = false
+		var fights = d.get("milestone_fights", [])
+		if fights.size() > 0:
+			var result_screen = RIFT_FIGHT_RESULT.new()
+			result_screen.fight_data = fights[0]
+			result_screen.progress_data = d
+			add_child(result_screen)
+		return
+
+	# Non-rift: gathering/crafting/first-login progress
+	if _first_progress_after_login:
 		_first_progress_after_login = false
 		overlay = ACTIVITY_PROGRESS_SCENE.instantiate()
 		add_child(overlay)
 		overlay.apply_activity_progress(d)
 		overlay.tree_exited.connect(_on_child_closed, Object.CONNECT_ONE_SHOT)
 	else:
-		# Gathering/crafting progress: route to the toast with steps + loot
 		_first_progress_after_login = false
 		var loot = d.get("loot_counts", {})
 		var mapping = d.get("mapping", {})
 		var new_items = d.get("new_items", [])
 		SignalManager.signal_StepToastUpdate.emit(steps_in, loot, mapping, new_items)
+
+	# Notify player if activity was auto-stopped due to full inventory
+	if d.get("inventory_full", false):
+		SignalManager.signal_GameNotification.emit(
+			"Inventory full - activity stopped!", Color.from_rgba8(255, 100, 100))
 	
 func _on_child_closed() -> void:
 	overlay = null
 
-func _show_rift() -> void:
+func _show_rift(location_id: int) -> void:
 	if _rift_overlay != null and is_instance_valid(_rift_overlay):
 		return
-	_rift_overlay = RIFT_SCENE.instantiate()
+	var rift_id = int(Account.rift_id) if Account.rift_id != null else 0
+	if rift_id > 0:
+		_rift_overlay = RIFT_ACTIVE_SCENE.instantiate()
+	else:
+		_rift_overlay = RIFT_DETAIL_SCENE.instantiate()
+		_rift_overlay.location_id = location_id
 	add_child(_rift_overlay)
 	_rift_overlay.tree_exited.connect(func(): _rift_overlay = null, Object.CONNECT_ONE_SHOT)
+
+
+func _on_account_rift_check(_ok) -> void:
+	# If player just entered a rift and detail screen is showing, it will self-close.
+	# If rift ended and active screen is showing, it will self-close.
+	# This handler exists for the case where rift starts and we need to show active view.
+	pass
 
 func _show_avatars() -> void:
 	if _avatars_overlay != null and is_instance_valid(_avatars_overlay):

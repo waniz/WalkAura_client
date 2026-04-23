@@ -10,6 +10,10 @@ const PAN_SPEED  = 0.55   # fraction of raw finger/mouse delta applied each even
 const PINCH_DAMPEN = 0.45 # how much of the raw pinch ratio is applied (0=none, 1=full)
 const WHEEL_STEP = 1.05   # zoom factor per mouse-wheel tick
 
+# Dev-only: double-click on the full map prints the clicked point as a Vector2 ratio
+# suitable for pasting into ItemDB.WAYPOINTS. Disable before shipping.
+const DEBUG_WAYPOINT_PICKER: bool = true
+
 @onready var mini_map_frame: PanelContainer = $MiniMapFrame
 @onready var mini_map_texture: TextureRect = $MiniMapFrame/Mask/MapTexture
 @onready var mini_player_marker: TextureRect = $MiniMapFrame/Mask/PlayerMarker
@@ -22,7 +26,7 @@ const WHEEL_STEP = 1.05   # zoom factor per mouse-wheel tick
 @onready var close_btn: Button = $FullMapOverlay/CloseButton
 
 var player_pos_ratio: Vector2 = Vector2(0.33, 0.42)
-var map_texture: Texture2D = load("res://assets/world_map_v1.png")
+var map_texture: Texture2D = load("res://assets/world_map_v2.webp")
 
 const CONFIRMATION_DIALOG = preload("res://scenes/secondary_scenes/confirmation_dialog.tscn")
 var _confirm_dialog: Control = null
@@ -197,6 +201,26 @@ func _ready() -> void:
 		_auto_walk_timer.timeout.connect(_on_auto_walk_tick)
 		add_child(_auto_walk_timer)
 
+	if DEBUG_WAYPOINT_PICKER:
+		big_map_texture.mouse_filter = Control.MOUSE_FILTER_PASS
+		big_map_texture.gui_input.connect(_on_big_map_picker_input)
+
+
+func _on_big_map_picker_input(event: InputEvent) -> void:
+	if not DEBUG_WAYPOINT_PICKER or not map_texture:
+		return
+	if not (event is InputEventMouseButton):
+		return
+	if event.button_index != MOUSE_BUTTON_LEFT or not event.pressed or not event.double_click:
+		return
+	var sz: Vector2 = map_texture.get_size()
+	if sz.x <= 0.0 or sz.y <= 0.0:
+		return
+	var ratio: Vector2 = event.position / sz
+	ratio.x = clampf(ratio.x, 0.0, 1.0)
+	ratio.y = clampf(ratio.y, 0.0, 1.0)
+	print("[Waypoint Picker] Vector2(%.3f, %.3f),  # paste into ItemDB.WAYPOINTS" % [ratio.x, ratio.y])
+
 
 # Call whenever the player moves. pos_ratio: Vector2 where x/y are 0.0–1.0.
 func update_location(pos_ratio: Vector2) -> void:
@@ -353,15 +377,15 @@ func _build_waypoints() -> void:
 		btn.text = ""
 		btn.focus_mode = Control.FOCUS_NONE
 		btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		btn.custom_minimum_size = Vector2(72, 72)
-		btn.size = Vector2(72, 72)
-		btn.position = map_texture.get_size() * pos_ratio - Vector2(36.0, 36.0)
+		btn.custom_minimum_size = Vector2(54, 54)
+		btn.size = Vector2(54, 54)
+		btn.position = map_texture.get_size() * pos_ratio - Vector2(27.0, 27.0)
 		_style_waypoint(btn)
 		var icon = TextureRect.new()
-		icon.offset_left = 4.0
-		icon.offset_top = 4.0
-		icon.offset_right = 68.0
-		icon.offset_bottom = 68.0
+		icon.offset_left = 8.0
+		icon.offset_top = 8.0
+		icon.offset_right = 46.0
+		icon.offset_bottom = 46.0
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -454,19 +478,25 @@ func _hide_tooltip() -> void:
 
 func _style_waypoint(btn: Button) -> void:
 	var normal = StyleBoxFlat.new()
-	normal.bg_color = Color(18.0 / 255.0, 14.0 / 255.0, 10.0 / 255.0, 220.0 / 255.0)
-	normal.border_color = Color(220.0 / 255.0, 175.0 / 255.0, 68.0 / 255.0, 1.0)
+	normal.bg_color = Color(18.0 / 255.0, 14.0 / 255.0, 10.0 / 255.0, 130.0 / 255.0)
+	normal.border_color = Color(220.0 / 255.0, 175.0 / 255.0, 68.0 / 255.0, 0.65)
 	normal.set_border_width_all(3)
-	normal.set_corner_radius_all(12)
-	normal.shadow_color = Color(220.0 / 255.0, 175.0 / 255.0, 68.0 / 255.0, 0.55)
+	normal.set_corner_radius_all(27)
+	normal.shadow_color = Color(220.0 / 255.0, 175.0 / 255.0, 68.0 / 255.0, 0.40)
 	normal.shadow_size = 6
 
 	var hover = normal.duplicate()
-	hover.bg_color = normal.bg_color.lightened(0.18)
+	var hover_bg = normal.bg_color.lightened(0.18)
+	hover_bg.a = 180.0 / 255.0
+	hover.bg_color = hover_bg
+	hover.border_color = Color(220.0 / 255.0, 175.0 / 255.0, 68.0 / 255.0, 0.9)
 	hover.shadow_size = 12
 
 	var pressed = normal.duplicate()
-	pressed.bg_color = normal.bg_color.darkened(0.12)
+	var pressed_bg = normal.bg_color.darkened(0.12)
+	pressed_bg.a = 170.0 / 255.0
+	pressed.bg_color = pressed_bg
+	pressed.border_color = Color(220.0 / 255.0, 175.0 / 255.0, 68.0 / 255.0, 0.75)
 	pressed.shadow_size = 3
 
 	btn.add_theme_stylebox_override("normal", normal)
