@@ -1,6 +1,7 @@
 extends Node
 
 var cached_rift_pending_monster: Dictionary = {}
+const OFFLINE_PROGRESS_VIEW = preload("res://scenes/secondary_scenes/offline_progress.gd")
 
 signal signal_LoginResult(ok: bool, error: String)
 signal signal_AccountDataReceived(result)
@@ -58,6 +59,15 @@ func parse_message(message):
 		update_account_steps(json.data)
 	elif cmd == "activity_progress":
 		show_activity_progress(json.data)
+	elif cmd == "offline_progress":
+		var summary = json.data.get("data", {})
+		print("[diag] offline_progress arrived: steps=%s xp=%s" % [
+			summary.get("steps", "?"), summary.get("xp_gained", "?")])
+		var view = OFFLINE_PROGRESS_VIEW.new()
+		view.data = summary
+		# Root, NOT current scene: survives login→hub transition and stays
+		# out of app_scenes_handler's swipe pager.
+		get_tree().root.add_child(view)
 	elif cmd in ["steps_update_cheat", "steps_update_android"]:
 		var steps_amount = int(json.data.get("data", {}).get("steps", 0))
 		if steps_amount > 0 and Account.activity == 0:
