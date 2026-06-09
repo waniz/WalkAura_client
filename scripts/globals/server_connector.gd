@@ -45,6 +45,7 @@ func _ready() -> void:
 	SignalManager.signal_UserActivity.connect(_on_user_activity)
 
 	SignalManager.signal_StepsUpdatesCheats.connect(_on_step_counter_cheat_update)
+	SignalManager.signal_StepsSimulateOffline.connect(_on_steps_simulate_offline)
 	SignalManager.signal_StepsUpdatesAndroid.connect(_on_step_counter_android_update)
 	SignalManager.signal_StepsRequestLastTimestamp.connect(_on_step_counter_android_request_last_ts)
 
@@ -311,6 +312,18 @@ func _on_step_counter_cheat_update(amount) -> void:
 	var server_request = JSON.stringify(payload)
 	socket.send_text(server_request)
 	server_connector_message_bus.emit("[Client] Sending cheat steps: {0}".format([amount]))
+
+func _on_steps_simulate_offline(amount) -> void:
+	var payload = {
+		"cmd": "steps_update_cheat",
+		"payload": {
+			"amount": amount,
+			"simulate_offline": true,
+		}
+	}
+	var server_request = JSON.stringify(payload)
+	socket.send_text(server_request)
+	server_connector_message_bus.emit("[Client] Simulate offline login: {0} steps".format([amount]))
 
 func _on_step_counter_android_request_last_ts(is_requested) -> void:
 	if not is_requested or not _was_authenticated:

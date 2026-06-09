@@ -53,6 +53,8 @@ func _ready() -> void:
 	_add_separator(vbox)
 	_add_step_item(vbox, "+ 5k steps", 5000)
 	_add_separator(vbox)
+	_add_simulate_offline_item(vbox, "Simulate login +1k", 1000)
+	_add_separator(vbox)
 	_add_talent_points_item(vbox, "+ 1 talent pt", 1)
 	_add_separator(vbox)
 	_add_talent_points_item(vbox, "+ 10 talent pts", 10)
@@ -169,6 +171,32 @@ func _add_step_item(parent: VBoxContainer, text: String, amount: int) -> void:
 	btn.add_theme_stylebox_override("pressed", pressed_sb)
 	btn.pressed.connect(func():
 		SignalManager.signal_StepsUpdatesCheats.emit(amount)
+		queue_free()
+	)
+	parent.add_child(btn)
+
+
+func _add_simulate_offline_item(parent: VBoxContainer, text: String, amount: int) -> void:
+	var btn = Button.new()
+	btn.text = text
+	btn.flat = true
+	btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	btn.custom_minimum_size = Vector2(140, 36)
+	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	btn.add_theme_font_override("font", Styler.QUADRAT_FONT)
+	btn.add_theme_font_size_override("font_size", 16)
+	btn.add_theme_color_override("font_color", Color(1.0, 0.85, 0.5))
+	btn.add_theme_color_override("font_hover_color", Color(1.0, 0.78, 0.26))
+	var hover_sb = StyleBoxFlat.new()
+	hover_sb.bg_color = Color(1.0, 1.0, 1.0, 0.08)
+	hover_sb.set_corner_radius_all(4)
+	btn.add_theme_stylebox_override("hover", hover_sb)
+	var pressed_sb = StyleBoxFlat.new()
+	pressed_sb.bg_color = Color(1.0, 1.0, 1.0, 0.12)
+	pressed_sb.set_corner_radius_all(4)
+	btn.add_theme_stylebox_override("pressed", pressed_sb)
+	btn.pressed.connect(func():
+		SignalManager.signal_StepsSimulateOffline.emit(amount)
 		queue_free()
 	)
 	parent.add_child(btn)
