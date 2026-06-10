@@ -7,12 +7,13 @@ class_name OfflineProgressView extends CanvasLayer
 
 var data: Dictionary = {}
 
-const GOLD = Color.from_rgba8(255, 200, 66)
-const TEXT_LIGHT = Color.from_rgba8(220, 215, 200)
-const TEXT_DIM = Color.from_rgba8(150, 140, 120)
-const BG_DARK = Color.from_rgba8(20, 16, 11, 250)
-const PANEL_BG = Color.from_rgba8(36, 28, 18, 255)
-const BORDER_GOLD = Color.from_rgba8(176, 141, 63)
+# Color() with float args is a constant expression; Color.from_rgba8() is not
+const GOLD = Color(1.0, 0.784, 0.259)
+const TEXT_LIGHT = Color(0.863, 0.843, 0.784)
+const TEXT_DIM = Color(0.588, 0.549, 0.471)
+const BG_DARK = Color(0.078, 0.063, 0.043, 0.98)
+const PANEL_BG = Color(0.141, 0.11, 0.071)
+const BORDER_GOLD = Color(0.69, 0.553, 0.247)
 
 
 func _ready() -> void:
