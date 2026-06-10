@@ -7,11 +7,19 @@ var _android_plugin = null
 func _ready() -> void:
 	connect_to_mobile()
 	AccountManager.signal_UserStepLastTSReceived.connect(_on_step_counter_android_update)
+	# Kick a sync immediately on login success — otherwise offline steps (and
+	# the "While You Were Away" scene) wait for the first 30s timer tick.
+	AccountManager.signal_LoginResult.connect(_on_login_result)
 	var timer = Timer.new()
 	timer.wait_time = 30.0
 	timer.autostart = true
 	timer.timeout.connect(func(): SignalManager.signal_StepsRequestLastTimestamp.emit(true))
 	add_child(timer)
+
+
+func _on_login_result(ok: bool, _error: String) -> void:
+	if ok:
+		SignalManager.signal_StepsRequestLastTimestamp.emit(true)
 
 
 func connect_to_mobile():
