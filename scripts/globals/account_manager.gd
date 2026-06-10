@@ -168,7 +168,6 @@ func _handle_version_mismatch(json_msg) -> void:
 const _ERROR_TOAST_CODES = {
 	"inventory_full":   Color(1.0, 0.39, 0.39),
 	"skill_too_low":    Color(0.9, 0.55, 0.35),
-	"rate_limited":     Color(1.0, 0.78, 0.26),
 	"server_error":     Color(1.0, 0.39, 0.39),
 	"bad_request":      Color(1.0, 0.39, 0.39),
 }
@@ -180,7 +179,12 @@ func _handle_server_error(json_msg) -> void:
 	# Login/register failure responses route through their dedicated cmd
 	# handlers above — this path is for codes that arrive via the generic
 	# "error: ..." channel (rate limit, server error, inventory full, etc.).
-	if code in _ERROR_TOAST_CODES:
+	if code == "rate_limited":
+		# Per-handler throttle on background requests (quest refresh bursts,
+		# step stats). The request retries naturally; a toast here reads
+		# like an account problem to the player — log it and stay silent.
+		print("[diag] rate_limited (silent): ", data.get("message", ""))
+	elif code in _ERROR_TOAST_CODES:
 		SignalManager.signal_GameNotification.emit(display, _ERROR_TOAST_CODES[code])
 	elif code == "version_mismatch":
 		_handle_version_mismatch(json_msg)
