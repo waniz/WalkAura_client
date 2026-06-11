@@ -39,6 +39,9 @@ grow_vertical = 2
 expand_mode = 1
 stretch_mode = 6
 script = ExtResource("2_xce3v")
+displacement_strength = 0.05
+idle_sway_amplitude = 0.35
+idle_sway_speed = 0.22
 
 [node name="StatusPanel" type="PanelContainer" parent="VBox" unique_id=31246572]
 unique_name_in_owner = true

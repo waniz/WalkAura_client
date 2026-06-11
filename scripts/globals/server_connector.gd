@@ -13,9 +13,20 @@ var _is_connected = false
 var _saved_username: String = ""
 var _saved_password: String = ""
 var _was_authenticated: bool = false
+# Persistent session token (auto-login on app entry). Minted by the server on
+# successful login, stored on disk in user://, re-sent via login_token on the
+# next launch. The password is never persisted — only this token is.
+var _saved_token: String = ""
+const AUTH_FILE := "user://auth.cfg"
 
 # Part B: Heartbeat constants and state
-const HEARTBEAT_INTERVAL = 15.0
+# App-level liveness probe. Distinct from Tornado's protocol ping/pong
+# (websocket_ping_interval=30 server-side, which handles SERVER-side dead-socket
+# cleanup). This heartbeat exists for CLIENT-side fast dead-detection: STATE_CLOSED
+# lags on silent mobile network drops, so we probe and time out to trigger the
+# reconnect overlay. Interval matched to the server ping cadence (30s) to minimise
+# foreground-idle radio wakeups (battery) while keeping worst-case detection ~40s.
+const HEARTBEAT_INTERVAL = 30.0
 const HEARTBEAT_TIMEOUT = 10.0
 var _heartbeat_timer: float = 0.0
 var _heartbeat_pending: bool = false
@@ -35,12 +46,22 @@ var _update_overlay: CanvasLayer = null
 
 func _ready() -> void:
 
+	# Load any persisted session token before connecting so the STATE_OPEN
+	# handler can auto-login as soon as the socket opens.
+	_load_token()
+
 	connect_to_server()
 
 	SignalManager.signal_CreateUser.connect(_on_user_creating)
 	SignalManager.signal_LoginUser.connect(_on_user_login)
+	SignalManager.signal_LoginToken.connect(_on_token_login)
+	SignalManager.signal_LoginGoogle.connect(_on_google_login)
 	# Handshake failure stops auto-reconnect and shows the update modal.
 	AccountManager.signal_VersionMismatch.connect(_on_version_mismatch)
+	# Handshake success gates auto-login: we only send login_token AFTER the
+	# server acks client_hello. Sending it earlier (same frame as the hello)
+	# made the server close the socket with version_mismatch (code 4000).
+	AccountManager.signal_HandshakeAck.connect(_on_handshake_ack)
 
 	SignalManager.signal_UserActivity.connect(_on_user_activity)
 
@@ -67,6 +88,7 @@ func _ready() -> void:
 	SignalManager.signal_TravelCostRequest.connect(_on_travel_cost_request)
 	SignalManager.signal_AvatarChanged.connect(_on_avatar_changed)
 	SignalManager.signal_RequestProfessionInfo.connect(_on_request_profession_info)
+	SignalManager.signal_UseRecipeScroll.connect(_on_use_recipe_scroll)
 	SignalManager.signal_StartCraftActivity.connect(_on_start_craft_activity)
 	SignalManager.signal_TalentAllocate.connect(_on_talent_allocate_request)
 	SignalManager.signal_TalentRespec.connect(_on_talent_respec_request)
@@ -127,10 +149,9 @@ func _process(_delta: float) -> void:
 			# Handshake: must be the first client->server frame. Server gates
 			# every other command behind this, so any later send (auto-login,
 			# heartbeat, etc.) would close the socket with version_mismatch.
+			# Auto-login is deferred to _on_handshake_ack — sending login_token
+			# here (before the ack) is exactly what triggered the 4000 close.
 			_send_client_hello()
-			# Auto-login if we were previously authenticated
-			if _was_authenticated and _saved_username != "" and _saved_password != "":
-				_auto_login()
 
 		# Heartbeat timer logic
 		_heartbeat_timer += _delta
@@ -154,6 +175,16 @@ func _process(_delta: float) -> void:
 			_heartbeat_pending = false
 			_heartbeat_timeout_timer = 0.0
 			_heartbeat_timer = 0.0
+			# Reset auto-login state. If the socket closed mid-flight (e.g. a 4000
+			# close races the login_token round-trip), _on_auto_login_data never
+			# fires, so _auto_login_in_progress would stay true and suppress the
+			# next connection's auto-login — leaving the reconnect overlay stuck.
+			_auto_login_in_progress = false
+			_auto_login_ok = false
+			if AccountManager.signal_LoginResult.is_connected(_on_auto_login_result):
+				AccountManager.signal_LoginResult.disconnect(_on_auto_login_result)
+			if AccountManager.signal_AccountDataReceived.is_connected(_on_auto_login_data):
+				AccountManager.signal_AccountDataReceived.disconnect(_on_auto_login_data)
 			print("Disconnected. Code: %d, Reason: %s" % [socket.get_close_code(), socket.get_close_reason()])
 			if _was_authenticated:
 				_show_reconnect_overlay()
@@ -164,6 +195,17 @@ func _process(_delta: float) -> void:
 				# against the version gate — stop the process entirely.
 				return
 			connect_to_server()
+
+# When the OS backgrounds the app, Godot freezes _process, so heartbeat timers
+# freeze mid-flight (a heartbeat may be left pending). On resume, clear that stale
+# state so the very first post-resume frame doesn't instantly trip HEARTBEAT_TIMEOUT
+# and flash the reconnect overlay before the socket is even re-evaluated.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_RESUMED:
+		_heartbeat_timer = 0.0
+		_heartbeat_pending = false
+		_heartbeat_timeout_timer = 0.0
+		_connection_healthy = true
 
 # Part C: Reconnection overlay methods
 func _show_reconnect_overlay() -> void:
@@ -197,16 +239,42 @@ func _hide_reconnect_overlay() -> void:
 # Part D: Auto-login after reconnect
 var _auto_login_ok = false
 
+# Fired when the server acks our client_hello. Only now is it safe to send an
+# auth command. Covers both first connect and reconnect; the in-progress guard
+# inside _auto_login() makes a duplicate ack a no-op.
+func _on_handshake_ack() -> void:
+	if Time.get_unix_time_from_system() < _auto_login_blocked_until:
+		return
+	if _was_authenticated and _saved_token != "":
+		_auto_login()
+
+
+# Auth attempts are IP-rate-limited server-side (5/min). When a login_token
+# reply comes back rate_limited, AccountManager calls this instead of wiping
+# the token: block auto-login for the server-provided window, then retry once.
+var _auto_login_blocked_until: float = 0.0
+
+func notify_login_rate_limited(retry_after: int) -> void:
+	var wait = maxi(retry_after, 10)
+	# The failed attempt consumed its one-shot signals; clear the in-progress
+	# latch so the post-window retry isn't a no-op on a still-open socket.
+	_auto_login_in_progress = false
+	_auto_login_blocked_until = Time.get_unix_time_from_system() + wait
+	get_tree().create_timer(wait + 1.0).timeout.connect(func():
+		if socket.get_ready_state() == WebSocketPeer.STATE_OPEN:
+			_on_handshake_ack()
+	)
+
 func _auto_login() -> void:
 	if _auto_login_in_progress:
 		return
-	if _saved_username == "" or _saved_password == "":
+	if _saved_token == "":
 		return
 	_auto_login_in_progress = true
 	_auto_login_ok = false
 	AccountManager.signal_LoginResult.connect(_on_auto_login_result, CONNECT_ONE_SHOT)
 	AccountManager.signal_AccountDataReceived.connect(_on_auto_login_data, CONNECT_ONE_SHOT)
-	_on_user_login(_saved_username, _saved_password)
+	_on_token_login(_saved_token)
 
 
 func _on_auto_login_result(result: bool, _error: String) -> void:
@@ -225,9 +293,67 @@ func _on_auto_login_data(_result) -> void:
 
 # Part A: Credential helper methods
 func clear_credentials() -> void:
+	# Best-effort: tell the server to invalidate the persistent token so it
+	# can't be reused. Local wipe happens regardless of socket state.
+	if _saved_token != "" and _is_socket_open():
+		socket.send_text(JSON.stringify({"cmd": "logout", "payload": {}}))
 	_saved_username = ""
 	_saved_password = ""
+	_saved_token = ""
 	_was_authenticated = false
+	if FileAccess.file_exists(AUTH_FILE):
+		DirAccess.remove_absolute(AUTH_FILE)
+
+func has_saved_token() -> bool:
+	return _saved_token != ""
+
+# Persist a server-minted session token to disk for auto-login on next launch.
+# Called by AccountManager when a login_user / login_token response carries one.
+func _save_token(token: String) -> void:
+	if token == "":
+		return
+	_saved_token = token
+	_was_authenticated = true
+	var cfg = ConfigFile.new()
+	cfg.set_value("auth", "token", token)
+	cfg.save(AUTH_FILE)
+
+func _load_token() -> void:
+	var cfg = ConfigFile.new()
+	if cfg.load(AUTH_FILE) != OK:
+		return
+	var token = cfg.get_value("auth", "token", "")
+	if typeof(token) == TYPE_STRING and token != "":
+		_saved_token = token
+		_was_authenticated = true
+
+# Token-based login (auto-login + reconnect). Payload-wrapped per WS contract.
+func _on_token_login(token) -> void:
+	if not _is_socket_open():
+		server_connector_message_bus.emit("[Client] ERROR: Not connected to server")
+		return
+	_was_authenticated = true
+	var payload = {
+		"cmd": "login_token",
+		"payload": {"token": token},
+	}
+	socket.send_text(JSON.stringify(payload))
+	server_connector_message_bus.emit("[Client] Requesting token login...")
+
+# Google login: send the Google ID token for server-side verification. On
+# success the server mints + returns our session token (persisted like any
+# other login). Payload-wrapped per WS contract.
+func _on_google_login(id_token) -> void:
+	if not _is_socket_open():
+		server_connector_message_bus.emit("[Client] ERROR: Not connected to server")
+		return
+	_was_authenticated = true
+	var payload = {
+		"cmd": "login_google",
+		"payload": {"id_token": id_token},
+	}
+	socket.send_text(JSON.stringify(payload))
+	server_connector_message_bus.emit("[Client] Requesting Google login...")
 
 # ################################
 # """Signal compilator section"""
@@ -508,6 +634,21 @@ func _on_request_profession_info(profession: String) -> void:
 	}
 	socket.send_text(JSON.stringify(payload))
 	server_connector_message_bus.emit("[Client] Requesting profession info: %s" % profession)
+
+
+func _on_use_recipe_scroll(recipe_id: String, item_uid: String) -> void:
+	var payload = {
+		"cmd": "use_recipe_scroll",
+		"payload": {
+			"recipe_id": recipe_id,
+			"item_uid": item_uid,
+		},
+	}
+	socket.send_text(JSON.stringify(payload))
+	server_connector_message_bus.emit(
+		"[Client] use_recipe_scroll: %s via %s" % [recipe_id, item_uid]
+	)
+
 
 func _on_start_craft_activity(activity: int, activity_site: int, recipe_id: String, target_qty: int) -> void:
 	var payload = {

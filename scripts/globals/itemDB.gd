@@ -180,6 +180,46 @@ var _item_icon_paths = {
 	"iron_ore":          "res://assets/professions/mining/iron_ore.png",
 	"mithril_ore":       "res://assets/professions/mining/mithril_ore.png",
 	"dragonscale_ore":   "res://assets/professions/mining/dragonscale_ore.png",
+	# Mining v2 (sprint v0.2.7) — new ores added by mining_config rewrite.
+	# Generation prompts: Graphics/midjorney_raw/_prompts_mining_loot_2026-04-25.md
+	"silver_ore":        "res://assets/professions/mining/silver_ore.png",
+	"coal":              "res://assets/professions/mining/coal.png",
+	"gold_ore":          "res://assets/professions/mining/gold_ore.png",
+	"cobalt_ore":        "res://assets/professions/mining/cobalt_ore.png",
+	# Stones (secondary mining drops; ingredients for blacksmith equipment recipes)
+	"rough_stone":          "res://assets/professions/mining/rough_stone.png",
+	"coarse_stone":         "res://assets/professions/mining/coarse_stone.png",
+	"heavy_stone":          "res://assets/professions/mining/heavy_stone.png",
+	"elemental_earthstone": "res://assets/professions/mining/elemental_earthstone.png",
+	"runestone":            "res://assets/professions/mining/runestone.png",
+	# Recipe scroll (legendary; rare independent drop in Iron Mountain + Dragon Lair mining)
+	"scr_oathbound":     "res://assets/professions/blacksmithing/scr_oathbound.png",
+
+	# Blacksmithing — smelting bars (7 outputs of bar_* recipes)
+	# Generation prompts: Graphics/midjorney_raw/_prompts_blacksmithing_outputs_2026-04-25.md
+	"bar_copper":        "res://assets/professions/blacksmithing/bar_copper.png",
+	"bar_bronze":        "res://assets/professions/blacksmithing/bar_bronze.png",
+	"bar_silver":        "res://assets/professions/blacksmithing/bar_silver.png",
+	"bar_iron":          "res://assets/professions/blacksmithing/bar_iron.png",
+	"bar_gold":          "res://assets/professions/blacksmithing/bar_gold.png",
+	"bar_cobalt":        "res://assets/professions/blacksmithing/bar_cobalt.png",
+	"bar_steel":         "res://assets/professions/blacksmithing/bar_steel.png",
+	# Blacksmithing — mail armor templates (12 bs_* gear recipes; crafted instances
+	# get unique UUIDs but item_definitions.item_icon for each template points here)
+	"bs_copper_helm":      "res://assets/professions/blacksmithing/bs_copper_helm.png",
+	"bs_bronze_bracers":   "res://assets/professions/blacksmithing/bs_bronze_bracers.png",
+	"bs_silver_gloves":    "res://assets/professions/blacksmithing/bs_silver_gloves.png",
+	"bs_iron_chest":       "res://assets/professions/blacksmithing/bs_iron_chest.png",
+	"bs_iron_boots":       "res://assets/professions/blacksmithing/bs_iron_boots.png",
+	"bs_gold_belt":        "res://assets/professions/blacksmithing/bs_gold_belt.png",
+	"bs_cobalt_shoulders": "res://assets/professions/blacksmithing/bs_cobalt_shoulders.png",
+	"bs_cobalt_legs":      "res://assets/professions/blacksmithing/bs_cobalt_legs.png",
+	"bs_steel_helm":       "res://assets/professions/blacksmithing/bs_steel_helm.png",
+	"bs_steel_chest":      "res://assets/professions/blacksmithing/bs_steel_chest.png",
+	"bs_steel_bracers":    "res://assets/professions/blacksmithing/bs_steel_bracers.png",
+	"bs_steel_boots":      "res://assets/professions/blacksmithing/bs_steel_boots.png",
+	# Blacksmithing — legendary epic (scroll-gated; Oathbound Aegis chest piece)
+	"bs_oathbound_aegis": "res://assets/professions/blacksmithing/bs_oathbound_aegis.png",
 	
 	# Woodcutting
 	"common_birch_log":  "res://assets/professions/woodcutting/common_birch_log.png",
@@ -245,7 +285,7 @@ var _icon_paths = {
 	"gold_coin":            "res://assets/general_icons/gold_coin.png",
 
 	# attributes icons
-	"armor_penetration":    "res://assets/general_icons/attributes/armor_penetration.png",
+	# "armor_penetration":  "res://assets/general_icons/attributes/armor_penetration.png",  # asset missing
 	"attributes_luck":      "res://assets/general_icons/attributes/attribute_luck.png",
 	"attributes_agility":   "res://assets/general_icons/attributes/attribute_agility.png",
 	"attributes_intellect": "res://assets/general_icons/attributes/attribute_intellect.png",
@@ -272,8 +312,8 @@ var _icon_paths = {
 
 	# talents — general
 	"thick_skin":           "res://assets/general_icons/passive_talents/thick_skin.png",
-	"brutal_strike":        "res://assets/general_icons/passive_talents/brutal_strike.png",
-	"brutal_finish":        "res://assets/general_icons/passive_talents/brutal_strike.png",
+	# "brutal_strike":      "res://assets/general_icons/passive_talents/brutal_strike.png",  # asset missing
+	# "brutal_finish":      "res://assets/general_icons/passive_talents/brutal_strike.png",  # asset missing
 	"guardian_shell":       "res://assets/general_icons/passive_talents/guardian_shell.png",
 	"evasion_training":     "res://assets/general_icons/passive_talents/evasion_training.png",
 	"magic_ward":           "res://assets/general_icons/passive_talents/magic_ward.png",
@@ -513,10 +553,54 @@ func get_item_icon(key: String, default = null):
 		var tex = load(_item_icon_paths[key]) as Texture2D
 		_item_icon_cache[key] = tex
 		return tex
+	# Crafting-set icons resolve by CONVENTION — no 120 gear + 20 material hardcoded
+	# entries, and lazy-loaded (cached) so they never bloat the login preload.
+	#   set_<material>_t<tier>_<slot> -> res://assets/sets/<material>/<key>.png
+	#   <cloth_scrap|bolt|raw_hide|leather>_t<tier> -> res://assets/sets/materials/<key>.png
+	# ResourceLoader.exists guards the window before the Godot import pass generates
+	# the .import files (icons degrade to `default` until the editor imports them).
+	var conv_path = _set_icon_path(key)
+	if conv_path != "" and ResourceLoader.exists(conv_path):
+		var tex2 = load(conv_path) as Texture2D
+		_item_icon_cache[key] = tex2
+		return tex2
 	return default
 
+
+func _set_icon_path(key: String) -> String:
+	if key.begins_with("set_"):
+		var parts = key.split("_")   # ["set", <material>, "tN", <slot>...]
+		if parts.size() >= 2:
+			return "res://assets/sets/%s/%s.png" % [parts[1], key]
+	for mp in ["cloth_scrap_", "bolt_", "raw_hide_", "leather_"]:
+		if key.begins_with(mp):
+			return "res://assets/sets/materials/%s.png" % key
+	return ""
+
+
+# Crafting-set display names (set_id -> name). Mirrors server crafting_sets.SET_NAMES;
+# guarded by server tests/test_crafting_sets.py::test_client_set_names_match_server.
+const SET_NAMES = {
+	"cloth_t1": "Apprentice's Weave", "cloth_t2": "Acolyte's Vestments",
+	"cloth_t3": "Adept's Regalia", "cloth_t4": "Magus Raiment",
+	"cloth_t5": "Archon Vestments",
+	"leather_t1": "Scout's Hide", "leather_t2": "Trapper's Leathers",
+	"leather_t3": "Stalker's Guise", "leather_t4": "Nightblade Harness",
+	"leather_t5": "Shadowmaster Garb",
+	"mail_t1": "Recruit's Chain", "mail_t2": "Soldier's Hauberk",
+	"mail_t3": "Sentinel's Hauberk", "mail_t4": "Vanguard Battlemail",
+	"mail_t5": "Ironclad Aegis",
+}
+
+
+func get_set_name(set_id: String) -> String:
+	return SET_NAMES.get(set_id, "")
+
 func has_item_icon(key: String) -> bool:
-	return _item_icon_paths.has(key)
+	if _item_icon_paths.has(key):
+		return true
+	var p = _set_icon_path(key)
+	return p != "" and ResourceLoader.exists(p)
 
 func get_icon(key: String, default = null):
 	if _icon_cache.has(key):

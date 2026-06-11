@@ -257,20 +257,36 @@ func _refresh_visuals() -> void:
 	_claim_button.text = "CLAIM"
 	_claimed_label.visible = is_claimed
 
-	# Style the claim button to tier color + gold text
-	var btn_style = StyleBoxFlat.new()
-	btn_style.bg_color = tier_color
-	btn_style.corner_radius_bottom_left = 4
-	btn_style.corner_radius_bottom_right = 4
-	btn_style.corner_radius_top_left = 4
-	btn_style.corner_radius_top_right = 4
-	_claim_button.add_theme_stylebox_override("normal", btn_style)
-	_claim_button.add_theme_stylebox_override("hover", btn_style)
-	_claim_button.add_theme_stylebox_override("pressed", btn_style)
+	# Embossed tier-colored CLAIM button — lightened top border, darker
+	# bottom border + tier-tinted halo. Matches the rift/quest CTA family.
+	_claim_button.add_theme_font_override("font", Styler.JANDA_FONT)
+	_claim_button.add_theme_font_size_override("font_size", 14)
+	for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
+		var btn_style = StyleBoxFlat.new()
+		btn_style.bg_color = tier_color
+		btn_style.set_corner_radius_all(5)
+		btn_style.border_color = tier_color.lightened(0.25)
+		btn_style.border_width_top = 1
+		btn_style.border_width_left = 1
+		btn_style.border_width_right = 1
+		btn_style.border_width_bottom = 2
+		btn_style.shadow_color = Color(tier_color, 0.45)
+		btn_style.shadow_size = 10
+		match state_name:
+			"hover":
+				btn_style.bg_color = tier_color.lightened(0.1)
+				btn_style.shadow_size = 14
+			"pressed":
+				btn_style.bg_color = tier_color.darkened(0.08)
+				btn_style.shadow_size = 4
+				btn_style.content_margin_top = 2
+		_claim_button.add_theme_stylebox_override(state_name, btn_style)
 	# Dark text reads on every tier-color background (bronze / silver / gold).
-	# Gold-on-gold would make the HARD tier button label invisible.
 	_claim_button.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
 	_claim_button.add_theme_color_override("font_hover_color", Styler.COLOR_TEXT_DARK)
+	_claim_button.add_theme_color_override("font_pressed_color", Styler.COLOR_TEXT_DARK)
+	_claim_button.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.6))
+	_claim_button.add_theme_constant_override("outline_size", 1)
 
 	# Claimed date stamp (under "✓ CLAIMED")
 	if is_claimed:

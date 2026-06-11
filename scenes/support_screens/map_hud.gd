@@ -2,7 +2,7 @@ class_name MapHUD extends Control
 
 signal waypoint_pressed(waypoint_id: String)
 
-@export var mini_map_size: Vector2 = Vector2(162, 162)
+@export var mini_map_size: Vector2 = Vector2(142, 142)
 
 const ZOOM_MIN = 0.25
 const ZOOM_MAX = 4.0
@@ -32,7 +32,9 @@ const CONFIRMATION_DIALOG = preload("res://scenes/secondary_scenes/confirmation_
 var _confirm_dialog: Control = null
 
 const SYSTEM_MENU_SCENE = preload("res://scenes/support_screens/system_menu.tscn")
+const SETTINGS_SCREEN = preload("res://scenes/support_screens/settings_screen.gd")
 var _system_menu: Control = null
+var _settings_screen: Control = null
 var _menu_btn: Button
 
 const DEV_MENU_SCENE = preload("res://scenes/support_screens/dev_menu.tscn")
@@ -45,6 +47,24 @@ var _dev_btn_pulse_tween: Tween = null
 
 var _tooltip_panel: PanelContainer = null
 var _tooltip_label: Label = null
+var _tooltip_vbox: VBoxContainer = null
+# Waypoint "armed" for travel. On touch, the first tap shows the tooltip (arms)
+# and the second tap on the same waypoint travels — so a single tap no longer
+# pops the travel dialog. On desktop, hover arms, so a click still travels once.
+var _pending_travel_waypoint: String = ""
+
+# Per-activity accent dot colors, matching the Location Hub activity-color
+# identity in DESIGN.md (herbalism green, mining gold, hunting offense-red,
+# fishing frost, alchemy arcane-purple, rift arcane). Keyed by profession.
+const _ACTIVITY_ACCENT = {
+	"herbalism": Color(0.235, 0.784, 0.392),
+	"mining": Color(1.0, 0.784, 0.259),
+	"woodcutting": Color(0.6, 0.78, 0.5),
+	"fishing": Color(0.302, 0.6, 1.0),
+	"hunting": Color(1.0, 0.471, 0.353),
+	"alchemy": Color(0.639, 0.212, 0.929),
+	"rift": Color(0.302, 0.702, 0.902),
+}
 var _big_player_marker: TextureRect = null
 
 var _avatar_shader: Shader = preload("res://shaders/avatar_shader.gdshader")
@@ -392,8 +412,12 @@ func _build_waypoints() -> void:
 		btn.add_child(icon)
 		btn.pressed.connect(func(): waypoint_pressed.emit(id))
 		var display_name = _format_waypoint_name(id)
-		btn.mouse_entered.connect(func(): _show_tooltip(display_name))
-		btn.mouse_exited.connect(_hide_tooltip)
+		# Desktop hover shows the tooltip AND arms travel, so a click still
+		# travels in one go. On touch there's no real hover (and emulated mouse
+		# events must not arm travel), so arming happens only on the first tap
+		# inside _on_waypoint_pressed.
+		btn.mouse_entered.connect(func(): _on_waypoint_hover(id))
+		btn.mouse_exited.connect(_on_waypoint_unhover)
 		map_canvas.add_child(btn)
 
 		# Location name label below the waypoint
@@ -434,22 +458,33 @@ func _update_tooltip_pos() -> void:
 func _create_tooltip() -> void:
 	_tooltip_panel = PanelContainer.new()
 	var sb = StyleBoxFlat.new()
-	sb.bg_color = Color(18.0 / 255.0, 14.0 / 255.0, 10.0 / 255.0, 230.0 / 255.0)
-	sb.border_color = Color(220.0 / 255.0, 175.0 / 255.0, 68.0 / 255.0, 1.0)
+	# Dark chrome, per DESIGN.md (floating HUD that overlays the painted map).
+	sb.bg_color = Styler.COL_PANEL_BG
+	sb.border_color = Styler.COL_PRIMARY
 	sb.set_border_width_all(2)
 	sb.set_corner_radius_all(8)
-	sb.shadow_color = Color(220.0 / 255.0, 175.0 / 255.0, 68.0 / 255.0, 0.4)
-	sb.shadow_size = 4
+	sb.shadow_color = Styler.COL_GOLD_GLOW
+	sb.shadow_size = 6
+	# 8px internal padding (DESIGN.md tooltip margin) so rows don't kiss the border.
+	sb.set_content_margin_all(8)
 	_tooltip_panel.add_theme_stylebox_override("panel", sb)
 	_tooltip_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
+	# Header (location name) + a gold hairline + one row per activity live in a
+	# VBox so the tooltip grows with the activity list.
+	_tooltip_vbox = VBoxContainer.new()
+	_tooltip_vbox.add_theme_constant_override("separation", 3)
+	_tooltip_vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_tooltip_panel.add_child(_tooltip_vbox)
+
 	_tooltip_label = Label.new()
-	_tooltip_label.add_theme_font_override("font", load("res://assets/fonts/janda.ttf"))
-	_tooltip_label.add_theme_font_size_override("font_size", 14)
-	_tooltip_label.add_theme_color_override("font_color", Color(255.0 / 255.0, 210.0 / 255.0, 80.0 / 255.0, 1.0))
+	_tooltip_label.add_theme_font_override("font", Styler.JANDA_FONT)
+	_tooltip_label.add_theme_font_size_override("font_size", 15)
+	_tooltip_label.add_theme_color_override("font_color", Styler.COL_PRIMARY)
 	_tooltip_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	_tooltip_label.add_theme_constant_override("outline_size", 2)
-	_tooltip_panel.add_child(_tooltip_label)
+	_tooltip_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_tooltip_vbox.add_child(_tooltip_label)
 
 	full_map_overlay.add_child(_tooltip_panel)
 	_tooltip_panel.visible = false
@@ -465,10 +500,114 @@ func _format_waypoint_name(id: String) -> String:
 	return result
 
 
-func _show_tooltip(text: String) -> void:
-	_tooltip_label.text = text
+func _show_tooltip(waypoint_id: String) -> void:
+	_tooltip_label.text = _format_waypoint_name(waypoint_id)
+	_populate_tooltip_activities(waypoint_id)
 	_tooltip_panel.visible = true
 	_update_tooltip_pos()
+
+
+# Rebuild the per-activity rows for the hovered waypoint's location. Each row
+# shows availability for THIS player: available (meets req_skill) or locked
+# (with the required level). Data is already client-side — no round-trip.
+#
+# Availability is signalled by COLOR + OPACITY (always renders) with a ✓/🔒
+# glyph as a secondary cue — the glyph sits in a default-font label so it falls
+# back gracefully if the themed font lacks it, instead of showing tofu.
+func _populate_tooltip_activities(waypoint_id: String) -> void:
+	# Drop everything but the header; rebuild the hairline + rows fresh.
+	for child in _tooltip_vbox.get_children():
+		if child != _tooltip_label:
+			child.queue_free()
+
+	var loc_id: int = ItemDB.WAYPOINT_LOCATION_IDS.get(waypoint_id, -1)
+	var loc_data: Dictionary = ServerParams.LOCATIONS.get(str(loc_id), {})
+	var activities: Array = loc_data.get("activities", [])
+	if activities.is_empty():
+		return
+
+	# Gold hairline separating the location header from the activity rows.
+	var rule = Panel.new()
+	var rule_sb = StyleBoxFlat.new()
+	rule_sb.bg_color = Color(Styler.COL_PRIMARY, 0.35)
+	rule.add_theme_stylebox_override("panel", rule_sb)
+	rule.custom_minimum_size = Vector2(0, 1)
+	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_tooltip_vbox.add_child(rule)
+
+	for act in activities:
+		var prof: String = str(act.get("profession", ""))
+		var req: int = int(act.get("req_skill", 1))
+		var lvl: int = int(ServerParams.profession_levels.get(prof, 1))
+		var available: bool = lvl >= req
+		var act_name: String = str(act.get("name", prof.capitalize()))
+		var accent: Color = _ACTIVITY_ACCENT.get(prof, Styler.COL_PRIMARY)
+
+		var row = HBoxContainer.new()
+		row.add_theme_constant_override("separation", 5)
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+		# Activity-identity dot (crisp circle via stylebox, never a glyph).
+		var dot = Panel.new()
+		var dot_sb = StyleBoxFlat.new()
+		dot_sb.bg_color = accent
+		dot_sb.set_corner_radius_all(4)
+		dot.add_theme_stylebox_override("panel", dot_sb)
+		dot.custom_minimum_size = Vector2(8, 8)
+		dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(dot)
+
+		# Status glyph — default font (no override) so ✓/🔒 fall back cleanly.
+		var status = Label.new()
+		status.add_theme_font_size_override("font_size", 12)
+		status.add_theme_color_override("font_outline_color", Color.BLACK)
+		status.add_theme_constant_override("outline_size", 2)
+		status.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		if available:
+			status.text = "✓"
+			status.add_theme_color_override("font_color", Color(0.235, 0.784, 0.392))
+		else:
+			status.text = "🔒"
+			status.add_theme_color_override("font_color", Color(0.66, 0.66, 0.68))
+		row.add_child(status)
+
+		# Activity name (+ required level when locked).
+		var name_lbl = Label.new()
+		name_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
+		name_lbl.add_theme_font_size_override("font_size", 13)
+		name_lbl.add_theme_color_override("font_outline_color", Color.BLACK)
+		name_lbl.add_theme_constant_override("outline_size", 2)
+		name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		if available:
+			name_lbl.text = act_name
+			name_lbl.add_theme_color_override("font_color", Color(0.96, 0.94, 0.86))
+		else:
+			name_lbl.text = "%s · Lv %d" % [act_name, req]
+			name_lbl.add_theme_color_override("font_color", Color(0.7, 0.68, 0.62))
+		row.add_child(name_lbl)
+
+		# Locked rows read dimmer overall.
+		if not available:
+			row.modulate.a = 0.6
+
+		_tooltip_vbox.add_child(row)
+
+
+func _on_waypoint_hover(id: String) -> void:
+	# Desktop only. On touch devices the emulated mouse must not arm travel —
+	# arming there happens on the first real tap in _on_waypoint_pressed.
+	if DisplayServer.is_touchscreen_available():
+		return
+	_show_tooltip(id)
+	_pending_travel_waypoint = id
+
+
+func _on_waypoint_unhover() -> void:
+	if DisplayServer.is_touchscreen_available():
+		return
+	_hide_tooltip()
+	_pending_travel_waypoint = ""
 
 
 func _hide_tooltip() -> void:
@@ -557,6 +696,16 @@ func _location_to_map_ratio(location_id: int) -> Vector2:
 
 
 func _on_waypoint_pressed(waypoint_id: String) -> void:
+	# Two-stage tap. First press on a waypoint just shows its tooltip and arms
+	# travel; only a second press on the SAME (armed) waypoint travels. On
+	# desktop, hover already armed it, so the first click travels in one go.
+	# This stops a single mobile tap from instantly popping the travel dialog.
+	if _pending_travel_waypoint != waypoint_id:
+		_show_tooltip(waypoint_id)
+		_pending_travel_waypoint = waypoint_id
+		return
+	_pending_travel_waypoint = ""
+	_hide_tooltip()
 	var location_id: int = ItemDB.WAYPOINT_LOCATION_IDS.get(waypoint_id, -1)
 	if location_id == -1:
 		return
@@ -672,7 +821,12 @@ func _on_menu_btn_pressed() -> void:
 
 
 func _on_settings() -> void:
-	pass  # TODO: open settings screen
+	if _settings_screen and is_instance_valid(_settings_screen):
+		return
+	_settings_screen = SETTINGS_SCREEN.new()
+	add_child(_settings_screen)
+	_settings_screen.logout_requested.connect(_on_relogin)
+	_settings_screen.tree_exited.connect(func(): _settings_screen = null, CONNECT_ONE_SHOT)
 
 
 func _on_relogin() -> void:

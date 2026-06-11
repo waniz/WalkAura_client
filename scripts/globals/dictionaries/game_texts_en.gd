@@ -37,6 +37,7 @@ var activities_texts = {
 	7: "Rift Explorer",
 	8: "Travelling",
 	9: "Enchanting",
+	10: "Crafting",
 }
 
 # Server error codes -> user-facing message. Keys must match the codes emitted
@@ -44,6 +45,9 @@ var activities_texts = {
 # that every server code has a key here.
 var error_texts = {
 	"invalid_credentials": "Incorrect username or password.",
+	"invalid_token": "Your session expired. Please log in again.",
+	"invalid_google_token": "Google sign-in failed. Please try again.",
+	"google_auth_unavailable": "Google sign-in is not available right now.",
 	"account_locked": "Account temporarily locked. Try again in a few minutes.",
 	"rate_limited": "Too many attempts. Please wait a moment.",
 	"username_taken": "That username is already taken.",
@@ -55,6 +59,10 @@ var error_texts = {
 	"server_error": "Server error. Please try again.",
 	"inventory_full": "Your inventory is full.",
 	"skill_too_low": "Your skill is too low for this.",
+	"slot_out_of_range": "That spell slot doesn't exist.",
+	"unknown_skill": "That spell is not in the skill book.",
+	"duplicate_skill": "That spell is already equipped in another slot.",
+	"internal_error": "Something went wrong. Please try again.",
 }
 
 # Reason subcodes for username_invalid / password_too_weak. Optional overlay

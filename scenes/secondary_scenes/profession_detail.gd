@@ -3,24 +3,35 @@ extends Control
 # ── Constants ──────────────────────────────────────────────────────────────────
 const ACTIVITY_ALCHEMY = 2
 const ACTIVITY_ENCHANTING = 9
+const ACTIVITY_BLACKSMITHING = 10
 const CONFIRMATION_DIALOG = preload("res://scenes/secondary_scenes/confirmation_dialog.tscn")
 
 const PROF_ICON_KEY = {
-	"herbalism"   : "herbalism",
-	"alchemy"     : "alchemy",
-	"enchanting"  : "enchanting",
-	"hunting"     : "hunting",
-	"mining"      : "mining",
-	"woodcutting" : "woodcutting",
-	"fishing"     : "fishing",
-	"rift"        : "rift",
+	"herbalism"     : "herbalism",
+	"alchemy"       : "alchemy",
+	"enchanting"    : "enchanting",
+	"blacksmithing" : "blacksmithing",
+	"hunting"       : "hunting",
+	"mining"        : "mining",
+	"woodcutting"   : "woodcutting",
+	"fishing"       : "fishing",
+	"rift"          : "rift",
 }
 
 var PROF_ACCENT = {
-	"alchemy"    : Color.from_rgba8(60, 130, 70),
-	"enchanting" : Color.from_rgba8(163, 54, 237),
-	"rift"       : Color.from_rgba8(255, 120, 90),
+	"alchemy"       : Color.from_rgba8(60, 130, 70),
+	"enchanting"    : Color.from_rgba8(163, 54, 237),
+	"blacksmithing" : Color.from_rgba8(180, 90, 50),   # forge ember orange
+	"rift"          : Color.from_rgba8(255, 120, 90),
 }
+
+# Crafting professions share the same UI scaffolding (tier tabs, recipe
+# cards, craft banner). Mining/herbalism etc. use a different layout.
+const _CRAFTING_PROFESSIONS = ["alchemy", "enchanting", "blacksmithing"]
+
+# Internal profession key → user-facing display name. Blacksmith→Crafting rename
+# is display-only; the key stays "blacksmithing" everywhere internal (D6).
+const _PROF_DISPLAY_NAME = {"blacksmithing": "Crafting"}
 
 const TIER_LEVEL_BREAKS = [1, 5, 10, 15, 20]
 
@@ -34,6 +45,11 @@ var _last_prof_level: int = 0
 var _confirm_dialog: Control = null
 var _accent: Color = Styler.COL_PRIMARY
 var _is_dark: bool = false
+# Dark-theme text tokens (panel switched to dark chrome like the rift view).
+var _col_text: Color = Color(0.82, 0.80, 0.76)
+var _col_hdr: Color = Styler.COLOR_GOLD
+# Recipe-list group collapse state, keyed by group header label.
+var _collapsed_groups: Dictionary = {}
 var _last_crafting_steps_max: int = 0
 var _last_crafting_target_qty: int = 0
 var _last_crafting_batch_done: int = 0
@@ -61,7 +77,9 @@ var _loading_label: Label
 func set_profession(prof_name: String) -> void:
 	_profession_name = prof_name
 	_accent = PROF_ACCENT.get(prof_name, Styler.COL_PRIMARY)
-	_is_dark = (prof_name == "rift")
+	# Dark chrome everywhere — the rift view's dark panel reads better than
+	# parchment for dense profession detail (user request 2026-06).
+	_is_dark = true
 
 
 func _ready() -> void:
@@ -130,7 +148,7 @@ func _build_ui() -> void:
 
 	_build_craft_banner(root_vbox)
 
-	if _profession_name in ["alchemy", "enchanting"]:
+	if _profession_name in _CRAFTING_PROFESSIONS:
 		_build_tier_tabs(root_vbox)
 
 	var scroll = ScrollContainer.new()
@@ -209,7 +227,7 @@ func _build_header(parent: VBoxContainer) -> void:
 	info_col.add_child(name_row)
 
 	var title = Label.new()
-	title.text = _profession_name.to_upper()
+	title.text = _PROF_DISPLAY_NAME.get(_profession_name, _profession_name).to_upper()
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.add_theme_color_override("font_color", _accent)
 	title.add_theme_font_size_override("font_size", 22)
@@ -262,7 +280,7 @@ func _build_craft_banner(parent: VBoxContainer) -> void:
 	_craft_banner.visible = false
 	_craft_banner.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var sb = StyleBoxFlat.new()
-	sb.bg_color = Color(0.0, 0.0, 0.0, 0.08)
+	sb.bg_color = Color(1.0, 1.0, 1.0, 0.07)
 	sb.border_color = _accent
 	sb.border_width_left = 3
 	sb.border_width_top = 1
@@ -294,7 +312,7 @@ func _build_craft_banner(parent: VBoxContainer) -> void:
 
 	_craft_banner_name_lbl = Label.new()
 	_craft_banner_name_lbl.text = "Crafting..."
-	Styler.style_parchment_label(_craft_banner_name_lbl, Styler.COLOR_SECTION_HDR, 14)
+	Styler.style_parchment_label(_craft_banner_name_lbl, _col_hdr, 14)
 	info_col.add_child(_craft_banner_name_lbl)
 
 	_craft_banner_bar = ProgressBar.new()
@@ -316,7 +334,7 @@ func _build_craft_banner(parent: VBoxContainer) -> void:
 
 	_craft_banner_steps_lbl = Label.new()
 	_craft_banner_steps_lbl.text = ""
-	Styler.style_parchment_label(_craft_banner_steps_lbl, Styler.COLOR_TEXT_DARK, 12)
+	Styler.style_parchment_label(_craft_banner_steps_lbl, _col_text, 12)
 	steps_row.add_child(_craft_banner_steps_lbl)
 
 	_craft_banner_batch_lbl = Label.new()
@@ -378,12 +396,12 @@ func _update_tier_tab_styles() -> void:
 
 		var sb = StyleBoxFlat.new()
 		if is_active:
-			sb.bg_color = Color(0.0, 0.0, 0.0, 0.08)
+			sb.bg_color = Color(1.0, 1.0, 1.0, 0.07)
 			sb.border_color = _accent
 			sb.border_width_bottom = 3
 		else:
-			sb.bg_color = Color(0.0, 0.0, 0.0, 0.03)
-			sb.border_color = Color(0.0, 0.0, 0.0, 0.1)
+			sb.bg_color = Color(1.0, 1.0, 1.0, 0.03)
+			sb.border_color = Color(1.0, 1.0, 1.0, 0.1)
 			sb.border_width_bottom = 1
 		sb.set_corner_radius_all(4)
 		sb.corner_radius_bottom_left = 0
@@ -402,7 +420,7 @@ func _update_tier_tab_styles() -> void:
 		elif is_locked:
 			text_color = Color(0.5, 0.5, 0.5, 0.5)
 		else:
-			text_color = Styler.COLOR_TEXT_DARK
+			text_color = _col_text
 		btn.add_theme_color_override("font_color", text_color)
 		btn.add_theme_color_override("font_hover_color", text_color)
 		btn.add_theme_color_override("font_pressed_color", text_color)
@@ -440,7 +458,7 @@ func _on_profession_info(data: Dictionary) -> void:
 		_xp_text.text = "MAX LEVEL"
 		_radial_progress.progress = 100.0
 
-	if _profession_name in ["alchemy", "enchanting"]:
+	if _profession_name in _CRAFTING_PROFESSIONS:
 		_update_tier_tab_styles()
 
 	for child in _scroll_content.get_children():
@@ -448,7 +466,7 @@ func _on_profession_info(data: Dictionary) -> void:
 
 	if _profession_name in ["herbalism", "mining", "woodcutting", "fishing", "hunting"]:
 		_build_gathering_content(data)
-	elif _profession_name in ["alchemy", "enchanting"]:
+	elif _profession_name in _CRAFTING_PROFESSIONS:
 		_build_crafting_content(data)
 
 
@@ -464,7 +482,8 @@ func _on_activity_progress(data: Dictionary) -> void:
 	_update_craft_banner()
 	var craft_active = (
 		(_profession_name == "alchemy" and Account.activity == ACTIVITY_ALCHEMY) or
-		(_profession_name == "enchanting" and Account.activity == ACTIVITY_ENCHANTING)
+		(_profession_name == "enchanting" and Account.activity == ACTIVITY_ENCHANTING) or
+		(_profession_name == "blacksmithing" and Account.activity == ACTIVITY_BLACKSMITHING)
 	)
 	if craft_active:
 		SignalManager.signal_RequestProfessionInfo.emit(_profession_name)
@@ -483,7 +502,7 @@ func _on_account_data(_ok) -> void:
 func _build_crafting_content(data: Dictionary) -> void:
 	_last_recipes = data.get("recipes", [])
 
-	var current_act = ACTIVITY_ENCHANTING if _profession_name == "enchanting" else ACTIVITY_ALCHEMY
+	var current_act = _craft_activity_id()
 	if Account.activity == current_act and not Account.crafting_recipe_id.is_empty():
 		for recipe in _last_recipes:
 			if recipe.get("recipe_id", "") == Account.crafting_recipe_id:
@@ -509,7 +528,7 @@ func _rebuild_recipe_list() -> void:
 		var empty_lbl = Label.new()
 		empty_lbl.text = "No recipes available."
 		empty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		Styler.style_parchment_label(empty_lbl, Styler.COLOR_TEXT_DARK)
+		Styler.style_parchment_label(empty_lbl, _col_text)
 		_scroll_content.add_child(empty_lbl)
 		return
 
@@ -522,7 +541,22 @@ func _rebuild_recipe_list() -> void:
 			if tier == _active_tier:
 				filtered.append(recipe)
 
+	# Precompute group order per recipe (avoids calling a member method inside the
+	# sort lambda). Crafting sets cluster under headers: smelting → refining → sets
+	# (by material/tier) → legacy gear. Ungrouped recipes (alchemy/enchanting) all
+	# get order 0, so the sort falls through to craftability — behavior unchanged.
+	for r in filtered:
+		var go = _group_order(r)
+		if go == 0 and _active_tier == -1:
+			# Ungrouped (alchemy/enchanting) in the ALL tab: section by tier so
+			# tier headers stay contiguous and foldable.
+			go = 1 + _get_recipe_tier(int(r.get("req_level", 1)))
+		r["_gorder"] = go
 	filtered.sort_custom(func(a, b):
+		var ga = int(a.get("_gorder", 0))
+		var gb = int(b.get("_gorder", 0))
+		if ga != gb:
+			return ga < gb
 		var a_craft = a.get("can_craft", false)
 		var b_craft = b.get("can_craft", false)
 		var a_unlock = a.get("unlocked", false)
@@ -538,7 +572,7 @@ func _rebuild_recipe_list() -> void:
 		var empty_lbl = Label.new()
 		empty_lbl.text = "No recipes in this tier."
 		empty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		Styler.style_parchment_label(empty_lbl, Styler.COLOR_TEXT_DARK)
+		Styler.style_parchment_label(empty_lbl, _col_text)
 		_scroll_content.add_child(empty_lbl)
 		return
 
@@ -550,7 +584,16 @@ func _rebuild_recipe_list() -> void:
 	if not expanded_in_filter:
 		_expanded_recipe_id = ""
 
+	var current_group = ""
+	var group_collapsed = false
 	for recipe in filtered:
+		var glabel = _display_group_label(recipe)
+		if glabel != "" and glabel != current_group:
+			current_group = glabel
+			group_collapsed = _collapsed_groups.get(glabel, false)
+			_scroll_content.add_child(_make_group_header(glabel, group_collapsed))
+		if group_collapsed and glabel != "":
+			continue
 		var rid = recipe.get("recipe_id", "")
 		if rid == _expanded_recipe_id:
 			_scroll_content.add_child(_build_expanded_recipe(recipe))
@@ -560,7 +603,72 @@ func _rebuild_recipe_list() -> void:
 
 # ── Compact Recipe Card ────────────────────────────────────────────────────────
 
+func _build_locked_scroll_card(recipe: Dictionary) -> PanelContainer:
+	# Locked placeholder for a scroll-gated recipe the player has not yet
+	# learned. Shows ??? + the server-supplied hint string with a gold @ 30%
+	# border that signals "rare/legendary class" without revealing the recipe.
+	var panel = PanelContainer.new()
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var sb = StyleBoxFlat.new()
+	sb.bg_color = Color(1.0, 1.0, 1.0, 0.05)
+	sb.set_corner_radius_all(6)
+	sb.border_width_left = 1
+	sb.border_width_right = 1
+	sb.border_width_top = 1
+	sb.border_width_bottom = 1
+	# Gold accent at 30% per DESIGN.md COL_PRIMARY (#FFC842).
+	sb.border_color = Color(1.0, 0.784, 0.259, 0.3)
+	sb.content_margin_left = 10
+	sb.content_margin_right = 10
+	sb.content_margin_top = 8
+	sb.content_margin_bottom = 8
+	panel.add_theme_stylebox_override("panel", sb)
+
+	var row = HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	panel.add_child(row)
+
+	# Lock icon at slot-size 44px (touch-target min from DESIGN.md).
+	var lock_icon = TextureRect.new()
+	lock_icon.custom_minimum_size = Vector2(44, 44)
+	lock_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	lock_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	lock_icon.modulate = Color(1.0, 0.784, 0.259, 0.6)  # muted gold
+	row.add_child(lock_icon)
+
+	var col = VBoxContainer.new()
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col.add_theme_constant_override("separation", 2)
+	row.add_child(col)
+
+	var name_lbl = Label.new()
+	name_lbl.text = "???"
+	name_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
+	name_lbl.add_theme_font_size_override("font_size", 16)
+	name_lbl.add_theme_color_override("font_color", Color(1.0, 0.784, 0.259, 0.9))
+	col.add_child(name_lbl)
+
+	var hint_lbl = Label.new()
+	hint_lbl.text = recipe.get("scroll_hint",
+		"Requires a rare recipe scroll. Explore Dragon Lair and Iron Mountain.")
+	hint_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hint_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
+	hint_lbl.add_theme_font_size_override("font_size", 12)
+	hint_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	col.add_child(hint_lbl)
+
+	return panel
+
+
 func _build_compact_recipe_card(recipe: Dictionary) -> PanelContainer:
+	# Scroll-gated recipes the player hasn't learned: render a locked
+	# placeholder card with a hint pointing to the scroll's drop sources.
+	# Once consumed (server adds recipe_id to known_recipes), the locked
+	# branch is bypassed and the card renders normally. Three-state UX
+	# per design §7.1 + CEO E9.
+	if recipe.get("locked_by_scroll", false):
+		return _build_locked_scroll_card(recipe)
+
 	var unlocked: bool = recipe.get("unlocked", false)
 	var can_craft: bool = recipe.get("can_craft", false)
 	var rid: String = recipe.get("recipe_id", "")
@@ -568,7 +676,7 @@ func _build_compact_recipe_card(recipe: Dictionary) -> PanelContainer:
 	var panel = PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var sb = StyleBoxFlat.new()
-	sb.bg_color = Color(0.0, 0.0, 0.0, 0.04)
+	sb.bg_color = Color(1.0, 1.0, 1.0, 0.05)
 	sb.set_corner_radius_all(6)
 	sb.content_margin_left = 10
 	sb.content_margin_right = 10
@@ -603,7 +711,7 @@ func _build_compact_recipe_card(recipe: Dictionary) -> PanelContainer:
 	icon_frame.custom_minimum_size = Vector2(52, 52)
 	icon_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var if_sb = StyleBoxFlat.new()
-	if_sb.bg_color = Color(0.0, 0.0, 0.0, 0.06)
+	if_sb.bg_color = Color(1.0, 1.0, 1.0, 0.06)
 	if_sb.border_color = _accent if unlocked else Color(0.4, 0.4, 0.4, 0.3)
 	if_sb.set_border_width_all(1)
 	if_sb.set_corner_radius_all(4)
@@ -635,7 +743,7 @@ func _build_compact_recipe_card(recipe: Dictionary) -> PanelContainer:
 	name_lbl.text = recipe.get("name", "Unknown")
 	name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	name_lbl.add_theme_font_size_override("font_size", 16)
-	name_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK if unlocked else Color(0.5, 0.5, 0.5))
+	name_lbl.add_theme_color_override("font_color", _col_text if unlocked else Color(0.55, 0.55, 0.55))
 	name_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	center_col.add_child(name_lbl)
 
@@ -669,7 +777,7 @@ func _build_compact_recipe_card(recipe: Dictionary) -> PanelContainer:
 		ing_row.add_child(ing_wrapper)
 
 		var ing_icon = TextureRect.new()
-		ing_icon.custom_minimum_size = Vector2(24, 24)
+		ing_icon.custom_minimum_size = Vector2(30, 30)
 		ing_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		ing_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		ing_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -703,7 +811,7 @@ func _build_expanded_recipe(recipe: Dictionary) -> PanelContainer:
 	var panel = PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var sb = StyleBoxFlat.new()
-	sb.bg_color = Color(0.0, 0.0, 0.0, 0.06)
+	sb.bg_color = Color(1.0, 1.0, 1.0, 0.06)
 	sb.border_color = _accent
 	sb.set_border_width_all(2)
 	sb.set_corner_radius_all(8)
@@ -733,7 +841,7 @@ func _build_expanded_recipe(recipe: Dictionary) -> PanelContainer:
 	icon_frame.custom_minimum_size = Vector2(68, 68)
 	icon_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var if_sb = StyleBoxFlat.new()
-	if_sb.bg_color = Color(0.0, 0.0, 0.0, 0.06)
+	if_sb.bg_color = Color(1.0, 1.0, 1.0, 0.06)
 	if_sb.border_color = _accent
 	if_sb.set_border_width_all(2)
 	if_sb.set_corner_radius_all(6)
@@ -774,7 +882,7 @@ func _build_expanded_recipe(recipe: Dictionary) -> PanelContainer:
 		var descr_lbl = Label.new()
 		descr_lbl.text = descr
 		descr_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		Styler.style_parchment_label(descr_lbl, Styler.COLOR_TEXT_DARK, 13)
+		Styler.style_parchment_label(descr_lbl, _col_text, 13)
 		descr_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		name_col.add_child(descr_lbl)
 
@@ -806,7 +914,7 @@ func _build_expanded_recipe(recipe: Dictionary) -> PanelContainer:
 	# Ingredients section
 	var ing_header = Label.new()
 	ing_header.text = "Ingredients"
-	Styler.style_parchment_label(ing_header, Styler.COLOR_SECTION_HDR, 14)
+	Styler.style_parchment_label(ing_header, _col_hdr, 14)
 	vbox.add_child(ing_header)
 
 	var ing_grid = HBoxContainer.new()
@@ -836,7 +944,7 @@ func _build_expanded_recipe(recipe: Dictionary) -> PanelContainer:
 
 	var steps_lbl = Label.new()
 	steps_lbl.text = steps_text
-	Styler.style_parchment_label(steps_lbl, Styler.COLOR_TEXT_DARK, 13)
+	Styler.style_parchment_label(steps_lbl, _col_text, 13)
 	stats_row.add_child(steps_lbl)
 
 	var xp_lbl = Label.new()
@@ -848,13 +956,13 @@ func _build_expanded_recipe(recipe: Dictionary) -> PanelContainer:
 	if output_qty > 1:
 		var makes_lbl = Label.new()
 		makes_lbl.text = "Makes %dx" % output_qty
-		Styler.style_parchment_label(makes_lbl, Styler.COLOR_TEXT_DARK, 13)
+		Styler.style_parchment_label(makes_lbl, _col_text, 13)
 		stats_row.add_child(makes_lbl)
 
 	# Craft controls
 	vbox.add_child(HSeparator.new())
 
-	var current_craft_activity = ACTIVITY_ENCHANTING if _profession_name == "enchanting" else ACTIVITY_ALCHEMY
+	var current_craft_activity = _craft_activity_id()
 	var max_qty: int = _compute_max_craft_qty(ingredients)
 
 	var craft_btn = Button.new()
@@ -966,9 +1074,9 @@ func _build_ingredient_slot(ing: Dictionary) -> VBoxContainer:
 	var has_enough: bool = qty_have >= qty_need
 
 	var frame = PanelContainer.new()
-	frame.custom_minimum_size = Vector2(48, 48)
+	frame.custom_minimum_size = Vector2(56, 56)
 	var f_sb = StyleBoxFlat.new()
-	f_sb.bg_color = Color(0.0, 0.0, 0.0, 0.06)
+	f_sb.bg_color = Color(1.0, 1.0, 1.0, 0.06)
 	if has_enough:
 		f_sb.border_color = Color.from_rgba8(60, 160, 80, 180)
 	else:
@@ -983,7 +1091,7 @@ func _build_ingredient_slot(ing: Dictionary) -> VBoxContainer:
 	wrapper.add_child(frame)
 
 	var icon = TextureRect.new()
-	icon.custom_minimum_size = Vector2(40, 40)
+	icon.custom_minimum_size = Vector2(48, 48)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -997,7 +1105,7 @@ func _build_ingredient_slot(ing: Dictionary) -> VBoxContainer:
 	name_lbl.text = name_text
 	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_lbl.add_theme_font_size_override("font_size", 11)
-	name_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
+	name_lbl.add_theme_color_override("font_color", _col_text)
 	name_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	name_lbl.clip_text = true
 	wrapper.add_child(name_lbl)
@@ -1341,7 +1449,7 @@ func _build_gathering_content(data: Dictionary) -> void:
 		act_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		act_lbl.add_theme_font_size_override("font_size", 18)
 		act_lbl.add_theme_font_override("font", Styler.JANDA_FONT)
-		act_lbl.add_theme_color_override("font_color", Styler.COLOR_SECTION_HDR)
+		act_lbl.add_theme_color_override("font_color", _col_hdr)
 		_scroll_content.add_child(act_lbl)
 
 	var columns = HBoxContainer.new()
@@ -1354,8 +1462,8 @@ func _build_gathering_content(data: Dictionary) -> void:
 	left_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	var left_sb = StyleBoxFlat.new()
-	left_sb.bg_color = Color(0.0, 0.0, 0.0, 0.06)
-	left_sb.border_color = Color(0.0, 0.0, 0.0, 0.15)
+	left_sb.bg_color = Color(1.0, 1.0, 1.0, 0.06)
+	left_sb.border_color = Color(1.0, 1.0, 1.0, 0.12)
 	left_sb.set_border_width_all(1)
 	left_sb.set_corner_radius_all(5)
 	left_sb.content_margin_left = 8
@@ -1371,17 +1479,17 @@ func _build_gathering_content(data: Dictionary) -> void:
 
 	var details_header = Label.new()
 	details_header.text = "Activity Details"
-	Styler.style_parchment_label(details_header, Styler.COLOR_SECTION_HDR)
+	Styler.style_parchment_label(details_header, _col_hdr)
 	left_vbox.add_child(details_header)
 
 	var steps_lbl = Label.new()
 	steps_lbl.text = "Steps: %d" % int(data.get("activity_steps", 0))
-	Styler.style_parchment_label(steps_lbl, Styler.COLOR_TEXT_DARK)
+	Styler.style_parchment_label(steps_lbl, _col_text)
 	left_vbox.add_child(steps_lbl)
 
 	var cycles_lbl = Label.new()
 	cycles_lbl.text = "Actions: %d" % int(data.get("activity_cycles", 0))
-	Styler.style_parchment_label(cycles_lbl, Styler.COLOR_TEXT_DARK)
+	Styler.style_parchment_label(cycles_lbl, _col_text)
 	left_vbox.add_child(cycles_lbl)
 
 	var spc_lbl = Label.new()
@@ -1392,22 +1500,22 @@ func _build_gathering_content(data: Dictionary) -> void:
 		spc_lbl.text = "Steps per action: %d  [-%d%% from stats, base %d]" % [eff_steps, pct, orig_steps]
 	else:
 		spc_lbl.text = "Steps per action: %d" % eff_steps
-	Styler.style_parchment_label(spc_lbl, Styler.COLOR_TEXT_DARK)
+	Styler.style_parchment_label(spc_lbl, _col_text)
 	left_vbox.add_child(spc_lbl)
 
 	var overall_header = Label.new()
 	overall_header.text = "Overall"
-	Styler.style_parchment_label(overall_header, Styler.COLOR_SECTION_HDR)
+	Styler.style_parchment_label(overall_header, _col_hdr)
 	left_vbox.add_child(overall_header)
 
 	var total_actions_lbl = Label.new()
 	total_actions_lbl.text = "Total Actions: %d" % int(data.get("total_profession_actions", 0))
-	Styler.style_parchment_label(total_actions_lbl, Styler.COLOR_TEXT_DARK)
+	Styler.style_parchment_label(total_actions_lbl, _col_text)
 	left_vbox.add_child(total_actions_lbl)
 
 	var total_steps_lbl = Label.new()
 	total_steps_lbl.text = "Total Steps: %d" % int(data.get("total_profession_steps", 0))
-	Styler.style_parchment_label(total_steps_lbl, Styler.COLOR_TEXT_DARK)
+	Styler.style_parchment_label(total_steps_lbl, _col_text)
 	left_vbox.add_child(total_steps_lbl)
 
 	# Right — Loot frame
@@ -1415,8 +1523,8 @@ func _build_gathering_content(data: Dictionary) -> void:
 	right_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	var right_sb = StyleBoxFlat.new()
-	right_sb.bg_color = Color(0.0, 0.0, 0.0, 0.06)
-	right_sb.border_color = Color(0.0, 0.0, 0.0, 0.15)
+	right_sb.bg_color = Color(1.0, 1.0, 1.0, 0.06)
+	right_sb.border_color = Color(1.0, 1.0, 1.0, 0.12)
 	right_sb.set_border_width_all(1)
 	right_sb.set_corner_radius_all(5)
 	right_sb.content_margin_left = 8
@@ -1432,13 +1540,13 @@ func _build_gathering_content(data: Dictionary) -> void:
 
 	var loot_header = Label.new()
 	loot_header.text = "Loot"
-	Styler.style_parchment_label(loot_header, Styler.COLOR_SECTION_HDR)
+	Styler.style_parchment_label(loot_header, _col_hdr)
 	right_vbox.add_child(loot_header)
 
 	if loot_items.is_empty():
 		var empty_lbl = Label.new()
 		empty_lbl.text = "No loot available."
-		Styler.style_parchment_label(empty_lbl, Styler.COLOR_TEXT_DARK)
+		Styler.style_parchment_label(empty_lbl, _col_text)
 		right_vbox.add_child(empty_lbl)
 		return
 
@@ -1451,8 +1559,8 @@ func _build_loot_row(herb: Dictionary, loot_counts: Dictionary = {}) -> PanelCon
 	var panel = PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var sb = StyleBoxFlat.new()
-	sb.bg_color = Color(0.0, 0.0, 0.0, 0.06)
-	sb.border_color = Color(0.0, 0.0, 0.0, 0.15)
+	sb.bg_color = Color(1.0, 1.0, 1.0, 0.06)
+	sb.border_color = Color(1.0, 1.0, 1.0, 0.12)
 	sb.set_border_width_all(1)
 	sb.set_corner_radius_all(4)
 	panel.add_theme_stylebox_override("panel", sb)
@@ -1486,14 +1594,14 @@ func _build_loot_row(herb: Dictionary, loot_counts: Dictionary = {}) -> PanelCon
 	var count_lbl = Label.new()
 	count_lbl.text = "x%d" % times_looted
 	count_lbl.add_theme_font_size_override("font_size", 15)
-	count_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
+	count_lbl.add_theme_color_override("font_color", _col_text)
 	count_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	hbox.add_child(count_lbl)
 
 	var pct_lbl = Label.new()
 	pct_lbl.text = "%.2f%%" % float(herb.get("drop_pct", 0))
 	pct_lbl.add_theme_font_size_override("font_size", 15)
-	pct_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
+	pct_lbl.add_theme_color_override("font_color", _col_text)
 	pct_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
 	hbox.add_child(pct_lbl)
 
@@ -1502,10 +1610,18 @@ func _build_loot_row(herb: Dictionary, loot_counts: Dictionary = {}) -> PanelCon
 
 # ── Craft Actions ──────────────────────────────────────────────────────────────
 
+func _craft_activity_id() -> int:
+	if _profession_name == "enchanting":
+		return ACTIVITY_ENCHANTING
+	elif _profession_name == "blacksmithing":
+		return ACTIVITY_BLACKSMITHING
+	return ACTIVITY_ALCHEMY
+
+
 func _on_craft_pressed(recipe_id: String, recipe_name: String, target_qty: int = 1) -> void:
 	if _confirm_dialog and is_instance_valid(_confirm_dialog):
 		return
-	var act = ACTIVITY_ENCHANTING if _profession_name == "enchanting" else ACTIVITY_ALCHEMY
+	var act = _craft_activity_id()
 	var qty: int = maxi(1, target_qty)
 	var qty_name: String = ("%dx %s" % [qty, recipe_name]) if qty > 1 else recipe_name
 	var text: String
@@ -1524,14 +1640,14 @@ func _on_craft_pressed(recipe_id: String, recipe_name: String, target_qty: int =
 
 
 func _on_stop_craft() -> void:
-	var act = ACTIVITY_ENCHANTING if _profession_name == "enchanting" else ACTIVITY_ALCHEMY
+	var act = _craft_activity_id()
 	SignalManager.signal_UserActivity.emit(act, Account.activity_site, "stop")
 
 
 # ── Craft Banner Progress ─────────────────────────────────────────────────────
 
 func _update_craft_banner() -> void:
-	var current_act = ACTIVITY_ENCHANTING if _profession_name == "enchanting" else ACTIVITY_ALCHEMY
+	var current_act = _craft_activity_id()
 	var is_crafting = Account.activity == current_act and not Account.crafting_recipe_id.is_empty()
 	_craft_banner.visible = is_crafting
 
@@ -1553,6 +1669,73 @@ func _update_craft_banner() -> void:
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
+
+# ── Crafting-set grouping (C3) ─────────────────────────────────────────────────
+# Server sends `group` (set_id | "refine" | "legacy" | null), `set_name`, and
+# `armor_type` per recipe. Ungrouped recipes (alchemy/enchanting) get order 0 and
+# an empty label → no header, craftability sort preserved.
+
+const _MAT_ORDER = {"cloth": 0, "leather": 1, "mail": 2}
+
+
+func _group_order(recipe: Dictionary) -> int:
+	var g = recipe.get("group", null)
+	if g == null or g == "" or g == "<null>":
+		return 0
+	if str(g) == "refine":
+		return 1000
+	if str(g) == "legacy":
+		return 500 if str(recipe.get("recipe_id", "")).begins_with("bar_") else 9000
+	# set armor (group is a set_id like "cloth_t3")
+	var mat = str(recipe.get("armor_type", ""))
+	return 2000 + int(_MAT_ORDER.get(mat, 9)) * 100 + int(recipe.get("req_level", 0))
+
+
+func _group_label(recipe: Dictionary) -> String:
+	var g = recipe.get("group", null)
+	if g == null or g == "" or g == "<null>":
+		return ""
+	if str(g) == "refine":
+		return "Refining — Cloth & Leather"
+	if str(g) == "legacy":
+		return "Smelting — Bars" if str(recipe.get("recipe_id", "")).begins_with("bar_") else "Blacksmith Gear (Legacy)"
+	# set_name arrives as JSON null for non-set recipes; str(null) is "<null>".
+	var sn_raw = recipe.get("set_name", "")
+	var sn = "" if sn_raw == null else str(sn_raw)
+	return sn if sn != "" else str(g)
+
+
+func _display_group_label(recipe: Dictionary) -> String:
+	# Server group label when present (blacksmithing); otherwise tier section
+	# in the ALL tab (alchemy/enchanting). Tier tabs need no tier headers.
+	var glabel = _group_label(recipe)
+	if glabel == "" and _active_tier == -1:
+		var tier = _get_recipe_tier(int(recipe.get("req_level", 1)))
+		return "Tier %d · Lv %d+" % [tier + 1, TIER_LEVEL_BREAKS[tier]]
+	return glabel
+
+
+func _make_group_header(text: String, collapsed: bool = false) -> Control:
+	var mc = MarginContainer.new()
+	mc.add_theme_constant_override("margin_top", 10)
+	mc.add_theme_constant_override("margin_bottom", 2)
+	mc.custom_minimum_size = Vector2(0, 36)  # touch target
+	var lbl = Label.new()
+	lbl.text = ("▶  " if collapsed else "▼  ") + text
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lbl.add_theme_color_override("font_color", _accent)
+	lbl.add_theme_font_size_override("font_size", 15)
+	if Styler.JANDA_FONT:
+		lbl.add_theme_font_override("font", Styler.JANDA_FONT)
+	mc.add_child(lbl)
+	mc.mouse_filter = Control.MOUSE_FILTER_STOP
+	mc.gui_input.connect(func(event: InputEvent):
+		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			_collapsed_groups[text] = not _collapsed_groups.get(text, false)
+			_rebuild_recipe_list()
+	)
+	return mc
+
 
 func _get_recipe_tier(req_level: int) -> int:
 	for i in range(TIER_LEVEL_BREAKS.size() - 1, -1, -1):
@@ -1579,10 +1762,10 @@ func _compute_max_craft_qty(ingredients: Array) -> int:
 
 func _quality_color(quality: int) -> Color:
 	match quality:
-		0: return Styler.COLOR_TEXT_DARK
+		0: return _col_text
 		1: return Color.from_rgba8(30, 180, 30)
 		2: return Color.from_rgba8(50, 100, 220)
 		3: return Color.from_rgba8(160, 50, 200)
 		4: return Color.from_rgba8(220, 150, 30)
 		5: return Color.from_rgba8(230, 70, 70)
-		_: return Styler.COLOR_TEXT_DARK
+		_: return _col_text

@@ -31,10 +31,10 @@ class AndroidExportPlugin extends EditorExportPlugin:
 			return PackedStringArray([_plugin_name + "/bin/release/" + _plugin_name + "-release.aar"])
 
 	func _get_android_dependencies(platform, debug):
-		if debug:
-			return PackedStringArray(["com.google.android.gms:play-services-fitness:21.3.0"])
-		else:
-			return PackedStringArray(["com.google.android.gms:play-services-fitness:21.3.0"])
+		return PackedStringArray([
+			"com.google.android.gms:play-services-fitness:21.3.0",
+			"com.google.android.gms:play-services-auth:21.2.0",
+		])
 
 	func _get_name():
 		return _plugin_name

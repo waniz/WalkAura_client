@@ -15,13 +15,14 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="WalkAura"
-config/version="0.2.5.170"
+config/version="0.2.6.178"
 run/main_scene="uid://dlfywtlps2ee4"
 config/features=PackedStringArray("4.6", "Mobile")
 boot_splash/bg_color=Color(0.14117648, 0.14117648, 0.14117648, 0.18039216)
 boot_splash/show_image=false
 boot_splash/use_filter=false
 config/icon="uid://b50kqegp47l3p"
+#Battery:appis~staticUImostofthetime.Withoutthistheenginerendersat#vsyncFPScontinuouslyevenonamotionlessscreen.low_processor_modemakesit#redrawonlywhensomethingchanges.Requiresper-framedrawstobegated(see#parallax_background.gd/character_paper_doll.gd)orthegainislost.run/low_processor_mode=true
 
 [autoload]
 
@@ -38,6 +39,7 @@ Styler="*res://scripts/globals/styler.gd"
 ServerParams="*res://scripts/globals/base_classes/server_params.gd"
 RiftData="*res://scripts/globals/rift_data.gd"
 PreloadManifest="*res://scripts/globals/preload_manifest.gd"
+QuestManager="*res://scripts/globals/quest_manager.gd"
 
 [display]
 

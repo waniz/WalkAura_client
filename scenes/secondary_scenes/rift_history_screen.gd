@@ -163,15 +163,36 @@ func _build_entry_card(entry: Dictionary) -> PanelContainer:
 	row1.add_child(name_lbl)
 
 	var badge_text: String
+	var pill_color: Color
 	match status:
-		"completed": badge_text = "CLEARED"
-		"died":      badge_text = "DIED"
-		_:           badge_text = "ABANDONED"
+		"completed":
+			badge_text = "CLEARED"
+			pill_color = Styler.COLOR_BTN_SUCCESS
+		"died":
+			badge_text = "DIED"
+			pill_color = Styler.COL_OFFENSE
+		_:
+			badge_text = "ABANDONED"
+			pill_color = Color.from_rgba8(200, 144, 48)
+	# Pill-shaped status badge with semantic accent.
+	var badge_panel = PanelContainer.new()
+	var badge_sb = StyleBoxFlat.new()
+	badge_sb.bg_color = Color(pill_color, 0.18)
+	badge_sb.border_color = pill_color
+	badge_sb.set_border_width_all(1)
+	badge_sb.set_corner_radius_all(10)
+	badge_sb.content_margin_left = 10
+	badge_sb.content_margin_right = 10
+	badge_sb.content_margin_top = 2
+	badge_sb.content_margin_bottom = 2
+	badge_panel.add_theme_stylebox_override("panel", badge_sb)
 	var badge_lbl = Label.new()
 	badge_lbl.text = badge_text
-	badge_lbl.add_theme_font_size_override("font_size", 13)
-	badge_lbl.add_theme_color_override("font_color", border_color)
-	row1.add_child(badge_lbl)
+	badge_lbl.add_theme_font_override("font", Styler.JANDA_FONT)
+	badge_lbl.add_theme_font_size_override("font_size", 11)
+	badge_lbl.add_theme_color_override("font_color", pill_color.darkened(0.2))
+	badge_panel.add_child(badge_lbl)
+	row1.add_child(badge_panel)
 
 	# Row 2: fights + deaths
 	var total_milestones: int = int(entry.get("total_milestones", 0))

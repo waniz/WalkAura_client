@@ -6,7 +6,10 @@ var talent_data: Dictionary = {} # current talent allocations/ranks from server
 var synergy_config: Array = []   # synergy definitions from server
 
 var PASSIVE_TOTAL_TO_LEVEL = {1: 0}
-var _active_slots: Array = [null, null, null, null, null, null]
+# Slot count is server-authoritative (Account.max_active_spell_slots).
+# _ensure_slot_capacity resizes up when the server payload arrives or an
+# out-of-range slot_id is ingested.
+var _active_slots: Array = [null, null, null, null, null, null, null]
 var _known_skills: Array = []
 
 # --- Node refs (from scene tree) ---
@@ -76,6 +79,12 @@ func _ready() -> void:
 	AccountManager.signal_AccountSkillsReceived.connect(_update_skills)
 	AccountManager.signal_TalentsConfigReceived.connect(_on_talents_config)
 	AccountManager.signal_TalentsDataReceived.connect(_on_talents_data)
+	# Re-render the active-spell bar whenever account_attributes lands. This
+	# is the moment Account.max_active_spell_slots is guaranteed fresh, which
+	# matters on first login (the scene's _ready() runs BEFORE login completes,
+	# so the initial render sees the default 6 not the server-sent 7) and
+	# after every equip/unequip (server re-sends account_attributes then).
+	AccountManager.signal_AccountDataReceived.connect(_on_account_data_received)
 
 	btn_tab_skills.pressed.connect(_on_btn_tab_skills_pressed)
 	btn_tab_talents.pressed.connect(_on_btn_tab_talents_pressed)
@@ -345,18 +354,18 @@ func _reposition_tooltip() -> void:
 
 
 func _apply_theme() -> void:
-	# Tab buttons
-	Styler.style_button(btn_tab_skills, Color.from_rgba8(64, 180, 255))
-	Styler.style_button(btn_tab_talents, Color.from_rgba8(64, 180, 255))
+	# Tab buttons — chrome painted-pill style (P5 redesign).
+	_style_chrome_pill_tab(btn_tab_skills)
+	_style_chrome_pill_tab(btn_tab_talents)
 	_set_skills_tab_active(btn_tab_skills)
 
-	# Skill class buttons
-	Styler.style_button(btn_skills_blood, Styler.COL_BLOOD)
-	Styler.style_button(btn_skills_dark, Styler.COL_DARK)
-	Styler.style_button(btn_skills_arcane, Styler.COL_ARCANE)
-	Styler.style_button(btn_skills_mage, Styler.COL_FIRE.lerp(Styler.COL_FROST, 0.5))
-	Styler.style_button(btn_skills_paladin, Styler.COL_HOLY)
-	Styler.style_button(btn_skills_buffs, Styler.COL_UTILITY)
+	# Class chips — rounded pills with school-color dot indicator.
+	_style_class_chip(btn_skills_mage, Styler.COL_FIRE.lerp(Styler.COL_FROST, 0.5), "Mage")
+	_style_class_chip(btn_skills_paladin, Styler.COL_HOLY, "Paladin")
+	_style_class_chip(btn_skills_buffs, Styler.COL_UTILITY, "Utility")
+	_style_class_chip(btn_skills_blood, Styler.COL_BLOOD, "Blood")
+	_style_class_chip(btn_skills_dark, Styler.COL_DARK, "Dark")
+	_style_class_chip(btn_skills_arcane, Styler.COL_ARCANE, "Arcane")
 
 	# Talents title label (Styler font)
 	_title_label.add_theme_font_override("font", Styler.GROBOLT_FONT)
@@ -410,9 +419,70 @@ func _on_btn_tab_talents_pressed() -> void:
 
 func _set_skills_tab_active(active_btn: Button) -> void:
 	for btn in [btn_tab_skills, btn_tab_talents]:
-		var sb = btn.get_theme_stylebox("normal") as StyleBoxFlat
-		if sb:
-			sb.bg_color = Color.from_rgba8(64, 180, 255) if btn == active_btn else Color.from_rgba8(60, 60, 70)
+		var is_active: bool = btn == active_btn
+		_style_chrome_pill_tab(btn, is_active)
+
+
+# Chrome pill tab — slim height + strong active state contrast.
+func _style_chrome_pill_tab(btn: Button, active: bool = false) -> void:
+	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	btn.add_theme_font_override("font", Styler.JANDA_FONT)
+	btn.add_theme_font_size_override("font_size", 14)
+	btn.custom_minimum_size = Vector2(0, 32)
+	var text_col: Color = Color.from_rgba8(20, 16, 10) if active else Color.from_rgba8(160, 140, 100)
+	btn.add_theme_color_override("font_color", text_col)
+	btn.add_theme_color_override("font_hover_color", text_col)
+	btn.add_theme_color_override("font_pressed_color", text_col)
+	for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
+		var sb = StyleBoxFlat.new()
+		if active:
+			# Filled gold — unambiguous "this is the current tab".
+			sb.bg_color = Styler.COL_PRIMARY
+			sb.border_color = Color.from_rgba8(216, 160, 64)
+			sb.set_border_width_all(0)
+			sb.border_width_bottom = 2
+			sb.shadow_color = Styler.COL_GOLD_GLOW
+			sb.shadow_size = 10
+		else:
+			sb.bg_color = Color.from_rgba8(20, 22, 30, 200)
+			sb.border_color = Color(Styler.COL_PRIMARY, 0.25)
+			sb.set_border_width_all(1)
+		sb.set_corner_radius_all(4)
+		sb.content_margin_top = 4
+		sb.content_margin_bottom = 4
+		btn.add_theme_stylebox_override(state_name, sb)
+
+
+# Class chip — pill with school-color border + tinted bg, neutral cream text.
+func _style_class_chip(btn: Button, school_color: Color, _label: String) -> void:
+	var neutral_text = Color.from_rgba8(232, 222, 194)
+	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	btn.add_theme_font_override("font", Styler.JANDA_FONT)
+	btn.add_theme_font_size_override("font_size", 13)
+	btn.add_theme_color_override("font_color", neutral_text)
+	btn.add_theme_color_override("font_hover_color", Color.WHITE)
+	btn.add_theme_color_override("font_pressed_color", Color.WHITE)
+	btn.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.7))
+	btn.add_theme_constant_override("outline_size", 2)
+	btn.custom_minimum_size = Vector2(90, 36)
+	for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
+		var sb = StyleBoxFlat.new()
+		sb.bg_color = Color(school_color, 0.1)
+		sb.border_color = Color(school_color, 0.5)
+		sb.set_border_width_all(1)
+		sb.set_corner_radius_all(18)
+		sb.content_margin_left = 14
+		sb.content_margin_right = 14
+		match state_name:
+			"hover":
+				sb.bg_color = Color(school_color, 0.18)
+				sb.border_color = school_color
+				sb.shadow_color = Color(school_color, 0.4)
+				sb.shadow_size = 6
+			"pressed":
+				sb.bg_color = Color(school_color, 0.22)
+				sb.border_color = school_color
+		btn.add_theme_stylebox_override(state_name, sb)
 
 
 # ==============================================================================
@@ -422,11 +492,34 @@ func _update_game_skills(server_json) -> void:
 	_known_skills = server_json["data"]["all_skills"]
 
 
+func _on_account_data_received(_ok) -> void:
+	# Account.max_active_spell_slots is now fresh; re-render the active bar
+	# to pick up any slot-count change the server pushed (login, equip,
+	# unequip, or a future server-side bump to the constant).
+	_refresh_skills_ui()
+
+
+func _ensure_slot_capacity(min_size: int) -> void:
+	# Grows _active_slots to at least `min_size`, padding new entries with null.
+	# Handles the rollout where the server sends slot 6 before account_attributes
+	# (which carries the real Account.max_active_spell_slots) has been parsed.
+	if _active_slots.size() >= min_size:
+		return
+	while _active_slots.size() < min_size:
+		_active_slots.append(null)
+
+
 func _update_skills(server_json) -> void:
 	var skills_data = server_json["data"]["skills"]
+	# Always size to the server-authoritative count so new empty slots render.
+	_ensure_slot_capacity(Account.max_active_spell_slots)
 	if len(skills_data) > 0:
 		for key in skills_data.keys():
-			_active_slots[int(skills_data[key]["slot"])] = int(skills_data[key]["skill_id"])
+			var slot = int(skills_data[key]["slot"])
+			# Defensive: server shouldn't send out-of-range, but if it does
+			# (admin-tool slot bump before client restart), grow rather than crash.
+			_ensure_slot_capacity(slot + 1)
+			_active_slots[slot] = int(skills_data[key]["skill_id"])
 
 
 func _refresh_talents() -> void:
@@ -578,8 +671,18 @@ func _render_active_bar() -> void:
 	for c in active_container.get_children():
 		c.queue_free()
 
-	for i in range(6):
+	_ensure_slot_capacity(Account.max_active_spell_slots)
+	for i in range(_active_slots.size()):
 		var skill_id = _active_slots[i]
+		var slot_school: Color = Styler.COL_PRIMARY  # default gold for empty/unknown
+		var skill_instance: Dictionary = {}
+
+		if skill_id != null:
+			for inst in _known_skills:
+				if skill_id == int(inst["skill_id"]):
+					skill_instance = inst
+					break
+			slot_school = _school_color_for_skill(skill_instance)
 
 		var btn = Button.new()
 		btn.custom_minimum_size = Vector2(72, 72)
@@ -587,24 +690,29 @@ func _render_active_bar() -> void:
 		btn.focus_mode = Control.FOCUS_NONE
 
 		var sb = StyleBoxFlat.new()
-		sb.bg_color = Color(0, 0, 0, 0.2)
-		sb.border_width_left = 2
-		sb.border_width_top = 2
-		sb.border_width_right = 2
-		sb.border_width_bottom = 2
-		sb.border_color = Styler.COLOR_GOLD
+		if skill_id != null:
+			# Filled: school-tinted border + glow halo + dark bg.
+			sb.bg_color = Color.from_rgba8(20, 22, 30, 220)
+			sb.border_color = slot_school
+			sb.set_border_width_all(2)
+			sb.shadow_color = Color(slot_school, 0.5)
+			sb.shadow_size = 8
+		else:
+			# Empty: faint dashed-feel border (StyleBoxFlat can't dash, fake
+			# via low-alpha bg + 1px dim border).
+			sb.bg_color = Color(0, 0, 0, 0.18)
+			sb.border_color = Color(Styler.COL_PRIMARY, 0.15)
+			sb.set_border_width_all(1)
 		sb.set_corner_radius_all(4)
 		btn.add_theme_stylebox_override("normal", sb)
 		btn.add_theme_stylebox_override("hover", sb)
 		btn.add_theme_stylebox_override("pressed", sb)
 
 		if skill_id != null:
-			var skill_instance = {}
-			for inst in _known_skills:
-				if skill_id == int(inst["skill_id"]):
-					skill_instance = inst
 			btn.icon = ItemDB.get_icon(skill_instance["skill_icon"])
 			btn.expand_icon = true
+			btn.clip_contents = true
+			btn.add_theme_constant_override("icon_max_width", 60)
 			btn.tooltip_text = skill_instance["name"] + "\n(Click to Unequip)"
 		else:
 			btn.text = ""
@@ -612,6 +720,62 @@ func _render_active_bar() -> void:
 
 		btn.pressed.connect(_on_active_slot_clicked.bind(i))
 		active_container.add_child(btn)
+
+		# Hotkey number badge top-left of slot (1-6) — larger + thicker outline
+		# so it reads cleanly against the painted spell icon.
+		var hotkey = Label.new()
+		hotkey.text = str(i + 1)
+		hotkey.add_theme_font_override("font", Styler.JANDA_FONT)
+		hotkey.add_theme_font_size_override("font_size", 18)
+		hotkey.add_theme_color_override("font_color", Styler.COL_PRIMARY)
+		hotkey.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1.0))
+		hotkey.add_theme_constant_override("outline_size", 4)
+		hotkey.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.8))
+		hotkey.add_theme_constant_override("shadow_offset_x", 1)
+		hotkey.add_theme_constant_override("shadow_offset_y", 1)
+		hotkey.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		hotkey.position = Vector2(5, 2)
+		btn.add_child(hotkey)
+
+		# Gold ★ star + glow corner when equipped — visible signal of "active".
+		if skill_id != null:
+			var star = Label.new()
+			star.text = "★"
+			star.add_theme_font_size_override("font_size", 22)
+			star.add_theme_color_override("font_color", Styler.COL_PRIMARY)
+			star.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1.0))
+			star.add_theme_constant_override("outline_size", 4)
+			star.add_theme_color_override("font_shadow_color", Styler.COL_GOLD_GLOW)
+			star.add_theme_constant_override("shadow_outline_size", 8)
+			star.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			star.position = Vector2(48, 0)
+			btn.add_child(star)
+
+
+# Returns the school accent color for a skill_instance dict — used to tint
+# active slots + spellbook row left edges.
+func _school_color_for_skill(skill_instance: Dictionary) -> Color:
+	if skill_instance.is_empty():
+		return Styler.COL_PRIMARY
+	var skill_type: String = skill_instance.get("skill_type", "")
+	# Mage rows split fire/frost via magic_type embedded in effect dict.
+	if skill_type == "mage":
+		var eff = skill_instance.get("effect", {})
+		if typeof(eff) == TYPE_STRING:
+			eff = JSON.parse_string(eff)
+			if eff == null:
+				eff = {}
+		var mtype = eff.get("magic_type", "")
+		if mtype == "frost":
+			return Styler.COL_FROST
+		return Styler.COL_FIRE
+	match skill_type:
+		"paladin": return Styler.COL_HOLY
+		"buff": return Styler.COL_UTILITY
+		"blood": return Styler.COL_BLOOD
+		"dark": return Styler.COL_DARK
+		"arcane": return Styler.COL_ARCANE
+	return Styler.COL_PRIMARY
 
 
 func _render_spellbook_lists() -> void:
@@ -751,11 +915,41 @@ func _render_spellbook_lists() -> void:
 func _make_skill_row_btn(skill_instance: Dictionary) -> Button:
 	var row_btn = Button.new()
 	row_btn.custom_minimum_size = Vector2(320, 96)
+	var school_col = _school_color_for_skill(skill_instance)
+	var is_equipped: bool = int(skill_instance.get("skill_id", -1)) in _active_slots
 
-	var sb_norm = StyleBoxFlat.new()
-	sb_norm.bg_color = Color(0, 0, 0, 0.05)
-	sb_norm.set_corner_radius_all(4)
-	row_btn.add_theme_stylebox_override("normal", sb_norm)
+	# School-color left edge + soft tinted bg. Equipped rows get a stronger
+	# gold halo + gold star corner to read as "you have this in a slot".
+	for state_name in ["normal", "hover", "pressed", "focus"]:
+		var sb = StyleBoxFlat.new()
+		sb.bg_color = Color(school_col, 0.06)
+		if state_name == "hover":
+			sb.bg_color = Color(school_col, 0.14)
+		elif state_name == "pressed":
+			sb.bg_color = Color(school_col, 0.18)
+		sb.set_corner_radius_all(6)
+		sb.border_color = Color(school_col, 0.45)
+		sb.set_border_width_all(0)
+		sb.border_width_left = 3
+		if is_equipped:
+			sb.shadow_color = Styler.COL_GOLD_GLOW
+			sb.shadow_size = 8
+		row_btn.add_theme_stylebox_override(state_name, sb)
+
+	if is_equipped:
+		var star = Label.new()
+		star.text = "★"
+		star.add_theme_font_size_override("font_size", 20)
+		star.add_theme_color_override("font_color", Styler.COL_PRIMARY)
+		star.add_theme_color_override("font_shadow_color", Styler.COL_GOLD_GLOW)
+		star.add_theme_constant_override("shadow_outline_size", 8)
+		star.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		star.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+		star.offset_left = -28
+		star.offset_top = 4
+		star.offset_right = -8
+		star.offset_bottom = 28
+		row_btn.add_child(star)
 
 	var hbox = HBoxContainer.new()
 	hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -766,8 +960,13 @@ func _make_skill_row_btn(skill_instance: Dictionary) -> Button:
 
 	var icon_rect = TextureRect.new()
 	icon_rect.custom_minimum_size = Vector2(96, 96)
+	icon_rect.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	icon_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon_rect.clip_contents = true
 	icon_rect.texture = ItemDB.get_icon(skill_instance["skill_icon"])
+	_apply_rounded_mask(icon_rect, 0.15)
 	hbox.add_child(icon_rect)
 
 	var vbox_info = VBoxContainer.new()
@@ -829,8 +1028,9 @@ func _make_skill_row_btn(skill_instance: Dictionary) -> Button:
 	var effect = _parse_effects(skill_instance)
 	var lbl_effect = Label.new()
 	lbl_effect.text = effect
-	lbl_effect.add_theme_color_override("font_color", Color(0.4, 0.4, 0.4))
+	lbl_effect.add_theme_color_override("font_color", Color.from_rgba8(60, 130, 70))
 	lbl_effect.add_theme_font_size_override("font_size", 12)
+	lbl_effect.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox_info.add_child(lbl_effect)
 
 	row_btn.pressed.connect(_on_spellbook_clicked.bind(skill_instance))
@@ -1005,3 +1205,28 @@ func _parse_effects(skill_instance) -> String:
 	if duration_line != "":
 		output += "\n " + duration_line.strip_edges()
 	return output
+
+
+# Apply a rounded-corner mask shader to a TextureRect. radius_norm is in UV
+# space (0..0.5). 0.15 = soft rounded square; 0.5 = full circle.
+# Shared by spell icons + active slot tiles.
+func _apply_rounded_mask(target: Control, radius_norm: float = 0.15) -> void:
+	var shader = Shader.new()
+	shader.code = """
+shader_type canvas_item;
+uniform float radius : hint_range(0.0, 0.5) = 0.15;
+void fragment() {
+	vec2 uv = UV;
+	vec2 half_size = vec2(0.5);
+	vec2 center = abs(uv - half_size);
+	vec2 corner = center - half_size + vec2(radius);
+	float dist = length(max(corner, 0.0));
+	float alpha = 1.0 - smoothstep(radius - 0.01, radius, dist);
+	COLOR = texture(TEXTURE, uv);
+	COLOR.a *= alpha;
+}
+"""
+	var mat = ShaderMaterial.new()
+	mat.shader = shader
+	mat.set_shader_parameter("radius", radius_norm)
+	target.material = mat

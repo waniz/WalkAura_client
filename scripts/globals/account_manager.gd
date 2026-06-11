@@ -3,6 +3,18 @@ extends Node
 var cached_rift_pending_monster: Dictionary = {}
 const OFFLINE_PROGRESS_VIEW = preload("res://scenes/secondary_scenes/offline_progress.gd")
 
+# Active-activity id -> profession name, for patching ServerParams.profession_levels
+# from activity_progress ticks. Mirrors location_hub.gd's ACTIVITY_PROF_NAME.
+const _PROGRESS_ACTIVITY_PROF = {
+	1: "herbalism",
+	2: "alchemy",
+	3: "hunting",
+	4: "mining",
+	5: "woodcutting",
+	6: "fishing",
+	7: "rift",
+}
+
 signal signal_LoginResult(ok: bool, error: String)
 signal signal_AccountDataReceived(result)
 signal signal_CreateUserResult(ok: bool, error: String)
@@ -10,6 +22,11 @@ signal signal_CreateUserResult(ok: bool, error: String)
 # date. Payload is a Dictionary with keys: server_version, required,
 # client_version. Listened to by login_scene to show the update modal.
 signal signal_VersionMismatch(info: Dictionary)
+# Emitted when the server acknowledges our client_hello handshake. ServerConnector
+# waits for this before sending any auth command (auto-login), so login_token is
+# never sent before the handshake completes — sending early gets the socket closed
+# with a version_mismatch (4000).
+signal signal_HandshakeAck
 
 signal signal_LoginParamsReceived(data)
 signal signal_UserStepLastTSReceived(data)
@@ -49,6 +66,10 @@ func parse_message(message):
 	var cmd: String = json.data.cmd
 	if cmd == "login_user":
 		check_login_result(json.data)
+	elif cmd == "login_token":
+		check_login_result(json.data)
+	elif cmd == "login_google":
+		check_login_result(json.data)
 	elif cmd == "create_user":
 		_handle_create_user_result(json.data)
 	elif cmd == "login_params":
@@ -58,6 +79,20 @@ func parse_message(message):
 	elif cmd == "_handle_user_steps_last_ts":
 		update_account_steps(json.data)
 	elif cmd == "activity_progress":
+		# Diagnostic: surface activity_progress arrivals + key data fields.
+		var _ap_inner = json.data.get("data", {}).get("data", {})
+		print("[diag] activity_progress arrived: steps_in=%s xp_gained=%s loot_counts=%s" % [
+			_ap_inner.get("steps_in", "?"),
+			_ap_inner.get("xp_gained", "?"),
+			_ap_inner.get("loot_counts", "?"),
+		])
+		# Keep the world-map availability data fresh: the progress tick carries
+		# the active profession's current level. Patch our level map so the map
+		# tooltip reflects in-session level-ups without a reconnect.
+		var _prof = _PROGRESS_ACTIVITY_PROF.get(Account.activity, "")
+		var _prof_lvl = int(_ap_inner.get("level", 0))
+		if _prof != "" and _prof_lvl > 0:
+			ServerParams.profession_levels[_prof] = _prof_lvl
 		show_activity_progress(json.data)
 	elif cmd == "offline_progress":
 		var summary = json.data.get("data", {})
@@ -70,6 +105,7 @@ func parse_message(message):
 		get_tree().root.add_child(view)
 	elif cmd in ["steps_update_cheat", "steps_update_android"]:
 		var steps_amount = int(json.data.get("data", {}).get("steps", 0))
+		print("[diag] %s arrived: steps=%s Account.activity=%s" % [cmd, steps_amount, Account.activity])
 		if steps_amount > 0 and Account.activity == 0:
 			SignalManager.signal_StepToastUpdate.emit(steps_amount, {}, {}, [])
 	elif cmd == "inventory":
@@ -92,6 +128,17 @@ func parse_message(message):
 		handle_disenchant_result(json.data)
 	elif cmd == "profession_info":
 		handle_profession_info(json.data)
+	elif cmd == "use_recipe_scroll":
+		# Fold the learned recipe into Account.known_recipes so the next
+		# profession_info request renders the recipe normally instead of as
+		# a locked placeholder. Server is the source of truth; this just
+		# avoids a stale cache moment between learn and the next refresh.
+		var _scroll_data = json.data.get("data", {}) if json.data is Dictionary else {}
+		if _scroll_data.get("status", "") == "learned":
+			var rid = _scroll_data.get("recipe_id", "")
+			if rid != "" and not Account.known_recipes.has(rid):
+				Account.known_recipes.append(rid)
+		SignalManager.signal_RecipeScrollResult.emit(_scroll_data)
 	elif cmd == "achievements":
 		SignalManager.signal_AchievementsReceived.emit(json.data.get("data", {}))
 	elif cmd == "achievement_claimed":
@@ -120,10 +167,33 @@ func parse_message(message):
 		)
 	elif cmd == "travel_passing_through":
 		_handle_travel_passing_through(json.data)
+	elif cmd == "quests":
+		QuestManager.ingest_quests(json.data.get("data", {}))
+	elif cmd == "quest_accepted":
+		QuestManager.ingest_quest_accepted(json.data.get("data", {}))
+	elif cmd == "quest_turned_in":
+		var _tdata = json.data.get("data", {})
+		QuestManager.ingest_quest_turned_in(_tdata)
+		SignalManager.signal_QuestTurnedIn.emit(_tdata)
+	elif cmd == "quest_progress":
+		QuestManager.ingest_progress(json.data.get("data", {}))
+	elif cmd == "quest_completed_toast":
+		var _cdata = json.data.get("data", {})
+		QuestManager.request_quests()
+		SignalManager.signal_QuestCompletedToast.emit(_cdata)
+	elif cmd == "npc_dialogue":
+		SignalManager.signal_NpcDialogueReceived.emit(json.data.get("data", {}))
+	elif cmd == "location_opened_ack":
+		pass
+	elif cmd == "location_npcs":
+		SignalManager.signal_LocationNpcsReceived.emit(json.data.get("data", {}))
+	elif cmd == "available_quests":
+		QuestManager.ingest_available_quests(json.data.get("data", {}))
 	elif cmd == "version_mismatch":
 		_handle_version_mismatch(json.data)
 	elif cmd == "client_hello_ack":
-		pass  # Handshake confirmed; nothing to do client-side.
+		# Handshake confirmed. Tell ServerConnector it may now auto-login.
+		signal_HandshakeAck.emit()
 	elif cmd.begins_with("error:"):
 		_handle_server_error(json.data)
 		
@@ -135,10 +205,26 @@ func check_login_result(json_msg):
 	# Emits the raw error code (not display text) — consumers format it via
 	# GameTextEn.error_texts so the server contract stays machine-readable.
 	if json_msg.get("ok", false) == true:
+		# Persist the session token (if the server minted one) so the next app
+		# launch can auto-login without the password.
+		var tok = json_msg.get("data", {}).get("auth_token", "")
+		if tok != "":
+			ServerConnector._save_token(tok)
 		signal_LoginResult.emit(true, "")
 		return
 	var data = json_msg.get("data", {})
 	var code: String = data.get("code", json_msg.get("error", "server_error"))
+	if json_msg.get("cmd", "") == "login_token":
+		if code == "rate_limited":
+			# Transient IP throttle, not a bad token — keep the token and
+			# back off auto-login. Wiping here logged users out whenever a
+			# flaky mobile network made the reconnect loop burn the 5/min
+			# auth budget.
+			ServerConnector.notify_login_rate_limited(int(data.get("retry_after_seconds", 0)))
+		else:
+			# A rejected token (expired/unknown): wipe the stored token so
+			# the next launch falls back to the manual login screen.
+			ServerConnector.clear_credentials()
 	signal_LoginResult.emit(false, code)
 	signal_AccountDataReceived.emit(true)
 
@@ -170,6 +256,12 @@ const _ERROR_TOAST_CODES = {
 	"skill_too_low":    Color(0.9, 0.55, 0.35),
 	"server_error":     Color(1.0, 0.39, 0.39),
 	"bad_request":      Color(1.0, 0.39, 0.39),
+	# Active spell slot validation. duplicate_skill is legitimate feedback;
+	# the other two indicate client/server drift and should also be logged.
+	"duplicate_skill":  Color(0.9, 0.55, 0.35),
+	"unknown_skill":    Color(1.0, 0.39, 0.39),
+	"slot_out_of_range": Color(1.0, 0.39, 0.39),
+	"internal_error":   Color(1.0, 0.39, 0.39),
 }
 
 func _handle_server_error(json_msg) -> void:
@@ -210,6 +302,12 @@ func _display_for_error(code: String, data: Dictionary) -> String:
 	return text
 		
 func get_login_params(data):
+	# `data` is the full WS envelope {ok, cmd, data}; the login params live under
+	# data["data"] (same nesting ServerParams.on_login_params_received reads).
+	# Server is the source of truth for rift metadata; overwrite RiftData's
+	# baked-in fallback so server retunes propagate without editing the client.
+	var params = data.get("data", {})
+	RiftData.update_from_catalog(params.get("rift_catalog", []))
 	signal_LoginParamsReceived.emit(data)
 		
 func get_account_attrs(json_msg):
@@ -244,6 +342,16 @@ func get_account_attrs(json_msg):
 	])
 	Account.rift_lvl = int(d.professions.get("rift_lvl", 1))
 	Account.rift_xp = int(d.professions.get("rift_xp", 0))
+
+	# Seed the world-map availability map {profession: level} from the account's
+	# profession levels. login_params is pre-auth static data and carries no
+	# account state, so this is the canonical seed point (runs on every login,
+	# manual or token). Patched live afterwards from activity_progress ticks.
+	ServerParams.profession_levels.clear()
+	for prof_key in d.professions:
+		var key_str = str(prof_key)
+		if key_str.ends_with("_lvl"):
+			ServerParams.profession_levels[key_str.trim_suffix("_lvl")] = int(d.professions[prof_key])
 
 	_bulk_set_int(d.passives, [
 		"thick_skin_lvl", "thick_skin_xp",
@@ -323,6 +431,13 @@ func get_account_attrs(json_msg):
 	Account.spirit_healing_mult = d.internal.spirit_healing_mult
 
 	Account.active_buffs = d.get("active_buffs", {})
+
+	Account.max_active_spell_slots = int(d.get("max_active_spell_slots", 7))
+
+	# known_recipes: scroll-learned blacksmith (and future) recipes.
+	# Server sends a sorted list; client keeps it as Array for set-style
+	# membership checks via has().
+	Account.known_recipes = d.get("known_recipes", [])
 
 	update_client_visuals()
 

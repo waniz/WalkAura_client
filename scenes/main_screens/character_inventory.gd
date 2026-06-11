@@ -40,10 +40,13 @@ var _paper_doll_layers: Dictionary = {} # slot_name -> TextureRect
 
 # --- Layout / Config ---
 @export_group("Grid Settings")
-# NOTE: server enforces INVENTORY_MAX_SLOTS = columns * rows (activities_base_config.py).
-# Update the server constant if you change these values.
+# NOTE: server enforces INVENTORY_MAX_SLOTS (activities_base_config.py) — it must
+# equal `capacity`. `columns` is just the grid width; keep capacity a multiple of
+# columns for a clean grid (72 = 9 rows of 8).
+# Update the server constant if you change `capacity`.
 @export var columns: int = 5
 @export var rows: int = 6
+@export var capacity: int = 72   # total inventory slots
 @export var slot_size: Vector2i = Vector2i(80, 110)
 @export var slot_padding: int = 5
  
@@ -64,6 +67,10 @@ var _slots: Array = []          # Array[Dictionary | null] -> [{"id":String, "qt
 var _equipped: Dictionary = {}  # slot_name -> {"id":String, "qty":int}
 var _item_defs: Dictionary = {}
 var _active_filter: String = "all"
+# Slot-type filter (e.g. "head", "chest") set when player taps an empty
+# equipment slot. Empty string = no slot filter applied. Cleared whenever
+# user picks a category chip via _set_filter.
+var _slot_type_filter: String = ""
 var _bulk_updating: bool = false
 var _multi_select_mode: bool = false
 var _selected_indices: Array = []
@@ -128,6 +135,12 @@ func _ready() -> void:
 
 	AccountManager.signal_AccountDataReceived.connect(_on_currency_update)
 	AccountManager.signal_InventoryReceived.connect(_on_request_inventory)
+	# The login bundle's inventory message dispatches during login_scene's life,
+	# before this scene is instantiated by app_scenes_handler. login_scene only
+	# uses it to flip a transition gate; it doesn't persist the data. Request
+	# a fresh inventory snapshot here so the grid is populated on first paint
+	# instead of waiting for the next activity completion to push one.
+	SignalManager.signal_RequestInventory.emit("get")
 	_setup_ui_layout()
 	# Defer grid build so container has its final size for adaptive slot calculation
 	await get_tree().process_frame
@@ -196,7 +209,7 @@ func _input(event: InputEvent) -> void:
 
 # --- Public API: Inventory Management ---
 func clear_inventory() -> void:
-	_slots.resize(columns * rows)
+	_slots.resize(capacity)
 	for i in _slots.size():
 		_slots[i] = null
 	_refresh_all_inventory_slots()
@@ -306,11 +319,14 @@ func _build_inventory_grid() -> void:
 	var available_width = item_container.size.x
 	if available_width <= 0:
 		available_width = item_container.get_parent().size.x
+	# Reserve the vertical scrollbar width so the last column stays inside the
+	# panel border once the grid is tall enough to scroll.
+	available_width -= 18
 	var total_padding = slot_padding * (columns - 1)
 	var adaptive_size = int(max(32, (available_width - total_padding) / columns))
 
-	_slots.resize(columns * rows)
-	for i in range(columns * rows):
+	_slots.resize(capacity)
+	for i in range(capacity):
 		_grid.add_child(_create_inventory_slot_node(i, adaptive_size))
 
 func _create_inventory_slot_node(index: int, adaptive_size: int = 50) -> Control:
@@ -431,31 +447,68 @@ func _create_equipment_slot_node(slot_name: String) -> Control:
 
 func _update_mean_ilvl() -> void:
 	if not ilvl_label: return
-	
+
 	var total_ilvl: float = 0.0
-	
-	# Iterate over equipped items
+	var slotted: int = 0
 	for slot_name in _equipped:
 		var data = _equipped[slot_name]
 		var id = data["id"]
 		var def = _item_defs.get(id, {})
-		
-		# Get ilvl, default to 0 if missing
 		var ilvl = int(def.get("ilvl", 0))
-		
-		# Only count items that actually have an ilvl (optional logic)
 		if ilvl > 0:
 			total_ilvl += ilvl
-	
-	var mean = 0
-	mean = int(round(total_ilvl / 16))
-		
-	ilvl_label.text = "Average Gear Level: %d" % mean
+			slotted += 1
+
+	var mean: int = int(round(total_ilvl / 16))
+	# Approximation: gear-score = sum-of-ilvls (mirrors the eventual server
+	# formula until the real one ships). Hero stat per DESIGN.md gear redesign.
+	var gear_score: int = int(round(total_ilvl))
+
+	# Gear Score ribbon — big gold mark + smaller meta line. Single Label
+	# can't render multi-style text without BBCode, so we just stack: GEAR
+	# SCORE huge + meta below. Use the Label as the hero mark, push the meta
+	# into a sibling label if present (auto-create on first call).
+	ilvl_label.add_theme_font_override("font", Styler.JANDA_FONT)
+	ilvl_label.add_theme_font_size_override("font_size", 26)
+	ilvl_label.add_theme_color_override("font_color", Styler.COL_PRIMARY)
+	ilvl_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	ilvl_label.add_theme_constant_override("outline_size", 4)
+	ilvl_label.add_theme_color_override("font_shadow_color", Styler.COL_GOLD_GLOW)
+	ilvl_label.add_theme_constant_override("shadow_outline_size", 14)
+	ilvl_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ilvl_label.text = "GEAR SCORE  %d" % gear_score
+
+	# Sibling meta label sits below the GEAR SCORE mark in the same VBox
+	# (parent Label can't grow to fit a child Label — needed sibling).
+	var parent_vbox: Node = ilvl_label.get_parent()
+	var meta: Label = parent_vbox.get_node_or_null("__ribbon_meta") if parent_vbox != null else null
+	if meta == null and parent_vbox != null:
+		meta = Label.new()
+		meta.name = "__ribbon_meta"
+		meta.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		meta.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		meta.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		parent_vbox.add_child(meta)
+		var ilvl_idx: int = ilvl_label.get_index()
+		parent_vbox.move_child(meta, ilvl_idx + 1)
+	if meta != null:
+		meta.add_theme_font_override("font", Styler.JANDA_FONT)
+		meta.add_theme_font_size_override("font_size", 14)
+		meta.add_theme_color_override("font_color", Styler.COL_PRIMARY)
+		meta.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
+		meta.add_theme_constant_override("outline_size", 3)
+		meta.text = "Avg iLvl %d  ·  Slotted %d / 16" % [mean, slotted]
 
 func _handle_slot_input(event: InputEvent, btn: Control, source: String, index: int = -1, slot_name: String = "") -> void:
 	# source: "inventory" or "equipment"
 	if event is InputEventScreenTouch and event.pressed:
 		_last_pointer_pos = btn.get_global_rect().position + event.position
+
+		# Empty equipment slot tapped → jump to Inventory tab pre-filtered
+		# to items of the matching slot type. Saves player from scrolling.
+		if source == "equipment" and not _equipped.has(slot_name):
+			_open_inventory_filtered_by_slot(slot_name)
+			return
 
 		# Multi-select mode: toggle selection instead of showing tooltip
 		if _multi_select_mode and source == "inventory":
@@ -658,7 +711,7 @@ func _style_main_interface() -> void:
 	equipment_panel.add_theme_stylebox_override("panel", transparent_sb)
 
 	var inv_sb = StyleBoxFlat.new()
-	inv_sb.bg_color     = Color(0.06, 0.07, 0.10, 0.75)
+	inv_sb.bg_color     = Color(0.06, 0.07, 0.10, 1.0)   # opaque — no parchment bleed-through under the grid
 	inv_sb.border_color = Color.from_rgba8(255, 200, 66, 55)
 	inv_sb.border_width_bottom = 1; inv_sb.border_width_top  = 1
 	inv_sb.border_width_left   = 1; inv_sb.border_width_right = 1
@@ -666,16 +719,34 @@ func _style_main_interface() -> void:
 	inventory_panel.add_theme_stylebox_override("panel", inv_sb)
 
 	var grid_sb = StyleBoxFlat.new()
-	grid_sb.bg_color     = Color(0.04, 0.04, 0.07, 0.85)
+	grid_sb.bg_color     = Color(0.04, 0.04, 0.07, 1.0)
 	grid_sb.border_color = Color(0, 0, 0, 0.3)
 	grid_sb.border_width_bottom = 1; grid_sb.border_width_top  = 1
 	grid_sb.border_width_left   = 1; grid_sb.border_width_right = 1
 	grid_sb.set_corner_radius_all(4)
 	item_container.add_theme_stylebox_override("panel", grid_sb)
+	# Grid panel fills the scroll viewport so its dark bg covers the empty area
+	# below the slots (no light gap when the inventory is sparse).
+	item_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 func _refresh_all_inventory_slots() -> void:
 	for i in _grid.get_child_count():
 		_refresh_inventory_slot_visuals(i)
+
+func _paint_empty_slot(sb: StyleBoxFlat) -> void:
+	# Faint near-transparent bg + dim gold-glow 1px border = empty slot tile.
+	# StyleBoxFlat can't dash, so simulate "empty" via low opacity + thin
+	# border + no glow.
+	sb.bg_color = Color(0.05, 0.05, 0.08, 0.4)
+	sb.border_color = Color(1.0, 0.78, 0.26, 0.10)
+	sb.border_width_bottom = 1
+	sb.border_width_top = 1
+	sb.border_width_left = 1
+	sb.border_width_right = 1
+	sb.shadow_color = Color(0, 0, 0, 0)
+	sb.shadow_size = 0
+	sb.set_corner_radius_all(4)
+
 
 func _refresh_inventory_slot_visuals(index: int) -> void:
 	if _bulk_updating: return
@@ -696,21 +767,29 @@ func _refresh_inventory_slot_visuals(index: int) -> void:
 		slot_node.tooltip_text = ""
 
 		if sb:
-			sb.bg_color = Color(0.1, 0.1, 0.1, 0.5)
-			sb.border_color = Color(0.25, 0.25, 0.3)
+			_paint_empty_slot(sb)
 		return
-	
+
 	var def = _item_defs.get(s["id"], {})
 
-	# Filter: if category doesn't match, render slot as visually empty
+	# Filter: if category doesn't match, render slot as visually empty.
 	if _active_filter != "all" and def.get("category", "") != _active_filter:
 		icon.texture = null
 		count_lbl.text = ""
 		btn.disabled = true
 		slot_node.tooltip_text = ""
 		if sb:
-			sb.bg_color = Color(0.1, 0.1, 0.1, 0.5)
-			sb.border_color = Color(0.25, 0.25, 0.3)
+			_paint_empty_slot(sb)
+		return
+	# Slot-type filter (set by empty-equipment-slot tap): hide items whose
+	# equip slot doesn't match the selected slot type.
+	if _slot_type_filter != "" and str(def.get("slot_type", "")) != _slot_type_filter:
+		icon.texture = null
+		count_lbl.text = ""
+		btn.disabled = true
+		slot_node.tooltip_text = ""
+		if sb:
+			_paint_empty_slot(sb)
 		return
 
 	var id = s["id"]
@@ -718,18 +797,31 @@ func _refresh_inventory_slot_visuals(index: int) -> void:
 	icon.texture = ItemDB.get_item_icon(def["item_icon"], null)
 	btn.disabled = false
 	count_lbl.text = str(qty) if (show_stack_count and qty > 1) else ""
-	
+
 	if sb:
 		var q = int(def.get("quality", 1))
 		var q_color: Color = Styler.QUALITY_COLORS.get(q, Styler.QUALITY_COLORS[1])
 		# Subtle tint: quality color at ~12% brightness
 		sb.bg_color = Color(q_color.r * 0.12, q_color.g * 0.12, q_color.b * 0.12, 0.6)
 		sb.border_color = q_color
+		# Quality glow: rare (q3) gets soft halo, epic+ (q4+) gets brighter
+		# halo to make legendaries pop across the grid.
+		var glow_size: int = 0
+		match q:
+			3: glow_size = 6
+			4: glow_size = 10
+			5: glow_size = 12
+			6: glow_size = 14
+		sb.shadow_color = Color(q_color, 0.45) if glow_size > 0 else Color(0, 0, 0, 0)
+		sb.shadow_size = glow_size
+		sb.set_corner_radius_all(4)
 		# Selection override (takes priority over quality color)
 		if index in _selected_indices:
 			sb.border_color = Color(1.0, 0.85, 0.0)
 			sb.border_width_bottom = 3; sb.border_width_top = 3
 			sb.border_width_left  = 3; sb.border_width_right = 3
+			sb.shadow_color = Color(1.0, 0.85, 0.0, 0.5)
+			sb.shadow_size = 10
 		else:
 			sb.border_width_bottom = 2; sb.border_width_top = 2
 			sb.border_width_left  = 2; sb.border_width_right = 2
@@ -796,21 +888,73 @@ func _update_equipment_slot_visuals(slot_name: String) -> void:
 		icon.modulate = Color.WHITE
 		if sb:
 			var q = int(def.get("quality", 1))
-			sb.border_color = Styler.QUALITY_COLORS.get(q, Styler.QUALITY_COLORS[1])
+			var q_color: Color = Styler.QUALITY_COLORS.get(q, Styler.QUALITY_COLORS[1])
+			sb.border_color = q_color
+			sb.set_border_width_all(2)
+			# Quality glow on equipment slots — same scale as inventory.
+			var glow_size: int = 0
+			match q:
+				3: glow_size = 6
+				4: glow_size = 10
+				5: glow_size = 12
+				6: glow_size = 14
+			sb.shadow_color = Color(q_color, 0.5) if glow_size > 0 else Color(0, 0, 0, 0)
+			sb.shadow_size = glow_size
 		if lbl:
-			lbl.add_theme_color_override("font_color", Styler.GOLD_COLOR)
+			# Slot label color = equipped item's quality color (one color
+			# system instead of two — DESIGN.md gear redesign rule).
+			var q2 = int(def.get("quality", 1))
+			lbl.add_theme_color_override("font_color", Styler.QUALITY_COLORS.get(q2, Styler.GOLD_COLOR))
+		# Show item level pip in top-right corner of the slot.
+		_set_slot_ilvl_pip(nodes, int(def.get("ilvl", 0)))
 		# Update paper doll overlay
 		_update_paper_doll_slot(slot_name, icon_key)
 	else:
 		var ph_key = SLOT_PLACEHOLDER_ICONS.get(slot_name, "")
 		icon.texture  = ItemDB.get_item_icon(ph_key, null) if ph_key != "" else null
-		icon.modulate = Color(1, 1, 1, 0.25)
+		# Empty slot silhouette: 18% opacity grayscale so player sees what
+		# type of item fits there.
+		icon.modulate = Color(0.6, 0.6, 0.6, 0.18)
 		if sb:
-			sb.border_color = Color(0.25, 0.25, 0.3)
+			sb.border_color = Color(1.0, 0.78, 0.26, 0.18)
+			sb.set_border_width_all(1)
+			sb.shadow_color = Color(0, 0, 0, 0)
+			sb.shadow_size = 0
 		if lbl:
 			lbl.add_theme_color_override("font_color", Color(0.55, 0.55, 0.55))
+		# Hide ilvl pip when slot is empty.
+		_set_slot_ilvl_pip(nodes, 0)
 		# Clear paper doll overlay
 		_update_paper_doll_slot(slot_name, "")
+
+
+# Renders a small gold iLvl pip in the top-right of an equipment slot panel.
+# Auto-creates the Label on first call + caches under nodes["pip"].
+func _set_slot_ilvl_pip(nodes: Dictionary, ilvl: int) -> void:
+	var panel: PanelContainer = nodes.get("panel")
+	if panel == null:
+		return
+	var pip: Label = nodes.get("pip", null)
+	if pip == null:
+		pip = Label.new()
+		pip.name = "__ilvl_pip"
+		pip.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+		pip.offset_left = -32
+		pip.offset_top = 2
+		pip.offset_right = -2
+		pip.offset_bottom = 18
+		pip.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		pip.add_theme_font_override("font", Styler.JANDA_FONT)
+		pip.add_theme_font_size_override("font_size", 11)
+		pip.add_theme_color_override("font_color", Styler.COL_PRIMARY)
+		pip.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.95))
+		pip.add_theme_constant_override("outline_size", 3)
+		pip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		panel.add_child(pip)
+		nodes["pip"] = pip
+	pip.visible = ilvl > 0
+	if ilvl > 0:
+		pip.text = str(ilvl)
 
 
 # --- Signal Callbacks ---
@@ -822,7 +966,7 @@ func _on_request_inventory(server_json) -> void:
 	_equipped.clear()
 	_item_defs.clear()
 
-	_slots.resize(columns * rows)
+	_slots.resize(capacity)
 	for i in _slots.size():
 		_slots[i] = null
 
@@ -912,6 +1056,10 @@ func _on_btn_loot_only_pressed() -> void:
 
 func _set_filter(filter: String) -> void:
 	_active_filter = filter
+	# Tapping any category chip clears the slot-type filter so it can't get
+	# stuck after the player navigated away from the gear empty-slot flow.
+	_slot_type_filter = ""
+	_remove_slot_filter_chip()
 	var filter_btns = {
 		"all": btn_all,
 		"equipment": btn_gear_only,
@@ -924,6 +1072,78 @@ func _set_filter(filter: String) -> void:
 		if sb:
 			sb.bg_color = Color.from_rgba8(255, 200, 66) if key == filter else Color.from_rgba8(90, 90, 90)
 	_sort_and_compact()
+
+
+# Jump from a tapped empty equipment slot to the Inventory tab with items
+# pre-filtered to that slot type. Adds a transient chip showing the active
+# slot filter with a clear (×) button.
+func _open_inventory_filtered_by_slot(slot_name: String) -> void:
+	if slot_name == "":
+		return
+	_active_filter = "equipment"
+	_slot_type_filter = slot_name
+	# Sync the category-chip highlight so it reads as "equipment" active.
+	var filter_btns = {
+		"all": btn_all,
+		"equipment": btn_gear_only,
+		"consumable": btn_consumable_only,
+		"material": btn_loot_only,
+	}
+	for key in filter_btns:
+		var btn = filter_btns[key]
+		var sb = btn.get_theme_stylebox("normal") as StyleBoxFlat
+		if sb:
+			sb.bg_color = Color.from_rgba8(255, 200, 66) if key == "equipment" else Color.from_rgba8(90, 90, 90)
+	_on_btn_tab_inventory_pressed()
+	_add_slot_filter_chip(slot_name)
+	_sort_and_compact()
+
+
+# Adds a removable chip next to the category filter row showing the active
+# slot-type filter. Tap × to clear and return to the full category view.
+func _add_slot_filter_chip(slot_name: String) -> void:
+	_remove_slot_filter_chip()
+	var host: Node = btn_all.get_parent() if btn_all != null else null
+	if host == null:
+		return
+	var chip = Button.new()
+	chip.name = "__slot_filter_chip"
+	var pretty: String = SLOT_DISPLAY_NAMES.get(slot_name, slot_name.capitalize())
+	chip.text = "%s  ×" % pretty
+	chip.add_theme_font_override("font", Styler.JANDA_FONT)
+	chip.add_theme_font_size_override("font_size", 12)
+	chip.add_theme_color_override("font_color", Color.from_rgba8(20, 16, 10))
+	chip.custom_minimum_size = Vector2(0, 32)
+	for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
+		var sb = StyleBoxFlat.new()
+		sb.bg_color = Styler.COL_PRIMARY
+		sb.border_color = Color.from_rgba8(216, 160, 64)
+		sb.set_border_width_all(1)
+		sb.set_corner_radius_all(16)
+		sb.content_margin_left = 10
+		sb.content_margin_right = 10
+		sb.shadow_color = Styler.COL_GOLD_GLOW
+		sb.shadow_size = 6
+		chip.add_theme_stylebox_override(state_name, sb)
+	host.add_child(chip)
+	# Capture chip ref directly — relying on a path lookup after the fact has
+	# been flaky (parent container varies). Free in-place via closure.
+	var chip_ref: Button = chip
+	chip.pressed.connect(func():
+		_slot_type_filter = ""
+		if is_instance_valid(chip_ref):
+			chip_ref.queue_free()
+		_sort_and_compact()
+	)
+
+
+func _remove_slot_filter_chip() -> void:
+	var host: Node = btn_all.get_parent() if btn_all != null else null
+	if host == null:
+		return
+	var chip = host.get_node_or_null("__slot_filter_chip")
+	if chip != null:
+		chip.queue_free()
 
 func _on_btn_sort_pressed() -> void:
 	_sort_and_compact()
@@ -979,10 +1199,14 @@ func _sort_and_compact() -> void:
 	for s in _slots:
 		if s == null:
 			rest.append(null)
-		elif _active_filter == "all" or _item_defs.get(s["id"], {}).get("category", "") == _active_filter:
-			matching.append(s)
 		else:
-			rest.append(s)
+			var def: Dictionary = _item_defs.get(s["id"], {})
+			var cat_ok: bool = _active_filter == "all" or def.get("category", "") == _active_filter
+			var slot_ok: bool = _slot_type_filter == "" or str(def.get("slot_type", "")) == _slot_type_filter
+			if cat_ok and slot_ok:
+				matching.append(s)
+			else:
+				rest.append(s)
 	# Sort matching items by quality descending, then by ilvl descending
 	matching.sort_custom(func(a, b):
 		var def_a = _item_defs.get(a["id"], {})

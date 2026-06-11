@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <path d="M25 121c2-22 12-38 29-43h20c17 5 27 21 29 43H25z" fill="#2f3a2a"/>
+  <path d="M35 121c3-18 12-31 26-37h6c14 6 23 19 26 37H35z" fill="#3a2c1e"/>
+  <path d="M28 74c1-28 15-50 36-50s35 22 36 50c-7-9-15-13-24-15H52c-9 2-17 6-24 15z" fill="#3a2c1e"/>
+  <path d="M35 71c0-27 12-45 29-45s29 18 29 45c-8-8-17-12-29-12S43 63 35 71z" fill="#5a4632"/>
+  <path d="M42 60c1-20 9-31 22-31s21 11 22 31c1 18-8 33-22 33S41 78 42 60z" fill="#b88d6a"/>
+  <path d="M43 57c3-18 10-28 21-28 8 0 15 6 19 18-10-6-24-5-40 10z" fill="#c9a86a" opacity=".22"/>
+  <path d="M40 63c-4 0-7 4-6 10 1 5 4 9 9 9l1-16c-1-2-2-3-4-3z" fill="#9a7054"/>
+  <path d="M88 63c4 0 7 4 6 10-1 5-4 9-9 9l-1-16c1-2 2-3 4-3z" fill="#7e5a45"/>
+  <path d="M45 50c7-9 18-13 33-8 5 2 8 6 10 12-12-8-25-10-43-4z" fill="#3a2c1e"/>
+  <path d="M44 57c7-5 15-8 23-7 8 0 14 3 19 8-1-13-10-25-22-25S45 44 44 57z" fill="#5a4632"/>
+  <path d="M48 63c4-4 10-5 16-1-5 2-10 2-16 1z" fill="#3a2c1e"/>
+  <path d="M66 62c5-4 11-3 15 1-5 1-10 1-15-1z" fill="#3a2c1e"/>
+  <circle cx="57" cy="66" r="2.4" fill="#2a2118"/>
+  <circle cx="73" cy="66" r="2.4" fill="#2a2118"/>
+  <circle cx="57.8" cy="65.1" r=".8" fill="#FFC842"/>
+  <path d="M54 55c5-4 12-4 18 0" fill="none" stroke="#3a2c1e" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M52 76c8 4 17 4 25 0-2 7-7 12-13 12s-10-5-12-12z" fill="#d0d0c7"/>
+  <path d="M48 75c4 20 10 36 16 44 6-8 12-24 16-44-7 6-25 6-32 0z" fill="#bfc0b6"/>
+  <path d="M50 86c4 15 9 27 14 33 5-6 10-18 14-33-8 5-20 5-28 0z" fill="#e0ded2"/>
+  <path d="M61 71c2 1 4 1 6 0" fill="none" stroke="#6f4f3e" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M56 82c5 3 11 3 16 0" fill="none" stroke="#5b3e32" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M36 121c2-15 7-25 15-31l13 29 13-29c8 6 13 16 15 31H36z" fill="#2f3a2a"/>
+  <path d="M52 91l12 28 12-28c-8 7-16 7-24 0z" fill="#c9a86a"/>
+  <path d="M22 121c4-19 13-34 29-43l8 16c-10 5-17 14-20 27H22z" fill="#5a4632"/>
+  <path d="M106 121c-4-19-13-34-29-43l-8 16c10 5 17 14 20 27h17z" fill="#3a2c1e"/>
+  <path d="M64 94l-5 12 5 13 5-13-5-12z" fill="#FFC842"/>
+</svg>

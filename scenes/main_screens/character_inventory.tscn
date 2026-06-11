@@ -7,7 +7,7 @@
 layout_mode = 3
 anchors_preset = 0
 script = ExtResource("1_20dno")
-columns = 7
+columns = 8
 slot_padding = 4
 
 [node name="VBox_Root" type="VBoxContainer" parent="." unique_id=509841734]

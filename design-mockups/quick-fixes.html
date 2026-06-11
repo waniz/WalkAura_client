@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>WalkAura — Quick Fixes (other screens)</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+body { padding-bottom: 80px; }
+h2 { text-align: center; margin-top: 32px; font-family: 'Cinzel', serif; color: var(--gold); letter-spacing: 1px; font-size: 18px; }
+.row { display: flex; gap: 32px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
+.col { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.col h3 { font-family: 'Cinzel', serif; color: var(--gold-soft); font-size: 13px; letter-spacing: 0.8px; }
+
+.note {
+  max-width: 800px; margin: 16px auto; padding: 14px;
+  background: rgba(255,255,255,0.04); border-left: 3px solid var(--gold);
+  border-radius: 4px; font-size: 12px; line-height: 1.55; color: #c8bfaa;
+}
+.note strong { color: var(--gold); }
+
+/* Inventory with quality borders */
+.inv-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  padding: 10px;
+  background: var(--panel-darker);
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.inv-slot {
+  aspect-ratio: 1;
+  background: linear-gradient(180deg, #0a0a10 0%, #14141e 100%);
+  border: 1.5px solid var(--panel-border);
+  border-radius: var(--r-sm);
+  position: relative;
+  display: grid; place-items: center;
+  font-size: 18px;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.inv-slot:hover { transform: scale(1.05); }
+
+.inv-slot.q1 { border-color: var(--q1); box-shadow: inset 0 0 8px rgba(255,255,255,0.08); }
+.inv-slot.q2 { border-color: var(--q2); box-shadow: inset 0 0 8px rgba(31,255,0,0.15); }
+.inv-slot.q3 { border-color: var(--q3); box-shadow: inset 0 0 8px rgba(0,112,222,0.2); }
+.inv-slot.q4 { border-color: var(--q4); box-shadow: inset 0 0 10px rgba(163,54,237,0.25); }
+.inv-slot.q5 { border-color: var(--q5); box-shadow: inset 0 0 10px rgba(255,128,0,0.25); }
+.inv-slot.q6 { border-color: var(--q6); box-shadow: inset 0 0 12px rgba(230,204,51,0.3); }
+.inv-slot.empty { border-style: dashed; border-color: rgba(255,255,255,0.06); background: transparent; }
+
+.inv-slot .stack {
+  position: absolute;
+  bottom: 1px; right: 3px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.9), 0 0 3px rgba(0,0,0,0.7);
+  font-family: 'Cinzel', serif;
+}
+
+.inv-slot .new-pip {
+  position: absolute;
+  top: -2px; right: -2px;
+  width: 8px; height: 8px;
+  background: var(--gold);
+  border: 1px solid #0a0a10;
+  border-radius: 50%;
+  box-shadow: 0 0 4px var(--gold);
+}
+
+.inv-header {
+  padding: 10px 12px;
+  background: linear-gradient(180deg, #14141e, #0a0a10);
+  border-bottom: 1px solid var(--gold-glow);
+}
+.inv-header .top {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 8px;
+}
+.inv-header .space {
+  font-family: 'Cinzel', serif; font-size: 12px; color: var(--gold-soft);
+  font-variant-numeric: tabular-nums;
+}
+.inv-header .actions { display: flex; gap: 4px; }
+.inv-header .actions button {
+  background: var(--panel-dark); border: 1px solid var(--panel-border);
+  color: var(--gold-soft); font-size: 10px; padding: 4px 8px; border-radius: 3px;
+  font-family: 'Cinzel', serif; letter-spacing: 0.5px; cursor: pointer;
+}
+
+.inv-filter-row {
+  display: flex; gap: 4px; overflow-x: auto;
+}
+.inv-filter-row::-webkit-scrollbar { display: none; }
+.inv-filter-row .chip {
+  flex-shrink: 0;
+  padding: 5px 10px;
+  background: var(--panel-dark);
+  border: 1px solid var(--panel-border);
+  border-radius: 3px;
+  font-size: 10px;
+  color: #8a7e68;
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+}
+.inv-filter-row .chip.active {
+  background: linear-gradient(180deg, #2a1f08, #14100a);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* === Step chart redesign === */
+
+.step-chart-card {
+  background: var(--parchment-card);
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: var(--r-md);
+  padding: 14px;
+  margin: 12px;
+  position: relative;
+}
+
+.step-chart-card .hdr {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255,200,66,0.3);
+  padding-bottom: 8px;
+}
+.step-chart-card .hdr .title {
+  font-family: 'Cinzel', serif; color: var(--parchment-section-hdr);
+  font-size: 14px; letter-spacing: 1px;
+}
+.step-chart-card .hdr .pill {
+  background: var(--panel-dark); color: var(--gold);
+  border: 1px solid var(--gold-soft); padding: 3px 10px;
+  font-size: 10px; border-radius: 3px;
+  font-family: 'Cinzel', serif;
+}
+
+.bars {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  align-items: end;
+  height: 110px;
+  margin-bottom: 6px;
+}
+
+.bar-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  height: 100%;
+  justify-content: end;
+}
+
+.bar-val { font-size: 9px; color: var(--parchment-text-muted); font-family: 'Cinzel', serif; }
+.bar {
+  width: 100%;
+  background: linear-gradient(180deg, #d4954a 0%, #8a5a28 100%);
+  border-radius: 3px 3px 0 0;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), inset 0 -3px 6px rgba(0,0,0,0.2);
+  position: relative;
+}
+.bar.today {
+  background: linear-gradient(180deg, var(--gold) 0%, #c89030 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -3px 6px rgba(0,0,0,0.2), 0 0 8px var(--gold-glow);
+}
+.bar.goal::after {
+  content: "";
+  position: absolute;
+  top: 30%; left: -2px; right: -2px;
+  height: 1px;
+  background: var(--btn-success);
+  box-shadow: 0 0 4px var(--success);
+}
+
+.bar-label { font-size: 9px; color: var(--parchment-text-muted); }
+.bar-label.today { color: var(--gold); font-weight: 700; }
+
+.chart-footer {
+  display: flex; justify-content: space-between;
+  font-size: 10px; color: var(--parchment-text-muted);
+  border-top: 1px dotted rgba(0,0,0,0.15);
+  padding-top: 6px;
+  margin-top: 6px;
+}
+.chart-footer .goal-marker { color: var(--btn-success); }
+
+/* Profession card redesign */
+.prof-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 12px;
+}
+
+.prof-card {
+  background: var(--parchment-card);
+  border: 1px solid rgba(0,0,0,0.1);
+  border-left: 3px solid var(--gold);
+  border-radius: var(--r-md);
+  padding: 10px;
+  display: grid;
+  grid-template-columns: 48px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  position: relative;
+}
+
+.prof-card.active {
+  border-color: var(--success);
+  border-left-color: var(--success);
+  background: linear-gradient(180deg, #e8e6cf 0%, #d8d4b5 100%);
+  box-shadow: 0 0 8px rgba(60,200,80,0.2);
+}
+
+.prof-card.active::before {
+  content: "ACTIVE";
+  position: absolute;
+  top: 4px; right: 4px;
+  font-family: 'Cinzel', serif;
+  font-size: 8px;
+  letter-spacing: 0.6px;
+  color: var(--btn-success);
+  background: rgba(60,130,70,0.15);
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+
+.prof-card .icon {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #c8b890 0%, #8a7a52 100%);
+  border: 1.5px solid var(--gold);
+  display: grid; place-items: center;
+  font-size: 22px;
+}
+
+.prof-card .info {
+  display: flex; flex-direction: column; gap: 2px; min-width: 0;
+}
+.prof-card .name {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  color: var(--parchment-text);
+  letter-spacing: 0.3px;
+}
+.prof-card .level {
+  font-size: 10px;
+  color: var(--parchment-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.prof-card .xp-bar {
+  height: 4px;
+  background: rgba(0,0,0,0.15);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 3px;
+}
+.prof-card .xp-fill {
+  height: 100%;
+  background: var(--gold);
+}
+.prof-card.active .xp-fill { background: var(--btn-success); }
+.prof-card .chev {
+  font-size: 18px;
+  color: var(--gold-soft);
+}
+
+.prof-section-hdr {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 1.2px;
+  color: var(--parchment-section-hdr);
+  padding: 10px 12px 4px;
+  border-bottom: 1px solid var(--gold-glow);
+  text-transform: uppercase;
+}
+.prof-section-hdr .meta {
+  float: right;
+  font-size: 10px;
+  color: var(--parchment-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+</style>
+</head>
+<body>
+
+<!-- ========================================================== -->
+<h2>INVENTORY — Quality Borders Restored</h2>
+<div class="row">
+  <div class="col">
+    <h3>Items grid with quality outlines</h3>
+    <div class="phone">
+      <div class="phone-screen">
+
+        <div class="top-hud">
+          <div class="avatar-frame">
+            <img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&h=200&fit=crop" alt="">
+            <div class="level-badge">17</div>
+          </div>
+          <div class="player-info">
+            <div class="player-name">test_user</div>
+            <div class="resource-bar"><div class="resource-fill hp"></div><div class="label">160 / 150</div></div>
+            <div class="resource-bar"><div class="resource-fill mp"></div><div class="label">220 / 200</div></div>
+          </div>
+          <div class="minimap-frame">
+            <img src="https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=200&h=200&fit=crop" alt="">
+            <div class="minimap-label">DRAGON LAIR</div>
+            <div class="location-d-badge">D</div>
+          </div>
+        </div>
+
+        <div class="body-area dark-bg">
+          <div class="painted-tabs">
+            <div class="tab active">INVENTORY</div>
+            <div class="tab">GEAR</div>
+          </div>
+
+          <div class="inv-header">
+            <div class="top">
+              <div class="inv-filter-row">
+                <div class="chip active">All</div>
+                <div class="chip">Gear</div>
+                <div class="chip">Consume</div>
+                <div class="chip">Loot</div>
+                <div class="chip">Material</div>
+              </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="space">SPACE 27 / 42</span>
+              <div class="actions">
+                <button>SORT</button>
+                <button>SELECT</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="inv-grid">
+            <div class="inv-slot q3">🪖<div class="new-pip"></div></div>
+            <div class="inv-slot q2">🌿</div>
+            <div class="inv-slot q1">👢</div>
+            <div class="inv-slot q1">💍</div>
+            <div class="inv-slot q5">🪄</div>
+            <div class="inv-slot q3">🛡</div>
+            <div class="inv-slot q1">🧤</div>
+
+            <div class="inv-slot q4">📿</div>
+            <div class="inv-slot q1">🧤</div>
+            <div class="inv-slot q1">🥋</div>
+            <div class="inv-slot q3">📿</div>
+            <div class="inv-slot q4">💎</div>
+            <div class="inv-slot q2">📿</div>
+            <div class="inv-slot q1">📿</div>
+
+            <div class="inv-slot q3">👕</div>
+            <div class="inv-slot q4">💍</div>
+            <div class="inv-slot q3">📿</div>
+            <div class="inv-slot q6">📕</div>
+            <div class="inv-slot q1">👢</div>
+            <div class="inv-slot q3">🌿<div class="stack">7</div></div>
+            <div class="inv-slot q1">🐾<div class="stack">17</div></div>
+
+            <div class="inv-slot q1">🪶<div class="stack">101</div></div>
+            <div class="inv-slot q1">🐾<div class="stack">22</div></div>
+            <div class="inv-slot q4">🧪<div class="stack">3</div></div>
+            <div class="inv-slot q1">🦷<div class="stack">22</div></div>
+            <div class="inv-slot q2">🌱<div class="stack">12</div></div>
+            <div class="inv-slot q2">🌿<div class="stack">13</div></div>
+            <div class="inv-slot empty"></div>
+
+            <div class="inv-slot empty"></div>
+            <div class="inv-slot empty"></div>
+            <div class="inv-slot empty"></div>
+            <div class="inv-slot empty"></div>
+            <div class="inv-slot empty"></div>
+            <div class="inv-slot empty"></div>
+            <div class="inv-slot empty"></div>
+          </div>
+        </div>
+
+        <div class="bottom-nav">
+          <div class="nav-tab"><div class="icon">👤</div><div class="label">Profile</div></div>
+          <div class="nav-tab active"><div class="icon">🎒</div><div class="label">Inventory</div></div>
+          <div class="nav-tab"><div class="icon">🗺</div><div class="label">Location</div></div>
+          <div class="nav-tab"><div class="icon">✨</div><div class="label">Skills</div></div>
+          <div class="nav-tab"><div class="icon">📜</div><div class="label">Quests</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="note">
+  <strong>Inventory fixes:</strong> (1) Apply existing quality tier border colors — biggest single visual win, costs nothing. (2) Empty slots get dashed border at 6% white, not solid frame — reads as "nothing here". (3) "NEW" gold pip on items not yet inspected. (4) Filter chips become horizontally scrollable so they breathe. (5) SORT/SELECT moved to right corner as small chrome buttons.
+</div>
+
+<!-- ========================================================== -->
+<h2>ATTRIBUTES → Step Chart Redesign</h2>
+<div class="row">
+  <div class="col">
+    <h3>Painted bars with goal line + today highlight</h3>
+    <div class="phone">
+      <div class="phone-screen">
+
+        <div class="top-hud">
+          <div class="avatar-frame"><img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&h=200&fit=crop" alt=""><div class="level-badge">17</div></div>
+          <div class="player-info">
+            <div class="player-name">test_user</div>
+            <div class="resource-bar"><div class="resource-fill hp"></div><div class="label">160 / 150</div></div>
+            <div class="resource-bar"><div class="resource-fill mp"></div><div class="label">220 / 200</div></div>
+          </div>
+          <div class="minimap-frame">
+            <img src="https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=200&h=200&fit=crop" alt="">
+            <div class="minimap-label">DRAGON LAIR</div>
+            <div class="location-d-badge">D</div>
+          </div>
+        </div>
+
+        <div class="body-area parchment-bg" style="display: flex; flex-direction: column;">
+          <div class="parchment-tabs">
+            <div class="tab active">ATTRIBUTES</div>
+            <div class="tab">PROFESSIONS</div>
+            <div class="tab">ACHIEVEMENTS</div>
+          </div>
+
+          <!-- Stats grid (kept simple, painted icons) -->
+          <div style="padding: 10px 12px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+            <div style="background: var(--parchment-card); padding: 8px; border-radius: 6px; display: flex; gap: 6px; align-items: center; border-left: 2px solid var(--str);">
+              <div style="width: 30px; height: 30px; border-radius: 50%; background: radial-gradient(circle, var(--str), #6a2050); border: 1px solid var(--str); display: grid; place-items: center; font-size: 14px;">✊</div>
+              <div>
+                <div style="font-size: 9px; color: var(--parchment-text-muted); font-family: 'Cinzel', serif;">STR</div>
+                <div style="font-family: 'Cinzel', serif; font-size: 12px; color: var(--parchment-text);">5 <span style="color: var(--btn-success);">+1</span></div>
+              </div>
+            </div>
+            <div style="background: var(--parchment-card); padding: 8px; border-radius: 6px; display: flex; gap: 6px; align-items: center; border-left: 2px solid var(--agi);">
+              <div style="width: 30px; height: 30px; border-radius: 50%; background: radial-gradient(circle, var(--agi), #8a5a18); border: 1px solid var(--agi); display: grid; place-items: center; font-size: 14px;">🏹</div>
+              <div>
+                <div style="font-size: 9px; color: var(--parchment-text-muted); font-family: 'Cinzel', serif;">AGI</div>
+                <div style="font-family: 'Cinzel', serif; font-size: 12px; color: var(--parchment-text);">3 <span style="color: var(--btn-success);">+1</span></div>
+              </div>
+            </div>
+            <div style="background: var(--parchment-card); padding: 8px; border-radius: 6px; display: flex; gap: 6px; align-items: center; border-left: 2px solid var(--vit);">
+              <div style="width: 30px; height: 30px; border-radius: 50%; background: radial-gradient(circle, var(--vit), #501010); border: 1px solid var(--vit); display: grid; place-items: center; font-size: 14px;">❤</div>
+              <div>
+                <div style="font-size: 9px; color: var(--parchment-text-muted); font-family: 'Cinzel', serif;">VIT</div>
+                <div style="font-family: 'Cinzel', serif; font-size: 12px; color: var(--parchment-text);">3 <span style="color: var(--btn-success);">+3</span></div>
+              </div>
+            </div>
+            <div style="background: var(--parchment-card); padding: 8px; border-radius: 6px; display: flex; gap: 6px; align-items: center; border-left: 2px solid var(--int);">
+              <div style="width: 30px; height: 30px; border-radius: 50%; background: radial-gradient(circle, var(--int), #4a1f7a); border: 1px solid var(--int); display: grid; place-items: center; font-size: 14px;">📖</div>
+              <div>
+                <div style="font-size: 9px; color: var(--parchment-text-muted); font-family: 'Cinzel', serif;">INT</div>
+                <div style="font-family: 'Cinzel', serif; font-size: 12px; color: var(--parchment-text);">1 <span style="color: var(--btn-success);">+2</span></div>
+              </div>
+            </div>
+            <div style="background: var(--parchment-card); padding: 8px; border-radius: 6px; display: flex; gap: 6px; align-items: center; border-left: 2px solid var(--spi);">
+              <div style="width: 30px; height: 30px; border-radius: 50%; background: radial-gradient(circle, var(--spi), #0a1850); border: 1px solid var(--spi); display: grid; place-items: center; font-size: 14px;">✦</div>
+              <div>
+                <div style="font-size: 9px; color: var(--parchment-text-muted); font-family: 'Cinzel', serif;">SPI</div>
+                <div style="font-family: 'Cinzel', serif; font-size: 12px; color: var(--parchment-text);">1 <span style="color: var(--btn-success);">+5</span></div>
+              </div>
+            </div>
+            <div style="background: var(--parchment-card); padding: 8px; border-radius: 6px; display: flex; gap: 6px; align-items: center; border-left: 2px solid var(--lck);">
+              <div style="width: 30px; height: 30px; border-radius: 50%; background: radial-gradient(circle, var(--lck), #0a4818); border: 1px solid var(--lck); display: grid; place-items: center; font-size: 14px;">🍀</div>
+              <div>
+                <div style="font-size: 9px; color: var(--parchment-text-muted); font-family: 'Cinzel', serif;">LCK</div>
+                <div style="font-family: 'Cinzel', serif; font-size: 12px; color: var(--parchment-text);">1 <span style="color: var(--btn-success);">+1</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding: 0 12px; display: flex; gap: 4px;">
+            <div style="flex: 1; padding: 6px; background: var(--parchment-card); border: 1px solid rgba(0,0,0,0.1); border-radius: 3px; text-align: center; font-family: 'Cinzel', serif; font-size: 10px; color: var(--parchment-text-muted);">OFFENSE</div>
+            <div style="flex: 1; padding: 6px; background: var(--parchment-card); border: 1px solid rgba(0,0,0,0.1); border-radius: 3px; text-align: center; font-family: 'Cinzel', serif; font-size: 10px; color: var(--parchment-text-muted);">DEFENSE</div>
+            <div style="flex: 1; padding: 6px; background: linear-gradient(180deg, var(--gold), #c89030); border: 1px solid var(--gold); border-radius: 3px; text-align: center; font-family: 'Cinzel', serif; font-size: 10px; color: #14100a; font-weight: 700;">STEPS</div>
+            <div style="flex: 1; padding: 6px; background: var(--parchment-card); border: 1px solid rgba(0,0,0,0.1); border-radius: 3px; text-align: center; font-family: 'Cinzel', serif; font-size: 10px; color: var(--parchment-text-muted);">SUSTAIN</div>
+          </div>
+
+          <!-- summary row -->
+          <div style="padding: 10px 12px 4px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div style="background: var(--parchment-card); padding: 8px 10px; border-radius: 6px; border-left: 2px solid var(--gold);">
+              <div style="font-size: 9px; color: var(--parchment-text-muted); font-family: 'Cinzel', serif; letter-spacing: 0.6px;">TOTAL STEPS</div>
+              <div style="font-family: 'Cinzel', serif; font-size: 16px; color: var(--parchment-section-hdr); font-variant-numeric: tabular-nums;">222,861</div>
+            </div>
+            <div style="background: var(--parchment-card); padding: 8px 10px; border-radius: 6px; border-left: 2px solid var(--defense);">
+              <div style="font-size: 9px; color: var(--parchment-text-muted); font-family: 'Cinzel', serif; letter-spacing: 0.6px;">BUFFER</div>
+              <div style="font-family: 'Cinzel', serif; font-size: 16px; color: var(--parchment-section-hdr); font-variant-numeric: tabular-nums;">22,000</div>
+            </div>
+          </div>
+
+          <div class="step-chart-card">
+            <div class="hdr">
+              <span class="title">STEP STATISTICS</span>
+              <span class="pill">7 DAYS ▾</span>
+            </div>
+
+            <div class="bars">
+              <div class="bar-col">
+                <div class="bar-val">12k</div>
+                <div class="bar" style="height: 50%;"></div>
+              </div>
+              <div class="bar-col">
+                <div class="bar-val">18k</div>
+                <div class="bar goal" style="height: 75%;"></div>
+              </div>
+              <div class="bar-col">
+                <div class="bar-val">22k</div>
+                <div class="bar goal" style="height: 90%;"></div>
+              </div>
+              <div class="bar-col">
+                <div class="bar-val">17k</div>
+                <div class="bar goal" style="height: 70%;"></div>
+              </div>
+              <div class="bar-col">
+                <div class="bar-val">16k</div>
+                <div class="bar goal" style="height: 66%;"></div>
+              </div>
+              <div class="bar-col">
+                <div class="bar-val">14k</div>
+                <div class="bar" style="height: 60%;"></div>
+              </div>
+              <div class="bar-col">
+                <div class="bar-val" style="color: var(--gold); font-weight: 700;">15k</div>
+                <div class="bar today" style="height: 62%;"></div>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;">
+              <div class="bar-label">Sat</div>
+              <div class="bar-label">Sun</div>
+              <div class="bar-label">Mon</div>
+              <div class="bar-label">Tue</div>
+              <div class="bar-label">Wed</div>
+              <div class="bar-label">Thu</div>
+              <div class="bar-label today">TODAY</div>
+            </div>
+
+            <div class="chart-footer">
+              <span><span class="goal-marker">━━</span> Daily goal · 15,000</span>
+              <span>Avg: 16.3k</span>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="bottom-nav">
+          <div class="nav-tab active"><div class="icon">👤</div><div class="label">Profile</div></div>
+          <div class="nav-tab"><div class="icon">🎒</div><div class="label">Inventory</div></div>
+          <div class="nav-tab"><div class="icon">🗺</div><div class="label">Location</div></div>
+          <div class="nav-tab"><div class="icon">✨</div><div class="label">Skills</div></div>
+          <div class="nav-tab"><div class="icon">📜</div><div class="label">Quests</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <h3>Professions list with XP bars + active flag</h3>
+    <div class="phone">
+      <div class="phone-screen">
+
+        <div class="top-hud">
+          <div class="avatar-frame"><img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&h=200&fit=crop" alt=""><div class="level-badge">17</div></div>
+          <div class="player-info">
+            <div class="player-name">test_user</div>
+            <div class="resource-bar"><div class="resource-fill hp"></div><div class="label">160 / 150</div></div>
+            <div class="resource-bar"><div class="resource-fill mp"></div><div class="label">220 / 200</div></div>
+          </div>
+          <div class="minimap-frame">
+            <img src="https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=200&h=200&fit=crop" alt="">
+            <div class="minimap-label">DRAGON LAIR</div>
+            <div class="location-d-badge">D</div>
+          </div>
+        </div>
+
+        <div class="body-area parchment-bg" style="overflow-y: auto;">
+          <div class="parchment-tabs">
+            <div class="tab">ATTRIBUTES</div>
+            <div class="tab active">PROFESSIONS</div>
+            <div class="tab">ACHIEVEMENTS</div>
+          </div>
+
+          <div class="prof-section-hdr">GATHERING <span class="meta">2 / 4 unlocked</span></div>
+          <div class="prof-grid">
+            <div class="prof-card active">
+              <div class="icon">🍃</div>
+              <div class="info">
+                <div class="name">Herbalism</div>
+                <div class="level">Lv 4 · 220/500</div>
+                <div class="xp-bar"><div class="xp-fill" style="width: 44%;"></div></div>
+              </div>
+              <div class="chev">›</div>
+            </div>
+            <div class="prof-card">
+              <div class="icon">⛏</div>
+              <div class="info">
+                <div class="name">Mining</div>
+                <div class="level">Lv 1 · 40/200</div>
+                <div class="xp-bar"><div class="xp-fill" style="width: 20%;"></div></div>
+              </div>
+              <div class="chev">›</div>
+            </div>
+            <div class="prof-card">
+              <div class="icon">🪓</div>
+              <div class="info">
+                <div class="name">Forester</div>
+                <div class="level">Lv 1 · 0/200</div>
+                <div class="xp-bar"><div class="xp-fill" style="width: 2%;"></div></div>
+              </div>
+              <div class="chev">›</div>
+            </div>
+            <div class="prof-card">
+              <div class="icon">🎣</div>
+              <div class="info">
+                <div class="name">Fishing</div>
+                <div class="level">Lv 1 · 0/200</div>
+                <div class="xp-bar"><div class="xp-fill" style="width: 2%;"></div></div>
+              </div>
+              <div class="chev">›</div>
+            </div>
+          </div>
+
+          <div class="prof-section-hdr">CRAFTING <span class="meta">1 / 2 unlocked</span></div>
+          <div class="prof-grid">
+            <div class="prof-card" style="border-left-color: var(--q4);">
+              <div class="icon" style="background: radial-gradient(circle, var(--q4), #4a1f7a); border-color: var(--q4);">🧪</div>
+              <div class="info">
+                <div class="name">Alchemy</div>
+                <div class="level">Lv 2 · 80/400</div>
+                <div class="xp-bar"><div class="xp-fill" style="width: 20%; background: var(--q4);"></div></div>
+              </div>
+              <div class="chev">›</div>
+            </div>
+            <div class="prof-card" style="opacity: 0.6;">
+              <div class="icon">📕</div>
+              <div class="info">
+                <div class="name">Enchanting</div>
+                <div class="level">Locked · Lv 10 req</div>
+                <div class="xp-bar"><div class="xp-fill" style="width: 0%;"></div></div>
+              </div>
+              <div class="chev">🔒</div>
+            </div>
+          </div>
+
+          <div class="prof-section-hdr">BATTLE <span class="meta">2 / 2 unlocked</span></div>
+          <div class="prof-grid">
+            <div class="prof-card" style="border-left-color: var(--offense);">
+              <div class="icon" style="background: radial-gradient(circle, var(--offense), #8a3018); border-color: var(--offense);">🏹</div>
+              <div class="info">
+                <div class="name">Hunting</div>
+                <div class="level">Lv 43 · 1,200/2,000</div>
+                <div class="xp-bar"><div class="xp-fill" style="width: 60%; background: var(--offense);"></div></div>
+              </div>
+              <div class="chev">›</div>
+            </div>
+            <div class="prof-card" style="border-left-color: var(--arcane);">
+              <div class="icon" style="background: radial-gradient(circle, var(--arcane), #1a4868); border-color: var(--arcane);">🌀</div>
+              <div class="info">
+                <div class="name">Rift Explorer</div>
+                <div class="level">Lv 1 · 0/200</div>
+                <div class="xp-bar"><div class="xp-fill" style="width: 2%; background: var(--arcane);"></div></div>
+              </div>
+              <div class="chev">›</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottom-nav">
+          <div class="nav-tab active"><div class="icon">👤</div><div class="label">Profile</div></div>
+          <div class="nav-tab"><div class="icon">🎒</div><div class="label">Inventory</div></div>
+          <div class="nav-tab"><div class="icon">🗺</div><div class="label">Location</div></div>
+          <div class="nav-tab"><div class="icon">✨</div><div class="label">Skills</div></div>
+          <div class="nav-tab"><div class="icon">📜</div><div class="label">Quests</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="note">
+  <strong>Attributes tab:</strong> Stats compress to 2-row × 3-col strip with per-stat color accent (matches existing styler stat colors). Free space goes to: (1) total/buffer step counts at top, (2) painted bar chart with goal line + today highlight, footer with average and goal value.
+</div>
+
+<div class="note">
+  <strong>Professions:</strong> Cards expand horizontally — icon + name + level + XP/next + progress bar in one row. Section header shows "N/M unlocked" so player knows what's gated. Active profession highlighted with green border + "ACTIVE" badge. Locked at 60% opacity with lock chevron. Profession accent colors carry (alchemy purple, hunting red, rift cyan) like in DESIGN.md.
+</div>
+
+</body>
+</html>

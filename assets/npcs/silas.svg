@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- Silas — the fallen Warden, consumed by the Hollow. Void-corrupted, hollow-doubled. -->
+  <!-- void aura wisps -->
+  <path d="M64 8c4 10 2 18-4 24 10-2 18 2 24 10-10 0-18 4-22 12-2-12-8-20-18-22 10-4 16-12 20-24z" fill="#a336ed" opacity=".18"/>
+  <path d="M22 60c10 2 16 8 18 18-8-4-16-4-24 0 6-6 8-12 6-18z" fill="#6a1f9e" opacity=".2"/>
+  <path d="M106 60c-10 2-16 8-18 18 8-4 16-4 24 0-6-6-8-12-6-18z" fill="#6a1f9e" opacity=".2"/>
+  <!-- shoulders (cracked Warden steel, dark) -->
+  <path d="M18 121c4-24 18-40 38-46h16c20 6 34 22 38 46H18z" fill="#241a2e"/>
+  <path d="M30 121c3-18 13-31 29-37h12c16 6 26 19 29 37H30z" fill="#3a2c47"/>
+  <!-- void cracks bleeding through armor -->
+  <path d="M40 110l8-14 4 6-6 12-6-4z" fill="#a336ed" opacity=".55"/>
+  <path d="M82 108l-7-13-4 6 5 11 6-4z" fill="#a336ed" opacity=".45"/>
+  <!-- neck -->
+  <path d="M55 80h18v12c0 4-4 6-9 6s-9-2-9-6V80z" fill="#7a6a82"/>
+  <!-- face (gaunt, ashen) -->
+  <path d="M45 56c0-19 8-30 19-30 12 0 20 11 20 31 0 19-9 32-20 32S45 75 45 56z" fill="#8f8499"/>
+  <path d="M47 53c3-15 8-23 17-23 6 0 12 5 15 14-9-5-21-3-32 9z" fill="#b3a7bd" opacity=".25"/>
+  <!-- sunken cheeks -->
+  <path d="M48 64c2 8 3 16 2 24-5-7-7-16-2-24z" fill="#6a5f74" opacity=".5"/>
+  <path d="M80 64c-2 8-3 16-2 24 5-7 7-16 2-24z" fill="#5a4f64" opacity=".5"/>
+  <!-- ragged hair -->
+  <path d="M44 50c2-16 11-26 25-25 14 1 23 13 21 31-9-10-20-14-30-10-7 3-13 1-16 4z" fill="#1c1426"/>
+  <path d="M45 49c10-12 28-13 41-2-3-11-12-19-22-19-10 0-18 9-19 21z" fill="#2e2240"/>
+  <!-- brows (anguished) -->
+  <path d="M50 55c5-2 10-1 14 3" fill="none" stroke="#1c1426" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M68 58c4-4 9-5 13-3" fill="none" stroke="#1c1426" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- glowing void eyes (the doubled stare) -->
+  <circle cx="57" cy="64" r="3.4" fill="#a336ed"/>
+  <circle cx="57" cy="64" r="1.4" fill="#f0d8ff"/>
+  <circle cx="74" cy="64" r="3.4" fill="#a336ed"/>
+  <circle cx="74" cy="64" r="1.4" fill="#f0d8ff"/>
+  <path d="M53 70l-3 9" fill="none" stroke="#a336ed" stroke-width="1.6" stroke-linecap="round" opacity=".7"/>
+  <path d="M78 70l3 9" fill="none" stroke="#a336ed" stroke-width="1.6" stroke-linecap="round" opacity=".7"/>
+  <!-- thin, sorrowful mouth -->
+  <path d="M57 78c4 1 9 1 13 0" fill="none" stroke="#5a4f64" stroke-width="2.5" stroke-linecap="round"/>
+</svg>

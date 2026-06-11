@@ -208,6 +208,14 @@ var spirit_healing_mult
 # temporary buffs from elixirs/flasks
 var active_buffs: Dictionary = {}
 
+# Server-authoritative active spell slot count. Populated from account_attributes.
+var max_active_spell_slots: int = 7
+
+# Recipes the player has learned via consumed recipe-scroll items (e.g.
+# scr_oathbound -> bs_oathbound_aegis). Server is the source of truth;
+# loaded at login and updated when use_recipe_scroll succeeds.
+var known_recipes: Array = []
+
 # structures to keep autoloaded
 var raw_structures = {
 	"all_server_skills": null,

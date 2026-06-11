@@ -5,6 +5,10 @@ extends Node
 signal signal_CreateUser(user, password)
 @warning_ignore("unused_signal")
 signal signal_LoginUser(user, password)
+@warning_ignore("unused_signal")
+signal signal_LoginToken(token)
+@warning_ignore("unused_signal")
+signal signal_LoginGoogle(id_token)
 
 # Client signals
 @warning_ignore("unused_signal")
@@ -105,6 +109,17 @@ signal signal_AchievementsReceived(data: Dictionary)
 signal signal_AchievementClaimed(data: Dictionary)
 @warning_ignore("unused_signal")
 signal signal_AchievementReady(ready_ids: Array)
+
+# Recipe-scroll learn flow.
+# Emit signal_UseRecipeScroll(recipe_id, item_uid) from the inventory action
+# (long-press on a scroll item -> "Learn Recipe" -> confirm). ServerConnector
+# forwards to the WS handler; signal_RecipeScrollResult fires when the server
+# returns {status: "learned"|"already_known"} or rejects with an error.
+@warning_ignore("unused_signal")
+signal signal_UseRecipeScroll(recipe_id: String, item_uid: String)
+@warning_ignore("unused_signal")
+signal signal_RecipeScrollResult(data: Dictionary)
+
 @warning_ignore("unused_signal")
 signal signal_ActiveTitleSet(active_title)
 @warning_ignore("unused_signal")
@@ -117,3 +132,20 @@ signal signal_TalentAllocate(talent_id: String)
 signal signal_TalentRespec()
 @warning_ignore("unused_signal")
 signal signal_TalentCheatPoints(points: int)
+
+# ── Quests ──────────────────────────────────────────────────────────────────
+# Request to open an NPC's dialogue (carries npc_uid); QuestManager sends the
+# resolve_npc_dialogue RPC. signal_NpcDialogueReceived fires with the resolved
+# line. signal_QuestTurnedIn / signal_QuestCompletedToast drive the reward modal.
+@warning_ignore("unused_signal")
+signal signal_RequestNpcDialogue(npc_uid: String)
+@warning_ignore("unused_signal")
+signal signal_NpcDialogueReceived(data: Dictionary)
+@warning_ignore("unused_signal")
+signal signal_AcceptQuest(quest_uid: String)
+@warning_ignore("unused_signal")
+signal signal_QuestTurnedIn(data: Dictionary)
+@warning_ignore("unused_signal")
+signal signal_QuestCompletedToast(data: Dictionary)
+@warning_ignore("unused_signal")
+signal signal_LocationNpcsReceived(data: Dictionary)

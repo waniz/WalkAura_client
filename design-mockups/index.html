@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>WalkAura — Design Mockups Index</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+.page {
+  max-width: 880px;
+  margin: 48px auto;
+  padding: 0 24px;
+}
+h1 {
+  font-family: 'Cinzel', serif;
+  font-size: 32px;
+  color: var(--gold);
+  letter-spacing: 2px;
+  text-shadow: 0 0 20px var(--gold-glow);
+  margin-bottom: 8px;
+}
+.subtitle {
+  color: #a89e88;
+  font-size: 14px;
+  margin-bottom: 32px;
+  font-style: italic;
+}
+.section-title {
+  font-family: 'Cinzel', serif;
+  color: var(--gold-soft);
+  font-size: 16px;
+  letter-spacing: 1px;
+  margin: 32px 0 12px;
+  border-bottom: 1px solid var(--gold-glow);
+  padding-bottom: 6px;
+}
+.mockup-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+.card {
+  background: linear-gradient(180deg, #181822, #0e0e16);
+  border: 1px solid var(--panel-border);
+  border-left: 3px solid var(--gold);
+  border-radius: var(--r-md);
+  padding: 16px;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: border-color 0.15s, transform 0.15s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+.card:hover {
+  border-color: var(--gold);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.5), 0 0 16px var(--gold-glow);
+}
+.card .eyebrow {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  color: #8a7e68;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.card .title {
+  font-family: 'Cinzel', serif;
+  font-size: 18px;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+.card .desc {
+  font-size: 12px;
+  color: #c8bfaa;
+  line-height: 1.5;
+}
+.card .badge {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 2px 8px;
+  background: var(--btn-destructive);
+  color: #fff;
+  font-size: 10px;
+  letter-spacing: 0.6px;
+  border-radius: 3px;
+  font-family: 'Cinzel', serif;
+}
+.card .badge.new { background: var(--success); color: #0a0a10; }
+.card .badge.polish { background: var(--defense); color: #0a0a10; }
+
+.intro {
+  background: rgba(255,200,66,0.04);
+  border: 1px solid var(--gold-glow);
+  border-left: 3px solid var(--gold);
+  padding: 16px 20px;
+  border-radius: var(--r-md);
+  font-size: 13px;
+  color: #c8bfaa;
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+.intro strong { color: var(--gold); }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <h1>WalkAura — Client Design Mockups</h1>
+  <div class="subtitle">2026-05-16 · Targeted redesigns + new quest UI</div>
+
+  <div class="intro">
+    <strong>What this is:</strong> static HTML previews of proposed UI changes for the WalkAura Godot client. Open each file directly in a browser. All mockups use shared tokens from <code>_shared.css</code> that mirror <code>scripts/globals/styler.gd</code>.
+    <br><br>
+    <strong>Priority:</strong> Location hub redesign is the focal point — it solves three issues you flagged (poor profession picker, UI overlay on painted bg, no quest entry). Quests page is brand new. Quick-fixes covers smaller wins on inventory, attributes, professions.
+    <br><br>
+    <strong>What's NOT in these mockups:</strong> the actual painted Godot art assets — placeholder Unsplash images stand in for the painted Dragon Lair / minimap. Read structure, hierarchy, and treatment — not literal pixels.
+  </div>
+
+  <div class="section-title">PRIMARY REDESIGNS</div>
+
+  <div class="mockup-grid">
+    <a class="card" href="location.html">
+      <div class="eyebrow">SCREEN · LOCATION HUB</div>
+      <div class="title">Location</div>
+      <div class="desc">Contained painted hero (no UI overlay), dark-chrome action stack below: quest tracker → active activity → 3×2 profession picker with progress rings.</div>
+      <span class="badge">REDESIGN</span>
+    </a>
+
+    <a class="card" href="quests.html">
+      <div class="eyebrow">SCREEN · NEW</div>
+      <div class="title">Quests</div>
+      <div class="desc">4-tab filter (Active/Available/Daily/Done), tier-bordered cards with multi-objective checklists, full detail view with painted illustration + lore.</div>
+      <span class="badge new">NEW</span>
+    </a>
+
+    <a class="card" href="login.html" style="border-left-color: var(--gold);">
+      <div class="eyebrow">SCREEN · LOGIN</div>
+      <div class="title">Login</div>
+      <div class="desc">Ornate gold-cornered card on painted scene, embossed "ENTER THE REALM" CTA, Fondamento tagline, atmospheric motes. Two variants: ornate vs glass.</div>
+      <span class="badge">REDESIGN</span>
+    </a>
+
+    <a class="card" href="skills-talents.html">
+      <div class="eyebrow">SCREENS · SKILLS + TALENTS</div>
+      <div class="title">Skills / Talents</div>
+      <div class="desc">Equipped row with hotkey labels, class tabs + school chips, painted spell cards with school accents. Talents get radial branches around class emblem with rank chips.</div>
+      <span class="badge">REDESIGN</span>
+    </a>
+
+    <a class="card" href="rift.html">
+      <div class="eyebrow">SCREENS · RIFT SUITE (5)</div>
+      <div class="title">Rift</div>
+      <div class="desc">Entry · Inside · Encounter · Victory · Replay · History. Tier color discipline, painted progress, structured encounter cards, parchment replay with combat snapshot.</div>
+      <span class="badge">REDESIGN</span>
+    </a>
+
+    <a class="card" href="gear.html">
+      <div class="eyebrow">SCREEN · GEAR</div>
+      <div class="title">Gear + Paper Doll</div>
+      <div class="desc">Gear Score ribbon hero, quality-bordered slots with iLvl pips + empty silhouettes + upgrade indicators, loadout chips, set bonuses, stat preview + compare overlay.</div>
+      <span class="badge">REDESIGN</span>
+    </a>
+
+    <a class="card" href="attributes-full.html" style="border-left-color: var(--defense);">
+      <div class="eyebrow">SCREEN · ATTRIBUTES (3 SUBS)</div>
+      <div class="title">Attributes — Off / Def / Sus</div>
+      <div class="desc">Painted sub-tab pills (red/blue/gold/green), summary bar of top stats, sectioned rating rows with element-colored left edges. Zero values dimmed, hi values green.</div>
+      <span class="badge">REDESIGN</span>
+    </a>
+  </div>
+
+  <div class="section-title">QUICK FIXES</div>
+
+  <div class="mockup-grid">
+    <a class="card" href="quick-fixes.html" style="border-left-color: var(--defense);">
+      <div class="eyebrow">SCREEN · INVENTORY</div>
+      <div class="title">Inventory + Filters</div>
+      <div class="desc">Apply quality tier borders (currently missing). Scrollable filter chips. Empty slots become dashed outlines.</div>
+      <span class="badge polish">POLISH</span>
+    </a>
+
+    <a class="card" href="quick-fixes.html#attributes" style="border-left-color: var(--defense);">
+      <div class="eyebrow">SCREEN · ATTRIBUTES</div>
+      <div class="title">Attributes + Step Chart</div>
+      <div class="desc">Compact 2×3 stat strip with per-stat color accents. Painted bar chart with goal line, today highlight, footer stats.</div>
+      <span class="badge polish">POLISH</span>
+    </a>
+
+    <a class="card" href="quick-fixes.html#professions" style="border-left-color: var(--defense);">
+      <div class="eyebrow">SCREEN · PROFESSIONS</div>
+      <div class="title">Professions</div>
+      <div class="desc">Horizontal cards with XP bar inline. Section headers show "N/M unlocked". Profession accent colors carry through.</div>
+      <span class="badge polish">POLISH</span>
+    </a>
+  </div>
+
+  <div class="section-title">SYSTEM-LEVEL CHANGES (applied to every screen)</div>
+
+  <div class="intro" style="margin-top: 12px;">
+    <strong>Top HUD chrome:</strong> Gray placeholder bar → dark-chrome gradient with gold border glow. Avatar + minimap get 2px ornate gold frames with inner shadow. HP/MP bars become painted (gradient fill, inner shadow track, highlight shimmer) instead of flat HTML rectangles. See any mockup for live treatment.
+    <br><br>
+    <strong>Bottom nav:</strong> 5-tab nav with painted icons. Active tab gets gold rim glow + gold tick mark above icon. Quests tab supports notification pip for ready-to-turn-in quests.
+    <br><br>
+    <strong>Sub-tab pills:</strong> Generic blue web pills replaced. Two families: <em>painted tabs</em> (dark chrome, gold underline glow — for inventory/skills/gear) and <em>parchment tabs</em> (cream bg, gold underline — for profile/attributes/professions/achievements).
+    <br><br>
+    <strong>Tier color discipline:</strong> Tier-1 green, Tier-2 blue, Tier-3 purple used consistently across location hero badge, quest cards, rift cards, and item quality tooltips. The painted scene gets a tier-tinted tag so location difficulty reads instantly.
+  </div>
+
+  <div class="section-title">WHAT TO REVIEW</div>
+
+  <div class="intro" style="margin-top: 12px; border-left-color: var(--success);">
+    Open each mockup, then send back:
+    <br>1. <strong>3-bar HUD</strong> — HP/Shield/MP stacked at 11px each (104px total HUD). OK or want HP+Shield layered into one bar (shield paints over HP from right) for tighter 88px HUD?
+    <br>2. <strong>Location hero size</strong> — 280px feels right? Or want bigger painted region (320px+) at expense of less action-stack space?
+    <br>3. <strong>Activity picker</strong> — 3×2 grid with progress rings vs horizontal scroll with bigger cards.
+    <br>4. <strong>Quest card density</strong> — multi-objective vs single-bar collapsed.
+    <br>5. <strong>Tab pill family</strong> — does the painted/parchment split match how you think about each screen?
+    <br>6. <strong>Talent tree</strong> — radial 4-branch around class emblem vs traditional top-down grid? Mockup shows radial.
+    <br>7. <strong>Login</strong> — ornate framed card (left) vs glass minimal (right)?
+    <br>8. <strong>Rift sub-badge</strong> — "RIFT EXPLORER" pill under avatar replaces the orange floating label. OK or move it elsewhere?
+    <br>9. <strong>Anything that breaks the painted feel</strong> — flag flat/web-ish elements.
+  </div>
+
+</div>
+
+</body>
+</html>

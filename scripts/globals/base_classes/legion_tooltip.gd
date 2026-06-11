@@ -18,6 +18,7 @@ var _lbl_type: Label
 var _lbl_ilvl: Label
 var _lbl_quality: Label
 var _lbl_armor_type: Label
+var _lbl_set: Label
 
 # Body
 var _stats_container: VBoxContainer
@@ -119,11 +120,13 @@ func _setup_header_area() -> void:
 	_lbl_ilvl = _create_label_simple(text_color_dark)
 	_lbl_quality = _create_label_simple(text_color_dark)
 	_lbl_armor_type = _create_label_simple(text_color_dark)
-	
+	_lbl_set = _create_label_simple(text_color_dark)
+
 	meta_vbox.add_child(_lbl_type)
 	meta_vbox.add_child(_lbl_ilvl)
 	meta_vbox.add_child(_lbl_quality)
 	meta_vbox.add_child(_lbl_armor_type)
+	meta_vbox.add_child(_lbl_set)
 	
 	
 func _setup_body_area() -> void:
@@ -208,6 +211,16 @@ func set_data(item_def: Dictionary, qty: int = 1, tooltip_source = "inventory",
 	else:
 		_lbl_armor_type.text = "Armor type: %s" % armor_type.capitalize()
 		_lbl_armor_type.visible = true
+
+	# Set membership (crafting sets) — gold "Set: <name>" line on set gear.
+	var set_id = str(item_def.get("set_id", ""))
+	var set_name = ItemDB.get_set_name(set_id) if (set_id != "" and set_id != "<null>") else ""
+	if set_name != "":
+		_lbl_set.text = "Set: %s" % set_name
+		_lbl_set.modulate = Styler.COL_PRIMARY
+		_lbl_set.visible = true
+	else:
+		_lbl_set.visible = false
 
 	# 2. Rebuild Stats
 	_rebuild_stats_section()

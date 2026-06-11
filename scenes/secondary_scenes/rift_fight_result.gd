@@ -78,18 +78,44 @@ func _build_ui() -> void:
 	var rift_died = progress_data.get("rift_died", false)
 	var xp_gained = int(progress_data.get("xp_gained", 0))
 
-	# --- VICTORY / DEFEATED header ---
+	# --- VICTORY / DEFEATED header — mini fanfare with flanking gold rules ---
+	var header_row = HBoxContainer.new()
+	header_row.add_theme_constant_override("separation", 12)
+	header_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_child(header_row)
+
+	var rule_color = Styler.COL_PRIMARY if result else Color.from_rgba8(220, 60, 60)
+	var left_rule = ColorRect.new()
+	left_rule.color = Color(rule_color, 0.6)
+	left_rule.custom_minimum_size = Vector2(60, 1)
+	left_rule.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left_rule.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	header_row.add_child(left_rule)
+
 	var result_header = Label.new()
 	result_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	result_header.add_theme_font_override("font", Styler.JANDA_FONT)
-	result_header.add_theme_font_size_override("font_size", 28)
+	result_header.add_theme_font_size_override("font_size", 40)
+	result_header.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
+	result_header.add_theme_constant_override("outline_size", 4)
 	if result:
 		result_header.text = "VICTORY"
 		result_header.add_theme_color_override("font_color", Styler.COL_PRIMARY)
+		result_header.add_theme_color_override("font_shadow_color", Styler.COL_GOLD_GLOW)
+		result_header.add_theme_constant_override("shadow_outline_size", 18)
 	else:
 		result_header.text = "DEFEATED"
 		result_header.add_theme_color_override("font_color", Color.from_rgba8(220, 60, 60))
-	vbox.add_child(result_header)
+		result_header.add_theme_color_override("font_shadow_color", Color(220.0/255.0, 60.0/255.0, 60.0/255.0, 0.4))
+		result_header.add_theme_constant_override("shadow_outline_size", 18)
+	header_row.add_child(result_header)
+
+	var right_rule = ColorRect.new()
+	right_rule.color = Color(rule_color, 0.6)
+	right_rule.custom_minimum_size = Vector2(60, 1)
+	right_rule.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right_rule.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	header_row.add_child(right_rule)
 
 	# Subtitle
 	var subtitle = Label.new()

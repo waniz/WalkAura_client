@@ -1,0 +1,491 @@
+/* WalkAura design mockup shared tokens — mirrors styler.gd */
+
+:root {
+  /* Primary */
+  --gold: #FFC842;
+  --gold-soft: rgba(255, 200, 66, 0.65);
+  --gold-glow: rgba(255, 200, 66, 0.18);
+  --offense: #FF785A;
+  --defense: #40B4FF;
+
+  /* Surfaces — dark chrome family */
+  --panel-bg: rgba(16, 18, 24, 0.86);
+  --panel-bg-solid: #101218;
+  --panel-dark: #1C1E28;
+  --panel-darker: #0A0C12;
+  --panel-border: rgba(255, 255, 255, 0.12);
+  --panel-border-strong: rgba(255, 255, 255, 0.20);
+  --panel-gray: #6E6060;
+
+  /* Parchment family */
+  --parchment-bg: #F0E6D2;
+  --parchment-card: #EBE0CA;
+  --parchment-darker: #D9CDB3;
+  --parchment-text: #2A2418;
+  --parchment-text-muted: #5C5142;
+  --parchment-section-hdr: #3A2E1E;
+
+  /* Quality tiers */
+  --q0: #9E9E9E;
+  --q1: #FFFFFF;
+  --q2: #1FFF00;
+  --q3: #0070DE;
+  --q4: #A336ED;
+  --q5: #FF8000;
+  --q6: #E6CC33;
+
+  /* Stats */
+  --str: #E664A0;
+  --agi: #E6A028;
+  --vit: #A01E1E;
+  --int: #963CF0;
+  --spi: #1E32A0;
+  --lck: #1E7832;
+
+  /* Semantic */
+  --success: #3CC850;
+  --error: #DC5050;
+  --btn-success: #3C8246;
+  --btn-destructive: #B43C3C;
+
+  /* Schools */
+  --fire: #FF8000;
+  --frost: #4D99FF;
+  --holy: #FFD94D;
+  --utility: #99CC80;
+  --dark: #8033B3;
+  --arcane: #4DB3E6;
+  --blood: #8C1428;
+
+  /* Tier accents */
+  --tier-1: #1FFF00;
+  --tier-2: #0070DE;
+  --tier-3: #A336ED;
+
+  /* Spacing */
+  --s-2xs: 2px;
+  --s-xs: 4px;
+  --s-sm: 8px;
+  --s-md: 16px;
+  --s-lg: 24px;
+  --s-xl: 32px;
+  --s-2xl: 48px;
+  --s-3xl: 64px;
+
+  /* Radius */
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-pill: 9999px;
+
+  /* Touch */
+  --touch-min: 44px;
+}
+
+/* Fonts — proxy for Godot QUADRAT + JANDA fonts */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Fondamento&family=Inter:wght@400;500;600;700&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #0a0a0f;
+  color: #e8e0cf;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Phone viewport frame */
+.phone {
+  width: 411px;
+  margin: 24px auto;
+  background: #000;
+  border-radius: 32px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 0 2px #222;
+}
+
+.phone-screen {
+  width: 100%;
+  height: 870px;
+  position: relative;
+  overflow: hidden;
+  background: var(--panel-darker);
+}
+
+/* ==========================================
+   TOP HUD — Dark chrome treatment (REDESIGN)
+   ========================================== */
+
+.top-hud {
+  position: relative;
+  height: 96px;
+  background: linear-gradient(180deg, #0e1018 0%, #1a1a25 60%, #14141e 100%);
+  border-bottom: 1px solid var(--gold-glow);
+  box-shadow: 0 2px 0 0 rgba(0,0,0,0.4), inset 0 -1px 0 rgba(255,200,66,0.1);
+  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: 76px 1fr 76px;
+  gap: 10px;
+  align-items: center;
+}
+
+.top-hud::before {
+  content: "";
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(255,200,66,0.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.avatar-frame {
+  position: relative;
+  width: 76px; height: 76px;
+  border-radius: var(--r-md);
+  background: var(--panel-dark);
+  border: 2px solid var(--gold);
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.6),
+    0 2px 6px rgba(0,0,0,0.5),
+    0 0 12px var(--gold-glow);
+  overflow: hidden;
+}
+
+.avatar-frame img { width: 100%; height: 100%; object-fit: cover; }
+
+.avatar-frame::after {
+  content: "";
+  position: absolute; inset: 0;
+  border-radius: var(--r-md);
+  background: linear-gradient(135deg, rgba(255,200,66,0.18), transparent 40%);
+  pointer-events: none;
+}
+
+.level-badge {
+  position: absolute;
+  bottom: -10px; left: 50%;
+  transform: translateX(-50%);
+  background: radial-gradient(circle at 30% 30%, #2a1f08 0%, #14100a 100%);
+  color: var(--gold);
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 13px;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--gold);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.6), inset 0 0 4px rgba(0,0,0,0.5);
+}
+
+.player-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 2px;
+}
+
+.player-name {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  color: var(--gold);
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+.resource-bar {
+  position: relative;
+  height: 14px;
+  background: linear-gradient(180deg, #0a0a10 0%, #1a1a22 100%);
+  border-radius: 3px;
+  border: 1px solid rgba(0,0,0,0.6);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.6);
+  overflow: hidden;
+}
+
+.resource-fill {
+  height: 100%;
+  border-radius: 2px;
+  position: relative;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -2px 4px rgba(0,0,0,0.3);
+}
+
+.resource-fill.hp {
+  background: linear-gradient(180deg, #d04545 0%, #8a1c1c 100%);
+  width: 90%;
+}
+
+.resource-fill.mp {
+  background: linear-gradient(180deg, #4a90d8 0%, #1e4880 100%);
+  width: 75%;
+}
+
+.resource-fill.shield {
+  background: linear-gradient(180deg, #6dd5e8 0%, #2978a0 100%);
+  width: 60%;
+}
+
+/* Shield "layered" mode — paints over HP from the right */
+.resource-bar.layered { position: relative; }
+.resource-bar.layered .resource-fill.shield-overlay {
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  background: linear-gradient(180deg, rgba(109, 213, 232, 0.85) 0%, rgba(41, 120, 160, 0.85) 100%);
+  border-left: 1px solid rgba(255,255,255,0.4);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+/* 3-bar variant: tighter HUD with HP/Shield/MP stack */
+.top-hud.three-bar { height: 104px; }
+.top-hud.three-bar .resource-bar { height: 11px; }
+.top-hud.three-bar .player-info { gap: 3px; }
+.top-hud.three-bar .resource-bar .label { font-size: 9px; }
+
+/* Active-activity sub-badge under avatar (Rift Explorer etc.) */
+.activity-sub-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 6px 2px 2px;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--gold-glow);
+  border-radius: 10px;
+  width: fit-content;
+  margin-top: 2px;
+}
+.activity-sub-badge .ic {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: radial-gradient(circle, var(--arcane), #1a4868);
+  display: grid; place-items: center; font-size: 9px;
+}
+.activity-sub-badge .name {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  color: var(--arcane);
+  letter-spacing: 0.4px;
+}
+
+.resource-fill::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%);
+}
+
+.resource-bar .label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.9), 0 0 3px rgba(0,0,0,0.6);
+  letter-spacing: 0.4px;
+}
+
+.minimap-frame {
+  position: relative;
+  width: 76px; height: 76px;
+  border-radius: var(--r-md);
+  border: 2px solid var(--gold);
+  background: var(--panel-dark);
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.6),
+    0 2px 6px rgba(0,0,0,0.5),
+    0 0 12px var(--gold-glow);
+  overflow: hidden;
+}
+
+.minimap-frame img { width: 100%; height: 100%; object-fit: cover; }
+
+.minimap-label {
+  position: absolute;
+  bottom: 4px; left: 4px; right: 4px;
+  text-align: center;
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  color: var(--gold);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.9);
+  letter-spacing: 0.3px;
+}
+
+.location-d-badge {
+  position: absolute;
+  bottom: -8px; left: 50%;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, #2a1f08, #14100a);
+  color: var(--gold);
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 700;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  border: 1.5px solid var(--gold);
+}
+
+/* ==========================================
+   BOTTOM NAV — Dark chrome
+   ========================================== */
+
+.bottom-nav {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 78px;
+  background: linear-gradient(180deg, #14141e 0%, #0a0a10 100%);
+  border-top: 1px solid var(--gold-glow);
+  box-shadow: 0 -2px 0 rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,200,66,0.1);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  padding: 8px 6px 12px;
+  gap: 4px;
+}
+
+.nav-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: background 0.15s;
+  padding: 4px;
+  position: relative;
+}
+
+.nav-tab:active { background: rgba(255,200,66,0.08); }
+
+.nav-tab .icon {
+  width: 40px; height: 40px;
+  border-radius: var(--r-md);
+  background: var(--panel-dark);
+  display: grid; place-items: center;
+  font-size: 22px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.nav-tab .label {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  color: #8a7e68;
+  letter-spacing: 0.5px;
+}
+
+.nav-tab.active .icon {
+  background: radial-gradient(circle at 30% 30%, #3a2a10, #14100a);
+  border-color: var(--gold);
+  box-shadow: 0 0 12px var(--gold-glow), inset 0 0 4px rgba(255,200,66,0.2);
+}
+
+.nav-tab.active .label {
+  color: var(--gold);
+  text-shadow: 0 0 6px var(--gold-glow);
+}
+
+.nav-tab.active::before {
+  content: "";
+  position: absolute;
+  top: -1px; left: 20%; right: 20%;
+  height: 2px;
+  background: var(--gold);
+  box-shadow: 0 0 6px var(--gold);
+  border-radius: 2px;
+}
+
+/* Quest notification pip */
+.nav-tab .pip {
+  position: absolute;
+  top: 2px; right: 18%;
+  width: 8px; height: 8px;
+  background: var(--offense);
+  border-radius: 50%;
+  border: 1.5px solid #0a0a10;
+  box-shadow: 0 0 6px var(--offense);
+}
+
+/* ==========================================
+   PAINTED PILL TABS (Inventory/Gear etc.)
+   ========================================== */
+
+.painted-tabs {
+  display: flex;
+  gap: 0;
+  background: var(--panel-darker);
+  border-bottom: 1px solid var(--gold-glow);
+  padding: 0;
+}
+
+.painted-tabs .tab {
+  flex: 1;
+  padding: 12px 10px;
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  letter-spacing: 0.8px;
+  text-align: center;
+  color: #6a5e48;
+  background: linear-gradient(180deg, #14141e 0%, #0a0a10 100%);
+  cursor: pointer;
+  position: relative;
+  border-right: 1px solid rgba(0,0,0,0.4);
+}
+
+.painted-tabs .tab:last-child { border-right: none; }
+
+.painted-tabs .tab.active {
+  color: var(--gold);
+  background: linear-gradient(180deg, #2a1f08 0%, #14100a 100%);
+}
+
+.painted-tabs .tab.active::after {
+  content: "";
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--gold);
+  box-shadow: 0 0 8px var(--gold);
+}
+
+/* ==========================================
+   PARCHMENT TABS (alternative)
+   ========================================== */
+
+.parchment-tabs {
+  display: flex;
+  gap: 0;
+  background: var(--parchment-bg);
+  padding: 8px 8px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+.parchment-tabs .tab {
+  flex: 1;
+  padding: 10px 8px;
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 0.6px;
+  color: var(--parchment-text-muted);
+  text-align: center;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.parchment-tabs .tab.active {
+  color: var(--parchment-section-hdr);
+  border-bottom-color: var(--gold);
+}
+
+/* ==========================================
+   GENERIC HELPERS
+   ========================================== */
+
+.body-area {
+  position: absolute;
+  top: 96px;
+  left: 0; right: 0;
+  bottom: 78px;
+  overflow: hidden;
+}
+
+.parchment-bg { background: var(--parchment-bg); }
+.dark-bg { background: var(--panel-darker); }

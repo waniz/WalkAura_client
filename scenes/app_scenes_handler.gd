@@ -24,12 +24,16 @@ const RIFT_FIGHT_RESULT = preload("res://scenes/secondary_scenes/rift_fight_resu
 const AVATARS_SCENE = preload("uid://dp38cogt60cii")
 const DISENCHANT_RESULT_SCENE = preload("res://scenes/support_screens/disenchant_result.tscn")
 const PROFESSION_DETAIL_SCENE = preload("res://scenes/secondary_scenes/profession_detail.tscn")
+const NPC_DIALOGUE_SCENE = preload("res://scenes/secondary_scenes/npc_dialogue.gd")
+const QUEST_REWARD_MODAL = preload("res://scenes/secondary_scenes/quest_reward_modal.gd")
 const _SKIP_LAYOUT_NAMES = ["ProgressUpdate", "ProgressSteps", "GlobalHud", "DisenchantResult"]
 var overlay = null
 var _rift_overlay = null
 var _avatars_overlay = null
 var _disenchant_overlay = null
 var _profession_overlay = null
+var _npc_dialogue_overlay = null
+var _quest_reward_overlay = null
 var _snap_tween: Tween = null
 var _first_progress_after_login: bool = true
 
@@ -49,6 +53,9 @@ func _ready() -> void:
 	SignalManager.signal_ShowAvatars.connect(_show_avatars)
 	SignalManager.signal_DisenchantResultReceived.connect(_show_disenchant_result)
 	SignalManager.signal_ShowProfession.connect(_show_profession)
+	SignalManager.signal_RequestNpcDialogue.connect(_show_npc_dialogue)
+	SignalManager.signal_QuestTurnedIn.connect(_on_quest_turned_in)
+	SignalManager.signal_QuestCompletedToast.connect(_on_quest_completed_toast)
 
 	clip_contents = true
 	mouse_filter = Control.MOUSE_FILTER_PASS
@@ -150,6 +157,32 @@ func _show_profession(profession_name: String) -> void:
 	_profession_overlay.set_profession(profession_name)
 	add_child(_profession_overlay)
 	_profession_overlay.tree_exited.connect(func(): _profession_overlay = null, Object.CONNECT_ONE_SHOT)
+
+func _show_npc_dialogue(npc_uid: String) -> void:
+	if _npc_dialogue_overlay != null and is_instance_valid(_npc_dialogue_overlay):
+		return
+	_npc_dialogue_overlay = NPC_DIALOGUE_SCENE.new()
+	_npc_dialogue_overlay.npc_uid = npc_uid
+	add_child(_npc_dialogue_overlay)
+	_npc_dialogue_overlay.tree_exited.connect(func(): _npc_dialogue_overlay = null, Object.CONNECT_ONE_SHOT)
+
+func _on_quest_turned_in(data: Dictionary) -> void:
+	var rewards = data.get("rewards_granted", [])
+	_show_quest_reward(String(data.get("quest_uid", "")), rewards if typeof(rewards) == TYPE_ARRAY else [])
+
+func _on_quest_completed_toast(data: Dictionary) -> void:
+	var result = data.get("result", {})
+	var rewards = result.get("rewards_granted", []) if typeof(result) == TYPE_DICTIONARY else []
+	_show_quest_reward(String(data.get("quest_uid", "")), rewards if typeof(rewards) == TYPE_ARRAY else [])
+
+func _show_quest_reward(quest_uid: String, rewards: Array) -> void:
+	if _quest_reward_overlay != null and is_instance_valid(_quest_reward_overlay):
+		_quest_reward_overlay.queue_free()
+	_quest_reward_overlay = QUEST_REWARD_MODAL.new()
+	_quest_reward_overlay.quest_uid = quest_uid
+	_quest_reward_overlay.rewards = rewards
+	add_child(_quest_reward_overlay)
+	_quest_reward_overlay.tree_exited.connect(func(): _quest_reward_overlay = null, Object.CONNECT_ONE_SHOT)
 
 func _show_disenchant_result(data: Dictionary) -> void:
 	if _disenchant_overlay != null and is_instance_valid(_disenchant_overlay):

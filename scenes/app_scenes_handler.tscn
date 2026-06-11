@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://c1uj7p2i64geq" path="res://scenes/main_screens/character_skills.tscn" id="6_skills"]
 [ext_resource type="PackedScene" uid="uid://ca84pi2vjniht" path="res://scenes/support_screens/progress_steps.tscn" id="7_g2q3n"]
 [ext_resource type="PackedScene" uid="uid://btcl2d6jrea" path="res://scenes/main_screens/location_hub.tscn" id="8_hub"]
+[ext_resource type="PackedScene" uid="uid://dquestscharauraqv" path="res://scenes/main_screens/character_quests.tscn" id="9_quests"]
 
 [node name="AppScenesHandler" type="Control" unique_id=1659115836]
 layout_mode = 3
@@ -32,6 +33,9 @@ layout_mode = 1
 layout_mode = 1
 
 [node name="CharacterSkills" parent="." unique_id=1825663957 instance=ExtResource("6_skills")]
+layout_mode = 1
+
+[node name="CharacterQuests" parent="." instance=ExtResource("9_quests")]
 layout_mode = 1
 
 [node name="ProgressUpdate" parent="." unique_id=430472883 instance=ExtResource("4_yr4qo")]

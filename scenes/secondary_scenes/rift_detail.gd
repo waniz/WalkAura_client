@@ -214,23 +214,18 @@ func _build_ui() -> void:
 
 	# --- Action buttons ---
 	_enter_btn = Button.new()
-	_enter_btn.custom_minimum_size = Vector2(0, 52)
+	_enter_btn.custom_minimum_size = Vector2(0, 56)
 	_enter_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_enter_btn.add_theme_font_override("font", Styler.JANDA_FONT)
+	_enter_btn.add_theme_font_size_override("font_size", 20)
 	if all_met:
-		_enter_btn.text = "ENTER RIFT"
-		Styler.style_button(_enter_btn, Color(tier_color, 0.8))
-		_enter_btn.add_theme_color_override("font_color", Color.WHITE)
-		_enter_btn.add_theme_color_override("font_hover_color", Color.WHITE)
-		_enter_btn.add_theme_color_override("font_pressed_color", Color.WHITE)
-		_enter_btn.add_theme_font_size_override("font_size", 18)
+		_enter_btn.text = "▸ ENTER RIFT"
+		_style_tier_emboss_button(_enter_btn, tier_color)
 		_enter_btn.pressed.connect(_on_enter_pressed)
 	else:
-		_enter_btn.text = "LOCKED"
+		_enter_btn.text = "🔒 LOCKED"
 		_enter_btn.disabled = true
-		Styler.style_button(_enter_btn, Color.from_rgba8(50, 50, 50))
-		_enter_btn.add_theme_color_override("font_color", Color(1, 1, 1, 0.4))
-		_enter_btn.add_theme_color_override("font_disabled_color", Color(1, 1, 1, 0.4))
-		_enter_btn.add_theme_font_size_override("font_size", 18)
+		_style_locked_button(_enter_btn)
 	content.add_child(_enter_btn)
 
 	var history_btn = Button.new()
@@ -333,3 +328,48 @@ func _on_account_data(_ok) -> void:
 func _on_history_pressed() -> void:
 	var screen = HISTORY_SCREEN.new()
 	add_child(screen)
+
+
+# Tier-colored embossed ENTER button — primary CTA per P5.4 spec.
+func _style_tier_emboss_button(btn: Button, tier_color: Color) -> void:
+	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	btn.add_theme_color_override("font_color", Color.WHITE)
+	btn.add_theme_color_override("font_hover_color", Color.WHITE)
+	btn.add_theme_color_override("font_pressed_color", Color.WHITE)
+	btn.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
+	btn.add_theme_constant_override("outline_size", 2)
+	for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
+		var sb = StyleBoxFlat.new()
+		sb.bg_color = tier_color
+		sb.set_corner_radius_all(6)
+		sb.border_color = tier_color.lightened(0.3)
+		sb.border_width_top = 1
+		sb.border_width_left = 1
+		sb.border_width_right = 1
+		sb.border_width_bottom = 2
+		sb.shadow_color = Color(tier_color, 0.55)
+		sb.shadow_size = 14
+		match state_name:
+			"hover":
+				sb.bg_color = tier_color.lightened(0.1)
+				sb.shadow_size = 20
+			"pressed":
+				sb.bg_color = tier_color.darkened(0.08)
+				sb.shadow_size = 6
+				sb.content_margin_top = 2
+		btn.add_theme_stylebox_override(state_name, sb)
+
+
+# Disabled / locked button — muted gray with red lock cue.
+func _style_locked_button(btn: Button) -> void:
+	btn.add_theme_color_override("font_color", Color(1, 1, 1, 0.5))
+	btn.add_theme_color_override("font_disabled_color", Color(1, 1, 1, 0.5))
+	btn.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.7))
+	btn.add_theme_constant_override("outline_size", 2)
+	for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
+		var sb = StyleBoxFlat.new()
+		sb.bg_color = Color.from_rgba8(40, 40, 50)
+		sb.set_corner_radius_all(6)
+		sb.border_color = Color(Styler.COL_OFFENSE, 0.4)
+		sb.set_border_width_all(1)
+		btn.add_theme_stylebox_override(state_name, sb)

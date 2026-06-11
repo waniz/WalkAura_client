@@ -137,15 +137,15 @@ const PROFESSION_GROUPS = [
 		"entries": [
 			{"k":"herbalism_lvl",    "n":"Herbalism", "exp":"herbalism_xp"},
 			{"k":"mining_lvl",       "n":"Mining",    "exp":"mining_xp"},
-			{"k":"woodcutting_lvl",  "n":"Forester",  "exp":"woodcutting_xp"},
-			{"k":"fishing_lvl",      "n":"Fishing",   "exp":"fishing_xp"},
+			# Forester (woodcutting) + Fishing hidden client-side — server keeps them (TODO re-enable).
 		]
 	},
 	{
 		"name": "Crafting",
 		"entries": [
-			{"k":"alchemy_lvl",     "n":"Alchemy",     "exp":"alchemy_xp"},
-			{"k":"enchanting_lvl",  "n":"Enchanting",  "exp":"enchanting_xp"},
+			{"k":"alchemy_lvl",       "n":"Alchemy",       "exp":"alchemy_xp"},
+			{"k":"enchanting_lvl",    "n":"Enchanting",    "exp":"enchanting_xp"},
+			{"k":"blacksmithing_lvl", "n":"Crafting", "exp":"blacksmithing_xp"},
 		]
 	},
 	{
@@ -531,7 +531,7 @@ func _make_mini_card(stat_name: String, lvl: int, activity_exp: int, accent: Col
 	# --- check if this profession is currently active ---
 	var prof_activity_map = {
 		"Herbalism": 1, "Alchemy": 2, "Hunting": 3,
-		"Mining": 4, "Forester": 5, "Fishing": 6,
+		"Mining": 4, "Crafting": 10,
 		"Rift Explorer": 7, "Enchanting": 9,
 	}
 	var act_id = prof_activity_map.get(stat_name, -1)
@@ -564,6 +564,7 @@ func _make_mini_card(stat_name: String, lvl: int, activity_exp: int, accent: Col
 
 	var icon_key = {
 		"Herbalism": "herbalism", "Alchemy": "alchemy", "Enchanting": "enchanting",
+		"Crafting": "blacksmith",
 		"Hunting": "hunting", "Mining": "mining", "Forester": "woodcutting",
 		"Fishing": "fishing", "Rift Explorer": "rift",
 	}
@@ -631,6 +632,7 @@ func _make_mini_card(stat_name: String, lvl: int, activity_exp: int, accent: Col
 	# --- click handler ---
 	var prof_key_map = {
 		"Herbalism": "herbalism", "Alchemy": "alchemy", "Enchanting": "enchanting",
+		"Crafting": "blacksmithing",
 		"Hunting": "hunting", "Mining": "mining", "Forester": "woodcutting",
 		"Fishing": "fishing", "Rift Explorer": "rift",
 	}
@@ -906,23 +908,22 @@ func set_active_title_display(active_title, titles_known: Array) -> void:
 func _build_stats_dropdown_section() -> void:
 	var btn_row = HBoxContainer.new()
 	btn_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	btn_row.add_theme_constant_override("separation", 4)
+	btn_row.add_theme_constant_override("separation", 0)
 	_attr_vbox.add_child(btn_row)
 
-	var labels = ["⚔ Offensive", "🛡 Defensive", "👟 Steps", "💚 Sustain"]
+	var labels = ["⚔ OFFENSIVE", "🛡 DEFENSIVE", "👟 STEPS", "💚 SUSTAIN"]
 	for i in labels.size():
 		var btn = Button.new()
 		btn.text = labels[i]
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		btn.custom_minimum_size = Vector2(0, 44)
-		btn.add_theme_font_size_override("font_size", 18)
-		Styler.style_button_small(btn, Color.from_rgba8(255, 200, 66))
+		btn.custom_minimum_size = Vector2(0, 38)
+		btn.add_theme_font_override("font", Styler.JANDA_FONT)
+		btn.add_theme_font_size_override("font_size", 12)
+		_apply_sub_tab_style(btn, i, i == _current_stats_mode, labels.size())
 		var idx = i
 		btn.pressed.connect(func(): _set_stats_mode(idx))
 		btn_row.add_child(btn)
 		_stats_mode_buttons.append(btn)
-
-	_set_stats_mode_highlight(_current_stats_mode)
 
 	var scroll = ScrollContainer.new()
 	scroll.size_flags_horizontal  = Control.SIZE_EXPAND_FILL
@@ -932,7 +933,7 @@ func _build_stats_dropdown_section() -> void:
 
 	_stats_list_vbox = VBoxContainer.new()
 	_stats_list_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_stats_list_vbox.add_theme_constant_override("separation", 1)
+	_stats_list_vbox.add_theme_constant_override("separation", 2)
 	scroll.add_child(_stats_list_vbox)
 
 
@@ -944,10 +945,54 @@ func _set_stats_mode(idx: int) -> void:
 
 func _set_stats_mode_highlight(active_idx: int) -> void:
 	for i in _stats_mode_buttons.size():
-		var btn = _stats_mode_buttons[i]
-		var sb = btn.get_theme_stylebox("normal") as StyleBoxFlat
-		if sb:
-			sb.bg_color = Color.from_rgba8(255, 200, 66) if i == active_idx else Color.from_rgba8(90, 90, 90)
+		_apply_sub_tab_style(_stats_mode_buttons[i], i, i == active_idx, _stats_mode_buttons.size())
+
+
+# Painted segmented sub-tab style — Offensive=red, Defensive=blue, Steps=gold,
+# Sustain=green. Active tab fills with the accent color and gets a glow halo;
+# inactive tabs stay dark with a thin tinted border. First/last segments get
+# rounded outer corners so the row reads as one painted control.
+func _apply_sub_tab_style(btn: Button, tab_idx: int, active: bool, total_tabs: int = 4) -> void:
+	var accent = _sub_tab_accent(tab_idx)
+	var text_active = Color.WHITE
+	var text_inactive = Color.from_rgba8(60, 60, 60)
+	btn.add_theme_color_override("font_color", text_active if active else text_inactive)
+	btn.add_theme_color_override("font_hover_color", text_active if active else text_inactive.lightened(0.3))
+	btn.add_theme_color_override("font_pressed_color", text_active if active else text_inactive)
+	for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
+		var sb = StyleBoxFlat.new()
+		if active:
+			sb.bg_color = accent
+			sb.border_color = accent.darkened(0.25)
+			sb.set_border_width_all(0)
+			sb.border_width_bottom = 2
+			sb.shadow_color = Color(accent, 0.45)
+			sb.shadow_size = 8
+		else:
+			sb.bg_color = Color.from_rgba8(220, 210, 190, 200)
+			sb.border_color = Color(accent, 0.35)
+			sb.set_border_width_all(1)
+		# Rounded outer corners on the first/last segment.
+		var first: bool = tab_idx == 0
+		var last: bool = tab_idx == total_tabs - 1
+		var r_outer: int = 4
+		sb.corner_radius_top_left = r_outer if first else 0
+		sb.corner_radius_bottom_left = r_outer if first else 0
+		sb.corner_radius_top_right = r_outer if last else 0
+		sb.corner_radius_bottom_right = r_outer if last else 0
+		btn.add_theme_stylebox_override(state_name, sb)
+
+
+# Sub-tab accent color by tab index. Steps + Sustain share the success-green
+# treatment (per user request — total steps + buffer values render green to
+# match the sustain family).
+func _sub_tab_accent(tab_idx: int) -> Color:
+	match tab_idx:
+		0: return Styler.COL_OFFENSE
+		1: return Styler.COL_DEFENSE
+		2: return Styler.COLOR_BTN_SUCCESS
+		3: return Styler.COLOR_BTN_SUCCESS
+	return Styler.COL_PRIMARY
 
 
 func _populate_stats_list(d: Dictionary) -> void:
@@ -998,30 +1043,38 @@ func _populate_stats_list(d: Dictionary) -> void:
 
 
 func _make_magic_group(title: String, keys: Array, d: Dictionary) -> Control:
+	var accent = _sub_tab_accent(_current_stats_mode)
 	var frame = PanelContainer.new()
 	frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var sb = StyleBoxFlat.new()
 	sb.bg_color     = Color(0.0, 0.0, 0.0, 0.06)
-	sb.border_color = Color(0.0, 0.0, 0.0, 0.25)
-	sb.set_border_width_all(1)
+	sb.border_color = Color(accent, 0.35)
+	sb.set_border_width_all(0)
+	sb.border_width_top = 1
 	sb.set_corner_radius_all(5)
 	sb.content_margin_left   = 6
 	sb.content_margin_right  = 6
-	sb.content_margin_top    = 4
+	sb.content_margin_top    = 6
 	sb.content_margin_bottom = 4
 	frame.add_theme_stylebox_override("panel", sb)
 
 	var vb = VBoxContainer.new()
 	vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vb.add_theme_constant_override("separation", 1)
+	vb.add_theme_constant_override("separation", 2)
 	frame.add_child(vb)
 
+	# Gold-underlined section header matching the design spec.
 	var hdr = Label.new()
-	hdr.text = title
-	hdr.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
-	hdr.add_theme_font_size_override("font_size", 16)
+	hdr.text = "✨ " + title.to_upper()
+	hdr.add_theme_color_override("font_color", accent.darkened(0.2))
+	hdr.add_theme_font_size_override("font_size", 13)
 	hdr.add_theme_font_override("font", Styler.JANDA_FONT)
+	hdr.add_theme_constant_override("outline_size", 0)
 	vb.add_child(hdr)
+	var rule = ColorRect.new()
+	rule.color = Color(accent, 0.35)
+	rule.custom_minimum_size = Vector2(0, 1)
+	vb.add_child(rule)
 
 	for i in keys.size():
 		var entry = keys[i]
@@ -1083,15 +1136,24 @@ func _make_stat_header() -> Control:
 
 
 func _make_stat_row(stat_name: String, value: String, idx: int, show_icon: bool = true) -> Control:
-	var row_dark  = Color(0.0, 0.0, 0.0, 0.04)
-	var row_light = Color(0.0, 0.0, 0.0, 0.09)
+	# Dim rows whose primary value is exactly 0 — visual signal that the stat
+	# is unallocated. Real values stay full opacity so notable stats jump out.
+	var is_zero: bool = _stat_value_is_zero(value)
+	var row_alpha: float = 0.55 if is_zero else 1.0
+
 	var panel = PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	panel.tooltip_text = STAT_TOOLTIPS.get(stat_name, "")
+	panel.modulate.a = row_alpha
 	var style = StyleBoxFlat.new()
-	style.bg_color     = row_dark if idx % 2 == 0 else row_light
-	style.border_color = Color(0.0, 0.0, 0.0, 0.08)
-	style.set_border_width_all(1)
+	style.bg_color = Color(0.0, 0.0, 0.0, 0.04 if idx % 2 == 0 else 0.09)
+	style.border_color = Color(0.0, 0.0, 0.0, 0.06)
+	style.set_border_width_all(0)
+	# Sub-tab-color left edge — anchors the row to the current sub-tab family.
+	var accent = _sub_tab_accent(_current_stats_mode)
+	style.border_color = accent
+	style.border_width_left = 2
+	style.set_corner_radius_all(3)
 	panel.add_theme_stylebox_override("panel", style)
 
 	var margin = MarginContainer.new()
@@ -1130,11 +1192,28 @@ func _make_stat_row(stat_name: String, value: String, idx: int, show_icon: bool 
 	val_lbl.text = value
 	val_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	val_lbl.add_theme_font_size_override("font_size", 16)
-	val_lbl.add_theme_color_override("font_color", Styler.COLOR_TEXT_DARK)
-	val_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
+	val_lbl.add_theme_font_override("font", Styler.JANDA_FONT)
+	if is_zero:
+		val_lbl.add_theme_color_override("font_color", Color(Styler.COLOR_TEXT_DARK, 0.6))
+	else:
+		# Non-zero values get the sub-tab accent so notable stats pop.
+		val_lbl.add_theme_color_override("font_color", accent.darkened(0.15))
 	hb.add_child(val_lbl)
 
 	return panel
+
+
+# Heuristic — value display strings start with "0" or "0.0..." for zero stats.
+func _stat_value_is_zero(value: String) -> bool:
+	var trimmed = value.strip_edges()
+	if trimmed.is_empty():
+		return false
+	# Accept "0", "0.0", "0  (0.0%)", etc. but NOT "10" or "0.5".
+	if trimmed.begins_with("0  "):
+		return true
+	if trimmed == "0" or trimmed == "0.0":
+		return true
+	return false
 
 
 func _make_section_header(title: String) -> Control:

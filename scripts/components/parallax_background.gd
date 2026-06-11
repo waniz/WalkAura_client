@@ -10,13 +10,18 @@ extends TextureRect
 
 const SHADER_PATH = "res://shaders/depth_parallax.gdshader"
 const DRAG_THRESHOLD_PX: float = 8.0
+# Spring is "at rest" below this — used to stop per-frame work once settled.
+const REST_EPS: float = 0.0008
 
 @export_range(0.0, 0.15, 0.005) var displacement_strength: float = 0.06
 @export_range(0.0, 1.0, 0.05) var far_ratio: float = 0.15
 # Stiffness in (rad/s)^2. Damping is derived from it as 2*sqrt(stiffness) for
 # true critical damping.
 @export_range(1.0, 400.0, 1.0) var spring_stiffness: float = 120.0
-@export_range(0.0, 1.0, 0.01) var idle_sway_amplitude: float = 0.35
+# Default 0.0: a non-zero idle sway animates the shader every single frame
+# forever, which keeps the GPU hot and defeats low_processor_mode. Opt in per
+# instance if a specific background wants perpetual motion.
+@export_range(0.0, 1.0, 0.01) var idle_sway_amplitude: float = 0.0
 @export_range(0.0, 2.0, 0.05) var idle_sway_speed: float = 0.35
 @export var parallax_enabled: bool = true
 
@@ -109,6 +114,8 @@ func _gui_input(event: InputEvent) -> void:
 			_press_active = true
 			_drag_active = false
 			_drag_origin = event.position
+			# Re-arm the per-frame spring; _process sleeps itself once settled.
+			set_process(true)
 			return
 		# Release.
 		if _drag_active:
@@ -155,6 +162,14 @@ func _process(delta: float) -> void:
 	_current_offset += _velocity * delta
 
 	_material.set_shader_parameter("parallax_offset", _current_offset)
+
+	# Battery: once the spring settles at its target and no perpetual idle sway is
+	# animating, stop running every frame. _gui_input re-arms us on the next touch.
+	if not _drag_active and not _press_active and idle_sway_amplitude == 0.0:
+		if _velocity.length() < REST_EPS and (_current_offset - _target_offset).length() < REST_EPS:
+			_current_offset = _target_offset
+			_material.set_shader_parameter("parallax_offset", _current_offset)
+			set_process(false)
 
 
 static func _derive_depth_path(tex: Texture2D) -> String:

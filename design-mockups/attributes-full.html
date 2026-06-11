@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>WalkAura — Attributes (all sub-tabs)</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+h2 { text-align: center; margin-top: 32px; font-family: 'Cinzel', serif; color: var(--gold); letter-spacing: 1px; font-size: 18px; }
+.row { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
+.col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.col h3 { font-family: 'Cinzel', serif; color: var(--gold-soft); font-size: 12px; letter-spacing: 0.8px; }
+.note {
+  max-width: 1100px; margin: 16px auto; padding: 14px;
+  background: rgba(255,255,255,0.04); border-left: 3px solid var(--gold);
+  border-radius: 4px; font-size: 12px; line-height: 1.55; color: #c8bfaa;
+}
+.note strong { color: var(--gold); }
+
+.stat-strip {
+  padding: 10px 12px;
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;
+}
+.stat-strip .scell {
+  background: var(--parchment-card);
+  padding: 6px 8px;
+  border-radius: 5px;
+  display: flex; gap: 6px; align-items: center;
+  border-left: 2px solid var(--gold);
+}
+.stat-strip .scell .ic {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 12px;
+  color: #fff;
+  border: 1px solid rgba(0,0,0,0.2);
+}
+.stat-strip .scell.str { border-left-color: var(--str); }
+.stat-strip .scell.str .ic { background: radial-gradient(circle, var(--str), #6a2050); border-color: var(--str); }
+.stat-strip .scell.agi { border-left-color: var(--agi); }
+.stat-strip .scell.agi .ic { background: radial-gradient(circle, var(--agi), #8a5a18); border-color: var(--agi); }
+.stat-strip .scell.vit { border-left-color: var(--vit); }
+.stat-strip .scell.vit .ic { background: radial-gradient(circle, var(--vit), #501010); border-color: var(--vit); }
+.stat-strip .scell.int { border-left-color: var(--int); }
+.stat-strip .scell.int .ic { background: radial-gradient(circle, var(--int), #4a1f7a); border-color: var(--int); }
+.stat-strip .scell.spi { border-left-color: var(--spi); }
+.stat-strip .scell.spi .ic { background: radial-gradient(circle, var(--spi), #0a1850); border-color: var(--spi); }
+.stat-strip .scell.lck { border-left-color: var(--lck); }
+.stat-strip .scell.lck .ic { background: radial-gradient(circle, var(--lck), #0a4818); border-color: var(--lck); }
+.stat-strip .scell .lbl {
+  font-size: 8px; color: var(--parchment-text-muted);
+  font-family: 'Cinzel', serif; letter-spacing: 0.5px;
+}
+.stat-strip .scell .num {
+  font-family: 'Cinzel', serif; font-size: 11px; color: var(--parchment-text);
+}
+.stat-strip .scell .num .bonus { color: var(--btn-success); }
+
+/* Sub-tab bar */
+.sub-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 0;
+  padding: 0 12px;
+  margin-bottom: 8px;
+}
+.sub-tabs .stab {
+  padding: 7px 4px;
+  text-align: center;
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.6px;
+  color: var(--parchment-text-muted);
+  background: var(--parchment-card);
+  border: 1px solid rgba(0,0,0,0.1);
+  border-right: none;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+}
+.sub-tabs .stab:first-child { border-radius: 4px 0 0 4px; }
+.sub-tabs .stab:last-child { border-right: 1px solid rgba(0,0,0,0.1); border-radius: 0 4px 4px 0; }
+.sub-tabs .stab.active.off { background: linear-gradient(180deg, var(--offense), #c84020); color: #fff; border-color: var(--offense); }
+.sub-tabs .stab.active.def { background: linear-gradient(180deg, var(--defense), #1e7ab0); color: #fff; border-color: var(--defense); }
+.sub-tabs .stab.active.step { background: linear-gradient(180deg, var(--gold), #c89030); color: #14100a; border-color: var(--gold); }
+.sub-tabs .stab.active.sus { background: linear-gradient(180deg, var(--btn-success), #2a601e); color: #fff; border-color: var(--btn-success); }
+.sub-tabs .stab .ic { font-size: 12px; }
+
+/* Stat list rows — redesigned to add visual rhythm */
+.stat-list {
+  padding: 0 12px;
+  display: flex; flex-direction: column;
+  gap: 4px;
+}
+
+.stat-section-hdr {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  color: var(--parchment-section-hdr);
+  text-transform: uppercase;
+  padding: 8px 0 4px;
+  border-bottom: 1px solid var(--gold-glow);
+  margin-bottom: 4px;
+}
+
+.stat-row {
+  display: grid;
+  grid-template-columns: 22px 1fr auto auto;
+  gap: 8px;
+  align-items: center;
+  background: var(--parchment-card);
+  padding: 6px 10px;
+  border-radius: 4px;
+  border-left: 2px solid transparent;
+}
+
+.stat-row.zero { opacity: 0.55; }
+
+.stat-row.off { border-left-color: var(--offense); }
+.stat-row.def { border-left-color: var(--defense); }
+.stat-row.sus { border-left-color: var(--btn-success); }
+.stat-row.dmg { border-left-color: var(--fire); }
+.stat-row.dmg.frost { border-left-color: var(--frost); }
+.stat-row.dmg.arc { border-left-color: var(--arcane); }
+.stat-row.dmg.dark { border-left-color: var(--dark); }
+.stat-row.dmg.holy { border-left-color: var(--holy); }
+.stat-row.dmg.blood { border-left-color: var(--blood); }
+
+.stat-row .ic {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 12px;
+  background: rgba(0,0,0,0.08);
+}
+.stat-row .nm {
+  font-size: 12px;
+  color: var(--parchment-text);
+}
+.stat-row .val {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  color: var(--parchment-section-hdr);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.stat-row .pct {
+  font-size: 10px;
+  color: var(--parchment-text-muted);
+  font-variant-numeric: tabular-nums;
+  min-width: 38px;
+  text-align: right;
+}
+.stat-row.zero .val,
+.stat-row.zero .pct { color: #b3a890; }
+
+.stat-row.hi .val {
+  color: var(--btn-success);
+  font-weight: 700;
+}
+
+/* Header summary */
+.summary-bar {
+  margin: 10px 12px;
+  padding: 10px;
+  background: linear-gradient(180deg, var(--parchment-card), var(--parchment-darker));
+  border-radius: 6px;
+  border-left: 3px solid var(--gold);
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+.summary-bar .item .l {
+  font-size: 9px; color: var(--parchment-text-muted);
+  font-family: 'Cinzel', serif; letter-spacing: 0.6px;
+}
+.summary-bar .item .v {
+  font-family: 'Cinzel', serif; font-size: 14px; color: var(--parchment-section-hdr);
+  font-variant-numeric: tabular-nums;
+}
+.summary-bar .item .v.acc { color: var(--offense); }
+.summary-bar .item .v.def { color: var(--defense); }
+.summary-bar .item .v.sus { color: var(--btn-success); }
+
+</style>
+</head>
+<body>
+
+<h2>ATTRIBUTES — All 3 sub-tabs</h2>
+
+<div class="row">
+
+<!-- =========== OFFENSIVE =========== -->
+<div class="col">
+  <h3>Offensive</h3>
+  <div class="phone">
+    <div class="phone-screen">
+
+      <div class="top-hud three-bar">
+        <div class="avatar-frame"><img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&h=200&fit=crop" alt=""><div class="level-badge">17</div></div>
+        <div class="player-info">
+          <div class="player-name">test_user</div>
+          <div class="resource-bar"><div class="resource-fill hp"></div><div class="label">HP 160 / 150</div></div>
+          <div class="resource-bar"><div class="resource-fill shield"></div><div class="label">SH 60 / 100</div></div>
+          <div class="resource-bar"><div class="resource-fill mp"></div><div class="label">MP 220 / 200</div></div>
+        </div>
+        <div class="minimap-frame"><img src="https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=200&h=200&fit=crop" alt=""><div class="minimap-label">DRAGON LAIR</div><div class="location-d-badge">D</div></div>
+      </div>
+
+      <div class="body-area parchment-bg" style="overflow-y: auto;">
+        <div class="parchment-tabs">
+          <div class="tab active">ATTRIBUTES</div>
+          <div class="tab">PROFESSIONS</div>
+          <div class="tab">ACHIEVEMENTS</div>
+        </div>
+
+        <!-- Primary stat strip (compact) -->
+        <div class="stat-strip">
+          <div class="scell str"><div class="ic">✊</div><div><div class="lbl">STR</div><div class="num">5 <span class="bonus">+1</span></div></div></div>
+          <div class="scell agi"><div class="ic">🏹</div><div><div class="lbl">AGI</div><div class="num">3 <span class="bonus">+1</span></div></div></div>
+          <div class="scell vit"><div class="ic">❤</div><div><div class="lbl">VIT</div><div class="num">3 <span class="bonus">+3</span></div></div></div>
+          <div class="scell int"><div class="ic">📖</div><div><div class="lbl">INT</div><div class="num">1 <span class="bonus">+2</span></div></div></div>
+          <div class="scell spi"><div class="ic">✦</div><div><div class="lbl">SPI</div><div class="num">1 <span class="bonus">+5</span></div></div></div>
+          <div class="scell lck"><div class="ic">🍀</div><div><div class="lbl">LCK</div><div class="num">1 <span class="bonus">+1</span></div></div></div>
+        </div>
+
+        <!-- Sub-tabs -->
+        <div class="sub-tabs">
+          <div class="stab active off"><span class="ic">⚔</span>OFFENSIVE</div>
+          <div class="stab"><span class="ic">🛡</span>DEFENSIVE</div>
+          <div class="stab"><span class="ic">👣</span>STEPS</div>
+          <div class="stab"><span class="ic">🌿</span>SUSTAIN</div>
+        </div>
+
+        <!-- Summary bar -->
+        <div class="summary-bar">
+          <div class="item"><div class="l">PHYS ATK</div><div class="v acc">20–30</div></div>
+          <div class="item"><div class="l">MAGIC ATK</div><div class="v acc">17.6–26.4</div></div>
+          <div class="item"><div class="l">CRIT</div><div class="v acc">0.5%</div></div>
+        </div>
+
+        <!-- Ratings list -->
+        <div class="stat-list">
+          <div class="stat-section-hdr">⚔ Combat Ratings</div>
+          <div class="stat-row off"><div class="ic">🎯</div><div class="nm">Crit Chance</div><div class="val">71</div><div class="pct">0.5%</div></div>
+          <div class="stat-row off"><div class="ic">💥</div><div class="nm">Crit Damage</div><div class="val">84</div><div class="pct">0.6%</div></div>
+          <div class="stat-row off hi"><div class="ic">🎯</div><div class="nm">Hit Rating</div><div class="val">63</div><div class="pct">0.4%</div></div>
+          <div class="stat-row off"><div class="ic">🗡</div><div class="nm">Armor Penetration</div><div class="val">41</div><div class="pct">0.3%</div></div>
+          <div class="stat-row off"><div class="ic">⚡</div><div class="nm">Haste</div><div class="val">35</div><div class="pct">0.2%</div></div>
+          <div class="stat-row off"><div class="ic">🪄</div><div class="nm">Magic Penetration</div><div class="val">25</div><div class="pct">0.2%</div></div>
+          <div class="stat-row off"><div class="ic">⚖</div><div class="nm">Versatility</div><div class="val">31</div><div class="pct">0.2%</div></div>
+
+          <div class="stat-section-hdr">✨ Damage Amplifiers</div>
+          <div class="stat-row dmg holy zero"><div class="ic" style="color: var(--holy);">☀</div><div class="nm">Holy</div><div class="val">0</div><div class="pct">0.0%</div></div>
+          <div class="stat-row dmg zero"><div class="ic" style="color: var(--fire);">🔥</div><div class="nm">Fire</div><div class="val">0</div><div class="pct">0.0%</div></div>
+          <div class="stat-row dmg frost zero"><div class="ic" style="color: var(--frost);">❄</div><div class="nm">Frost</div><div class="val">0</div><div class="pct">0.0%</div></div>
+          <div class="stat-row dmg arc zero"><div class="ic" style="color: var(--arcane);">✨</div><div class="nm">Arcane</div><div class="val">0</div><div class="pct">0.0%</div></div>
+          <div class="stat-row dmg dark zero"><div class="ic" style="color: var(--dark);">🌑</div><div class="nm">Dark</div><div class="val">0</div><div class="pct">0.0%</div></div>
+          <div class="stat-row dmg blood zero"><div class="ic" style="color: var(--blood);">🩸</div><div class="nm">Blood</div><div class="val">0</div><div class="pct">0.0%</div></div>
+        </div>
+
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-tab active"><div class="icon">👤</div><div class="label">Profile</div></div>
+        <div class="nav-tab"><div class="icon">🎒</div><div class="label">Inventory</div></div>
+        <div class="nav-tab"><div class="icon">🗺</div><div class="label">Location</div></div>
+        <div class="nav-tab"><div class="icon">✨</div><div class="label">Skills</div></div>
+        <div class="nav-tab"><div class="icon">📜</div><div class="label">Quests</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========== DEFENSIVE =========== -->
+<div class="col">
+  <h3>Defensive</h3>
+  <div class="phone">
+    <div class="phone-screen">
+
+      <div class="top-hud three-bar">
+        <div class="avatar-frame"><img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&h=200&fit=crop" alt=""><div class="level-badge">17</div></div>
+        <div class="player-info">
+          <div class="player-name">test_user</div>
+          <div class="resource-bar"><div class="resource-fill hp"></div><div class="label">HP 160 / 150</div></div>
+          <div class="resource-bar"><div class="resource-fill shield"></div><div class="label">SH 60 / 100</div></div>
+          <div class="resource-bar"><div class="resource-fill mp"></div><div class="label">MP 220 / 200</div></div>
+        </div>
+        <div class="minimap-frame"><img src="https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=200&h=200&fit=crop" alt=""><div class="minimap-label">DRAGON LAIR</div><div class="location-d-badge">D</div></div>
+      </div>
+
+      <div class="body-area parchment-bg" style="overflow-y: auto;">
+        <div class="parchment-tabs">
+          <div class="tab active">ATTRIBUTES</div>
+          <div class="tab">PROFESSIONS</div>
+          <div class="tab">ACHIEVEMENTS</div>
+        </div>
+
+        <div class="stat-strip">
+          <div class="scell str"><div class="ic">✊</div><div><div class="lbl">STR</div><div class="num">5 <span class="bonus">+1</span></div></div></div>
+          <div class="scell agi"><div class="ic">🏹</div><div><div class="lbl">AGI</div><div class="num">3 <span class="bonus">+1</span></div></div></div>
+          <div class="scell vit"><div class="ic">❤</div><div><div class="lbl">VIT</div><div class="num">3 <span class="bonus">+3</span></div></div></div>
+          <div class="scell int"><div class="ic">📖</div><div><div class="lbl">INT</div><div class="num">1 <span class="bonus">+2</span></div></div></div>
+          <div class="scell spi"><div class="ic">✦</div><div><div class="lbl">SPI</div><div class="num">1 <span class="bonus">+5</span></div></div></div>
+          <div class="scell lck"><div class="ic">🍀</div><div><div class="lbl">LCK</div><div class="num">1 <span class="bonus">+1</span></div></div></div>
+        </div>
+
+        <div class="sub-tabs">
+          <div class="stab"><span class="ic">⚔</span>OFFENSIVE</div>
+          <div class="stab active def"><span class="ic">🛡</span>DEFENSIVE</div>
+          <div class="stab"><span class="ic">👣</span>STEPS</div>
+          <div class="stab"><span class="ic">🌿</span>SUSTAIN</div>
+        </div>
+
+        <div class="summary-bar">
+          <div class="item"><div class="l">PHYS DEF</div><div class="v def">54</div></div>
+          <div class="item"><div class="l">MAGIC DEF</div><div class="v def">38</div></div>
+          <div class="item"><div class="l">DODGE</div><div class="v def">0.4%</div></div>
+        </div>
+
+        <div class="stat-list">
+          <div class="stat-section-hdr">🛡 Mitigation</div>
+          <div class="stat-row def hi"><div class="ic">🛡</div><div class="nm">Physical Defense</div><div class="val">54</div><div class="pct">1.7%</div></div>
+          <div class="stat-row def"><div class="ic">🌀</div><div class="nm">Magic Defense</div><div class="val">38</div><div class="pct">1.2%</div></div>
+          <div class="stat-row def zero"><div class="ic">⛨</div><div class="nm">Block Chance</div><div class="val">0</div><div class="pct">0.0%</div></div>
+          <div class="stat-row def"><div class="ic">💨</div><div class="nm">Dodge</div><div class="val">63</div><div class="pct">0.4%</div></div>
+          <div class="stat-row def"><div class="ic">🪨</div><div class="nm">Damage Reduction</div><div class="val">15</div><div class="pct">0.1%</div></div>
+
+          <div class="stat-section-hdr">🌈 Resistances</div>
+          <div class="stat-row dmg holy zero"><div class="ic" style="color: var(--holy);">☀</div><div class="nm">Holy</div><div class="val">0</div><div class="pct">0.0%</div></div>
+          <div class="stat-row dmg zero"><div class="ic" style="color: var(--fire);">🔥</div><div class="nm">Fire</div><div class="val">0</div><div class="pct">0.0%</div></div>
+          <div class="stat-row dmg frost zero"><div class="ic" style="color: var(--frost);">❄</div><div class="nm">Frost</div><div class="val">0</div><div class="pct">0.0%</div></div>
+          <div class="stat-row dmg arc zero"><div class="ic" style="color: var(--arcane);">✨</div><div class="nm">Arcane</div><div class="val">0</div><div class="pct">0.0%</div></div>
+          <div class="stat-row dmg dark zero"><div class="ic" style="color: var(--dark);">🌑</div><div class="nm">Dark</div><div class="val">0</div><div class="pct">0.0%</div></div>
+          <div class="stat-row dmg blood zero"><div class="ic" style="color: var(--blood);">🩸</div><div class="nm">Blood</div><div class="val">0</div><div class="pct">0.0%</div></div>
+        </div>
+
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-tab active"><div class="icon">👤</div><div class="label">Profile</div></div>
+        <div class="nav-tab"><div class="icon">🎒</div><div class="label">Inventory</div></div>
+        <div class="nav-tab"><div class="icon">🗺</div><div class="label">Location</div></div>
+        <div class="nav-tab"><div class="icon">✨</div><div class="label">Skills</div></div>
+        <div class="nav-tab"><div class="icon">📜</div><div class="label">Quests</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========== SUSTAIN =========== -->
+<div class="col">
+  <h3>Sustain</h3>
+  <div class="phone">
+    <div class="phone-screen">
+
+      <div class="top-hud three-bar">
+        <div class="avatar-frame"><img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&h=200&fit=crop" alt=""><div class="level-badge">17</div></div>
+        <div class="player-info">
+          <div class="player-name">test_user</div>
+          <div class="resource-bar"><div class="resource-fill hp"></div><div class="label">HP 160 / 150</div></div>
+          <div class="resource-bar"><div class="resource-fill shield"></div><div class="label">SH 60 / 100</div></div>
+          <div class="resource-bar"><div class="resource-fill mp"></div><div class="label">MP 220 / 200</div></div>
+        </div>
+        <div class="minimap-frame"><img src="https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=200&h=200&fit=crop" alt=""><div class="minimap-label">DRAGON LAIR</div><div class="location-d-badge">D</div></div>
+      </div>
+
+      <div class="body-area parchment-bg" style="overflow-y: auto;">
+        <div class="parchment-tabs">
+          <div class="tab active">ATTRIBUTES</div>
+          <div class="tab">PROFESSIONS</div>
+          <div class="tab">ACHIEVEMENTS</div>
+        </div>
+
+        <div class="stat-strip">
+          <div class="scell str"><div class="ic">✊</div><div><div class="lbl">STR</div><div class="num">5 <span class="bonus">+1</span></div></div></div>
+          <div class="scell agi"><div class="ic">🏹</div><div><div class="lbl">AGI</div><div class="num">3 <span class="bonus">+1</span></div></div></div>
+          <div class="scell vit"><div class="ic">❤</div><div><div class="lbl">VIT</div><div class="num">3 <span class="bonus">+3</span></div></div></div>
+          <div class="scell int"><div class="ic">📖</div><div><div class="lbl">INT</div><div class="num">1 <span class="bonus">+2</span></div></div></div>
+          <div class="scell spi"><div class="ic">✦</div><div><div class="lbl">SPI</div><div class="num">1 <span class="bonus">+5</span></div></div></div>
+          <div class="scell lck"><div class="ic">🍀</div><div><div class="lbl">LCK</div><div class="num">1 <span class="bonus">+1</span></div></div></div>
+        </div>
+
+        <div class="sub-tabs">
+          <div class="stab"><span class="ic">⚔</span>OFFENSIVE</div>
+          <div class="stab"><span class="ic">🛡</span>DEFENSIVE</div>
+          <div class="stab"><span class="ic">👣</span>STEPS</div>
+          <div class="stab active sus"><span class="ic">🌿</span>SUSTAIN</div>
+        </div>
+
+        <div class="summary-bar">
+          <div class="item"><div class="l">HP REGEN</div><div class="v sus">0</div></div>
+          <div class="item"><div class="l">LIFE STEAL</div><div class="v sus">0%</div></div>
+          <div class="item"><div class="l">HEAL POWER</div><div class="v sus">0</div></div>
+        </div>
+
+        <div class="stat-list">
+          <div class="stat-section-hdr">⚕ Regeneration</div>
+          <div class="stat-row sus zero"><div class="ic">❤</div><div class="nm">HP Regen in Battle</div><div class="val">0</div><div class="pct">0.0%</div></div>
+          <div class="stat-row sus zero"><div class="ic">💧</div><div class="nm">MP Regen in Battle</div><div class="val">0</div><div class="pct">0.0%</div></div>
+          <div class="stat-row sus zero"><div class="ic">🔷</div><div class="nm">Shield Regen in Battle</div><div class="val">0</div><div class="pct">0.0%</div></div>
+
+          <div class="stat-section-hdr">🩹 Combat Sustain</div>
+          <div class="stat-row sus zero"><div class="ic">🩸</div><div class="nm">Life Steal</div><div class="val">0</div><div class="pct">0.0%</div></div>
+          <div class="stat-row off zero"><div class="ic">🎯</div><div class="nm">Precision</div><div class="val">0</div><div class="pct">0.0%</div></div>
+          <div class="stat-row def zero"><div class="ic">🔷</div><div class="nm">Shield Absorb</div><div class="val">0</div><div class="pct">0.0%</div></div>
+          <div class="stat-row off zero"><div class="ic">🌵</div><div class="nm">Thorns</div><div class="val">0</div><div class="pct">0.0%</div></div>
+          <div class="stat-row def zero"><div class="ic">💪</div><div class="nm">Resilience</div><div class="val">0</div><div class="pct">0.0%</div></div>
+
+          <div class="stat-section-hdr">🌿 Healing</div>
+          <div class="stat-row sus hi"><div class="ic">🌿</div><div class="nm">Vitality Restoration</div><div class="val">3</div><div class="pct">0.1%</div></div>
+          <div class="stat-row sus zero"><div class="ic">✨</div><div class="nm">Healing Power</div><div class="val">0</div><div class="pct">0.0%</div></div>
+        </div>
+
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-tab active"><div class="icon">👤</div><div class="label">Profile</div></div>
+        <div class="nav-tab"><div class="icon">🎒</div><div class="label">Inventory</div></div>
+        <div class="nav-tab"><div class="icon">🗺</div><div class="label">Location</div></div>
+        <div class="nav-tab"><div class="icon">✨</div><div class="label">Skills</div></div>
+        <div class="nav-tab"><div class="icon">📜</div><div class="label">Quests</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="note">
+  <strong>Attributes sub-tabs changes:</strong>
+  <ul style="margin: 8px 0 0 18px; line-height: 1.7;">
+    <li><strong>Sub-tab bar</strong> becomes painted segmented control. Active tab fills with sub-tab's accent color (Offensive=red, Defensive=blue, Steps=gold, Sustain=green). Each tab has an icon glyph so it scans visually.</li>
+    <li><strong>Summary bar</strong> below sub-tabs shows the 3 most relevant high-level stats for that view (Phys ATK / Magic ATK / Crit on offensive, etc.). Gives a glance answer before you scroll into rows.</li>
+    <li><strong>Stat rows</strong> get section headers ("Combat Ratings" / "Damage Amplifiers" / "Mitigation" / "Resistances"), 2px sub-tab-color left edge for rhythm, 22px icon column, name, value, percent. Zero values dimmed to 55% opacity so non-zero stats jump out. Hi values (notable) get success-green value text.</li>
+    <li><strong>Damage Amplifiers / Resistances</strong> use element colors as left-edge (fire red, frost blue, dark purple, blood crimson, etc.) — matches school colors used in skills + spells.</li>
+    <li><strong>Top stat strip</strong> compresses primary stats (STR/AGI/VIT/INT/SPI/LCK) to 3x2 grid; visible on every sub-tab so they stay context.</li>
+  </ul>
+</div>
+
+</body>
+</html>

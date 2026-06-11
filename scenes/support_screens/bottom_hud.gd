@@ -1,5 +1,11 @@
 extends CanvasLayer
 
+# WalkAura Bottom Nav — Phase 1 chrome restyle (2026-05-16).
+# Mockup: design-mockups/index.html (bottom of every phone). Spec: DESIGN.md
+# "Bottom Nav — 5 Tabs". Active state = gold rim tick above icon + radial
+# brown-glow bg + outer gold glow. Quests slot supports a notification pip
+# (driven by QuestManager quest state — pip shows when a quest is ready to turn in).
+
 const PAGE_LABELS = ["Profile", "Inventory", "Location", "Skills", "Quests"]
 const PAGE_ICONS = [
 	"res://assets/general_icons/hud/buttom_hud_character_without_face.png",
@@ -8,7 +14,8 @@ const PAGE_ICONS = [
 	"res://assets/general_icons/hud/buttom_hud_skills.png",
 	"res://assets/general_icons/hud/buttom_hud_quest.png",
 ]
-const NAV_COUNT = 4  # Quests (index 4) shows icon+label but is disabled until a Quests scene exists
+const NAV_COUNT = 5  # All 5 tabs active. Quests scene shipped in P3 boilerplate.
+const QUESTS_SLOT_IDX = 4
 
 @onready var _button_panel: PanelContainer = $ButtonPanel
 
@@ -31,6 +38,16 @@ func _ready() -> void:
 	_build_buttons()
 	SignalManager.signal_PageChanged.connect(_on_page_changed)
 	_on_page_changed(2)
+
+	# Quests pip — driven live by QuestManager.signal_QuestsUpdated.
+	if has_node("/root/QuestManager"):
+		QuestManager.signal_QuestsUpdated.connect(_refresh_quests_pip)
+		_refresh_quests_pip()
+
+
+func _refresh_quests_pip() -> void:
+	if has_node("/root/QuestManager"):
+		set_quests_pip(QuestManager.has_ready_quest())
 
 
 func _precache_styleboxes() -> void:
@@ -136,7 +153,45 @@ func _make_slot(idx: int) -> Dictionary:
 	lbl.add_theme_constant_override("outline_size", 2)
 	vbox.add_child(lbl)
 
-	return {btn = btn, icon = icon, label = lbl, is_nav = is_nav}
+	# Gold rim tick above the icon — visible only on active state. Spans ~60%
+	# of the slot width centred at the top edge.
+	var rim = Panel.new()
+	rim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rim.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	rim.offset_top = -1
+	rim.offset_bottom = 1
+	rim.offset_left = 22  # 60% width = leave ~22px margin each side on typical slot
+	rim.offset_right = -22
+	rim.visible = false
+	var rim_sb = StyleBoxFlat.new()
+	rim_sb.bg_color = Styler.COL_PRIMARY
+	rim_sb.set_corner_radius_all(1)
+	rim_sb.shadow_color = Styler.COL_PRIMARY
+	rim_sb.shadow_size = 4
+	rim.add_theme_stylebox_override("panel", rim_sb)
+	btn.add_child(rim)
+
+	# Notification pip — top-right of icon. Driven by live QuestManager quest state.
+	var pip = Panel.new()
+	pip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pip.custom_minimum_size = Vector2(8, 8)
+	pip.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	pip.offset_left = -16
+	pip.offset_top = 6
+	pip.offset_right = -8
+	pip.offset_bottom = 14
+	pip.visible = false  # P3 wires visibility via QuestManager.has_ready_quest
+	var pip_sb = StyleBoxFlat.new()
+	pip_sb.bg_color = Styler.COL_OFFENSE
+	pip_sb.border_color = Color.from_rgba8(10, 10, 16, 255)
+	pip_sb.set_border_width_all(2)
+	pip_sb.set_corner_radius_all(4)
+	pip_sb.shadow_color = Color(Styler.COL_OFFENSE, 0.6)
+	pip_sb.shadow_size = 4
+	pip.add_theme_stylebox_override("panel", pip_sb)
+	btn.add_child(pip)
+
+	return {btn = btn, icon = icon, label = lbl, is_nav = is_nav, rim = rim, pip = pip}
 
 
 func _on_page_changed(idx: int) -> void:
@@ -152,6 +207,7 @@ func _apply_slot_style(slot: Dictionary, is_active: bool) -> void:
 	var icon: TextureRect = slot.icon
 	var lbl: Label = slot.label
 	var is_nav: bool = slot.is_nav
+	var rim: Panel = slot.get("rim", null)
 
 	var sb_set: Dictionary
 	if is_active:
@@ -167,8 +223,24 @@ func _apply_slot_style(slot: Dictionary, is_active: bool) -> void:
 		icon.modulate = Color(0.3, 0.3, 0.3, 0.4)
 		lbl.add_theme_color_override("font_color", Color(0.0, 0.0, 0.0, 0.0))
 
+	# Gold rim tick: only visible on the active slot (and only nav slots are
+	# ever active). Non-nav slots never get a rim shown.
+	if rim != null:
+		rim.visible = is_active and is_nav
+
 	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
 		btn.add_theme_stylebox_override(state, sb_set[state])
+
+
+# Public API: toggle the Quests slot notification pip. Phase 3 wires this from
+# QuestManager.has_ready_quest. Until then, leave pip hidden; debug callers can
+# flip via this API.
+func set_quests_pip(visible_pip: bool) -> void:
+	if _slots.size() <= QUESTS_SLOT_IDX:
+		return
+	var pip: Panel = _slots[QUESTS_SLOT_IDX].get("pip", null)
+	if pip != null:
+		pip.visible = visible_pip
 
 
 func _make_sb(bg: Color, border: Color, use_shadow: bool, shad_size: int) -> StyleBoxFlat:

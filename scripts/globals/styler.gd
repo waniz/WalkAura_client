@@ -1,7 +1,33 @@
 extends Node
 
+# =========================================================================
+# WalkAura Styler — single source of truth for color/font/spacing tokens
+# and styling helpers. See DESIGN.md for the canonical visual spec.
+#
+# SURFACE FAMILIES — every screen belongs to exactly one:
+#
+#   Dark chrome   (COL_PANEL_BG, gold accents)
+#     Ambient game HUD overlaid on painted scenes: top HUD, bottom nav,
+#     location action stack, rifts, skills, gear (slot frames), quests.
+#     Use _apply_dark_panel_style() + chrome pill sub-tabs.
+#
+#   Parchment     (COLOR_PARCHMENT, dark-brown text, gold accents)
+#     Codex/study screens read at the player's pace: inventory body,
+#     profile, attributes, professions, achievements, crafting detail,
+#     battle replay/log.
+#     Use _apply_parchment_style() + parchment pill sub-tabs.
+#
+# Never mix families inside one screen. Sub-tab pill style follows screen
+# family. See DESIGN.md "Surface Treatment — Dark Chrome vs Parchment".
+# =========================================================================
+
+
 # ------------------- Adaptive layout -------------------
-const TOP_HUD_HEIGHT = 195.0
+# Top HUD: 3-bar default (HP / Shield / MP stacked).
+# Layered alternate — HP+Shield share one bar via right-painted overlay —
+# used only where vertical space is tight. See DESIGN.md.
+const TOP_HUD_HEIGHT = 180.0
+const TOP_HUD_HEIGHT_LAYERED = 150.0
 const BOTTOM_HUD_HEIGHT = 108.0
 const CONTENT_PAD_TOP = 16.0
 const CONTENT_PAD_BOTTOM = 8.0
@@ -42,11 +68,31 @@ const QUALITY_COLORS = {
 
 var COL_PRIMARY  = Color.from_rgba8(255, 200, 66)
 var GOLD_COLOR   = COL_PRIMARY  # Alias for backward compatibility
+var COL_GOLD_GLOW = Color.from_rgba8(255, 200, 66, 46)   # 18% alpha gold — outer glow halos
 var COL_OFFENSE  = Color.from_rgba8(255, 120, 90)
 var COL_DEFENSE  = Color.from_rgba8(64, 180, 255)
+var COL_SHIELD   = Color.from_rgba8(109, 213, 232)        # Cyan — Shield bar fill (top of gradient)
+var COL_SHIELD_DARK = Color.from_rgba8(41, 120, 160)      # Cyan dark — Shield bar fill (bottom of gradient)
+var COL_HP       = Color.from_rgba8(208, 69, 69)          # Red — HP bar fill (top of gradient)
+var COL_HP_DARK  = Color.from_rgba8(138, 28, 28)          # Red dark — HP bar fill (bottom of gradient)
+var COL_MP       = Color.from_rgba8(74, 144, 216)         # Blue — MP bar fill (top of gradient)
+var COL_MP_DARK  = Color.from_rgba8(30, 72, 128)          # Blue dark — MP bar fill (bottom of gradient)
 var COL_PANEL_BG = Color.from_rgba8(16, 18, 24, 220)
 var COL_PANEL_BR = Color.from_rgba8(255, 255, 255, 30)
 var COL_PANEL_GRAY = Color.from_rgba8(110, 96, 96, 255)
+var COL_PANEL_DARKER = Color.from_rgba8(10, 12, 18, 255)  # Outer chrome surround under HUDs
+
+# Rift tier colors — mirror of RiftData.TIER_COLORS for use outside rift
+# contexts (location hero badges, quest tier edges, etc.) so callers don't
+# need to depend on the RiftData autoload. Keep values in sync with
+# scripts/globals/rift_data.gd:TIER_COLORS — that file remains canonical
+# for rift screens themselves.
+# NOTE: distinct from achievement medal colors (COLOR_TIER_BRONZE/SILVER/GOLD)
+# which use the easy/medium/hard medal palette. Two different "tier" systems
+# coexist intentionally.
+var COL_RIFT_TIER_1 = Color.from_rgba8(31, 255, 0)        # Easy — cool green
+var COL_RIFT_TIER_2 = Color.from_rgba8(0, 112, 222)       # Medium — warm blue
+var COL_RIFT_TIER_3 = Color.from_rgba8(163, 54, 237)      # Hard — hot purple
 
 const COLOR_PARCHMENT   = Color(0.95, 0.92, 0.84, 1.0) # Beige background
 const COLOR_TEXT_DARK   = Color(0.1, 0.1, 0.1, 1.0)    # Dark text
@@ -444,17 +490,123 @@ func _apply_dark_panel_style(panel: PanelContainer, tier_color: Color = Color.TR
 func _get_slot_stylebox(is_hover: bool = false) -> StyleBoxFlat:
 	var sb = StyleBoxFlat.new()
 	# Slots are darker to make icons pop
-	sb.bg_color = COLOR_SLOT_BG 
+	sb.bg_color = COLOR_SLOT_BG
 	sb.set_corner_radius_all(4)
 	sb.border_width_left = 1
 	sb.border_width_right = 1
 	sb.border_width_top = 1
 	sb.border_width_bottom = 1
-	
+
 	if is_hover:
 		sb.border_color = Color(0.8, 0.6, 0.0, 1.0) # Gold glow on hover
 		sb.bg_color = Color(0.0, 0.0, 0.0, 0.05)
 	else:
 		sb.border_color = Color(0.4, 0.4, 0.4, 0.5) # Grey border default
-		
+
 	return sb
+
+
+# ---------------------------------------------------------------------
+# Phase 0 — new helpers for HUD/card/bar chrome treatment.
+# ---------------------------------------------------------------------
+
+# Returns a StyleBoxFlat with an outer color glow halo (via shadow), useful for
+# avatar/minimap frames, login card, gear-score disc, location hero corner
+# panels. Glow intensity defaults to gold-glow alpha (18%); pass a custom
+# tinted color for tier-color halos (e.g. tier-3 purple glow on hard rift).
+#
+# Used by: top HUD avatar/minimap frames (Phase 1), location hero corners
+# (Phase 2), gear score disc (Phase 4), login card (Phase 5).
+func make_glow_stylebox(
+	bg: Color,
+	border: Color,
+	corner_radius: int = 8,
+	border_width: int = 2,
+	glow_color: Color = Color(0,0,0,0),
+	glow_size: int = 12,
+) -> StyleBoxFlat:
+	var sb = StyleBoxFlat.new()
+	sb.bg_color = bg
+	sb.border_color = border
+	sb.border_width_left = border_width
+	sb.border_width_right = border_width
+	sb.border_width_top = border_width
+	sb.border_width_bottom = border_width
+	sb.set_corner_radius_all(corner_radius)
+	# If no glow color supplied, derive a soft gold glow.
+	var effective_glow = glow_color if glow_color.a > 0.0 else COL_GOLD_GLOW
+	sb.shadow_color = effective_glow
+	sb.shadow_size = glow_size
+	return sb
+
+
+# Style a ProgressBar with the painted-chrome treatment used for HP / Shield /
+# MP / rift progress bars. Track is dark inset, fill uses fill_top color with
+# a darker shadow simulating the bottom of a 2-stop gradient + an inset glow.
+#
+# TODO (Phase 1 polish): upgrade to true vertical gradient via
+# StyleBoxTexture + GradientTexture2D for the "painted metal" look. Until
+# then, single-color StyleBoxFlat with shadow approximates it.
+#
+# corner_radius defaults to 3 for resource bars (DESIGN.md spec); pass 6+ for
+# wider progress bars (e.g. rift main progress = 16px tall, radius 6).
+func make_painted_progressbar(
+	bar: ProgressBar,
+	fill_top: Color,
+	fill_bottom: Color,
+	corner_radius: int = 3,
+) -> void:
+	# Track: very dark, sharp inset shadow simulating recessed metal.
+	var track = StyleBoxFlat.new()
+	track.bg_color = Color.from_rgba8(10, 10, 16, 255)
+	track.border_color = Color(0, 0, 0, 0.6)
+	track.border_width_left = 1
+	track.border_width_right = 1
+	track.border_width_top = 1
+	track.border_width_bottom = 1
+	track.set_corner_radius_all(corner_radius)
+	track.shadow_color = Color(0, 0, 0, 0.6)
+	track.shadow_size = 0  # inset feel via dark border + dark bg, no outer glow
+	# Fill: dominant top color, dark bottom shadow approximates gradient bottom.
+	var fill = StyleBoxFlat.new()
+	fill.bg_color = fill_top
+	fill.shadow_color = fill_bottom
+	fill.shadow_size = 4
+	fill.shadow_offset = Vector2(0, 1)
+	fill.set_corner_radius_all(max(0, corner_radius - 1))
+	# Subtle top highlight via lighter border-top simulating sheen.
+	fill.border_color = fill_top.lightened(0.25)
+	fill.border_width_top = 1
+	fill.border_width_left = 0
+	fill.border_width_right = 0
+	fill.border_width_bottom = 0
+	bar.add_theme_stylebox_override("background", track)
+	bar.add_theme_stylebox_override("fill", fill)
+	bar.show_percentage = false
+	bar.min_value = 0
+
+
+# Quick-config helpers for the three resource bars — wraps
+# make_painted_progressbar with the canonical color pairings so callers
+# can't accidentally swap HP/MP/Shield gradients.
+func paint_hp_bar(bar: ProgressBar) -> void:
+	make_painted_progressbar(bar, COL_HP, COL_HP_DARK)
+
+
+func paint_mp_bar(bar: ProgressBar) -> void:
+	make_painted_progressbar(bar, COL_MP, COL_MP_DARK)
+
+
+func paint_shield_bar(bar: ProgressBar) -> void:
+	make_painted_progressbar(bar, COL_SHIELD, COL_SHIELD_DARK)
+
+
+# Returns the rift tier color for a tier index (1, 2, 3). Falls back to white
+# for unknown tiers. Use this in non-rift code (quests, location hero) so
+# callers don't need to import the RiftData autoload.
+func get_tier_color(tier: int) -> Color:
+	match tier:
+		1: return COL_RIFT_TIER_1
+		2: return COL_RIFT_TIER_2
+		3: return COL_RIFT_TIER_3
+		_: return Color.WHITE

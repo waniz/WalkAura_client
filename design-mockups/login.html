@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>WalkAura — Login</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+h2 { text-align: center; margin-top: 32px; font-family: 'Cinzel', serif; color: var(--gold); letter-spacing: 1px; font-size: 18px; }
+.row { display: flex; gap: 32px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
+.col { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.col h3 { font-family: 'Cinzel', serif; color: var(--gold-soft); font-size: 13px; letter-spacing: 0.8px; }
+.note {
+  max-width: 900px; margin: 16px auto; padding: 14px;
+  background: rgba(255,255,255,0.04); border-left: 3px solid var(--gold);
+  border-radius: 4px; font-size: 12px; line-height: 1.55; color: #c8bfaa;
+}
+.note strong { color: var(--gold); }
+
+.login-screen {
+  position: relative;
+  width: 100%; height: 100%;
+  overflow: hidden;
+}
+
+.login-bg {
+  position: absolute; inset: 0;
+  background-size: cover;
+  background-position: center;
+}
+.login-bg::after {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.0) 0%, rgba(0,0,0,0.45) 100%),
+    linear-gradient(180deg, rgba(10,10,16,0.2) 0%, transparent 30%, transparent 60%, rgba(10,10,16,0.6) 100%);
+}
+
+/* Title block over scene */
+.title-mark {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 3;
+}
+.title-mark .title {
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 44px;
+  color: var(--gold);
+  letter-spacing: 4px;
+  text-shadow:
+    0 4px 12px rgba(0,0,0,0.9),
+    0 0 30px rgba(255,200,66,0.4),
+    0 0 60px rgba(255,200,66,0.2);
+}
+.title-mark .title::before,
+.title-mark .title::after {
+  content: "✦";
+  font-size: 16px;
+  color: var(--gold-soft);
+  margin: 0 12px;
+  vertical-align: middle;
+}
+.title-mark .tagline {
+  font-family: 'Fondamento', serif;
+  font-size: 14px;
+  color: #e8dec2;
+  font-style: italic;
+  letter-spacing: 2px;
+  margin-top: 6px;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.9);
+}
+
+/* Ornate card */
+.login-card {
+  position: absolute;
+  bottom: 90px;
+  left: 16px; right: 16px;
+  background:
+    linear-gradient(180deg, rgba(20, 22, 30, 0.94), rgba(10, 12, 18, 0.96));
+  border: 1px solid var(--gold);
+  border-radius: var(--r-md);
+  padding: 20px 18px 18px;
+  z-index: 3;
+  box-shadow:
+    0 12px 40px rgba(0,0,0,0.6),
+    0 0 20px var(--gold-glow),
+    inset 0 1px 0 rgba(255,200,66,0.2);
+}
+.login-card::before,
+.login-card::after {
+  content: "";
+  position: absolute;
+  width: 24px; height: 24px;
+  border: 2px solid var(--gold);
+  filter: drop-shadow(0 0 4px var(--gold-glow));
+}
+.login-card::before { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+.login-card::after { top: -1px; right: -1px; border-left: none; border-bottom: none; }
+
+/* second pair of corners */
+.login-card .corner-bl,
+.login-card .corner-br {
+  position: absolute;
+  width: 24px; height: 24px;
+  border: 2px solid var(--gold);
+  filter: drop-shadow(0 0 4px var(--gold-glow));
+}
+.login-card .corner-bl { bottom: -1px; left: -1px; border-right: none; border-top: none; }
+.login-card .corner-br { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+
+.form-group { margin-bottom: 10px; }
+.form-group .label {
+  display: block;
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  color: var(--gold-soft);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.form-group input {
+  width: 100%;
+  padding: 10px 12px;
+  background: rgba(10, 10, 16, 0.7);
+  border: 1px solid var(--panel-border);
+  border-left: 2px solid var(--gold-soft);
+  border-radius: var(--r-sm);
+  color: #e8e0cf;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  outline: none;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+}
+.form-group input:focus { border-color: var(--gold); box-shadow: inset 0 1px 2px rgba(0,0,0,0.5), 0 0 8px var(--gold-glow); }
+
+.btn-primary {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(180deg, var(--gold) 0%, #c89030 100%);
+  border: 1px solid #d8a040;
+  border-bottom: 2px solid #8a6020;
+  color: #14100a;
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.3), 0 0 18px var(--gold-glow);
+  margin-top: 10px;
+  margin-bottom: 8px;
+  position: relative;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.2);
+}
+
+.btn-google {
+  width: 100%;
+  padding: 10px;
+  background: #fff;
+  border: 1px solid rgba(255,200,66,0.4);
+  color: #3c4043;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  margin-top: 4px;
+}
+
+.btn-google .g-mark {
+  width: 18px; height: 18px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #4285F4 0% 25%, #34A853 25% 50%, #FBBC04 50% 75%, #EA4335 75% 100%);
+  -webkit-mask: radial-gradient(circle, transparent 5px, #000 6px);
+  mask: radial-gradient(circle, transparent 5px, #000 6px);
+}
+
+.btn-google .g-text { font-weight: 500; }
+
+.btn-secondary {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  border: 1px solid var(--gold-soft);
+  color: var(--gold-soft);
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 1px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+
+.divider {
+  display: flex; align-items: center; gap: 8px;
+  margin: 10px 0;
+  font-size: 9px;
+  color: #6a5e48;
+  font-family: 'Cinzel', serif;
+  letter-spacing: 1px;
+}
+.divider::before, .divider::after {
+  content: "";
+  flex: 1; height: 1px;
+  background: rgba(255,200,66,0.15);
+}
+
+/* Version */
+.version-tag {
+  position: absolute;
+  bottom: 12px; right: 14px;
+  font-size: 9px;
+  color: rgba(255,200,66,0.4);
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.6px;
+  z-index: 4;
+}
+
+/* Lantern bottom corners */
+.lantern {
+  position: absolute;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,200,66,0.6) 0%, rgba(255,150,40,0.2) 40%, transparent 70%);
+  z-index: 2;
+}
+.lantern.l { bottom: 60px; left: -10px; }
+.lantern.r { bottom: 60px; right: -10px; }
+
+/* Particle motes */
+.mote {
+  position: absolute;
+  width: 2px; height: 2px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 4px var(--gold);
+  z-index: 2;
+}
+
+</style>
+</head>
+<body>
+
+<h2>LOGIN — Refined</h2>
+
+<div class="row">
+  <div class="col">
+    <h3>Painted scene with ornate card + gold mark</h3>
+    <div class="phone">
+      <div class="phone-screen">
+        <div class="login-screen">
+
+          <div class="login-bg" style="background-image: url('https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=900&h=1600&fit=crop');"></div>
+
+          <!-- Atmospheric motes -->
+          <div class="mote" style="top: 25%; left: 18%;"></div>
+          <div class="mote" style="top: 30%; left: 72%;"></div>
+          <div class="mote" style="top: 42%; left: 28%; width: 3px; height: 3px;"></div>
+          <div class="mote" style="top: 38%; left: 65%;"></div>
+          <div class="mote" style="top: 50%; left: 55%; width: 3px; height: 3px;"></div>
+
+          <!-- Title -->
+          <div class="title-mark">
+            <div class="title">WalkAura</div>
+            <div class="tagline">Walk · Explore · Grow</div>
+          </div>
+
+          <!-- Card -->
+          <div class="login-card">
+            <span class="corner-bl"></span>
+            <span class="corner-br"></span>
+
+            <div class="form-group">
+              <label class="label">Username</label>
+              <input type="text" value="test_user">
+            </div>
+
+            <div class="form-group">
+              <label class="label">Password</label>
+              <input type="password" value="••••••••">
+            </div>
+
+            <button class="btn-primary">ENTER THE REALM</button>
+
+            <button class="btn-google">
+              <span class="g-mark"></span>
+              <span class="g-text">Continue with Google</span>
+            </button>
+
+            <div class="divider">OR</div>
+
+            <button class="btn-secondary">CREATE NEW ACCOUNT</button>
+          </div>
+
+          <div class="version-tag">v0.2.6.78 · Server 0.2.6</div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="note">
+  <strong>Login changes:</strong>
+  <ul style="margin: 8px 0 0 18px; line-height: 1.7;">
+    <li><strong>Title becomes the mark.</strong> "WalkAura" sized up to 44px Cinzel gold with strong text-shadow + outer gold glow. Flanked by `✦` ornament glyphs. "Walk · Explore · Grow" in Fondamento italic — feels written, not typed.</li>
+    <li><strong>Card gets ornate gold frame</strong> with 4 corner brackets matching the location hero treatment. Inner glow + 12px black shadow ground it on the painting. Reads as "engraved plaque", not "web form".</li>
+    <li><strong>Inputs get gold-soft left edge</strong> to mirror panel hierarchy used elsewhere. Focus state ramps to full gold + glow.</li>
+    <li><strong>ENTER THE REALM</strong> — gold gradient, dark embossed text, 18px gold halo. Reads as the primary action from across the room. Replaces flat green that looked Bootstrap-ish.</li>
+    <li><strong>Continue with Google</strong> — white button with brand-correct conic-gradient Google G mark. Sits between primary login and "Create New Account" so existing Google users skip the form entirely.</li>
+    <li><strong>Atmospheric motes</strong> — 4-5 1-2px gold dots scattered over the painting, animated drift in Godot (not in mockup). Sells "magic" without changing the painting itself.</li>
+    <li><strong>Version tag</strong> stays bottom-right but in muted gold-on-transparent, not white-on-gray placeholder.</li>
+  </ul>
+</div>
+
+</body>
+</html>

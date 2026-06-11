@@ -59,7 +59,7 @@ const PRELOAD_ICON_PATHS: Array[String] = [
 	"res://assets/general_icons/attributes/attribute_intellect.png",
 	"res://assets/general_icons/attributes/attribute_spirit.png",
 	"res://assets/general_icons/attributes/attribute_luck.png",
-	"res://assets/general_icons/attributes/armor_penetration.png",
+	# "res://assets/general_icons/attributes/armor_penetration.png",  # asset missing
 
 	# Spell-damage icons — shown on skills screen + secondary attributes
 	"res://assets/general_icons/attributes/fire.png",
@@ -82,7 +82,7 @@ const PRELOAD_ICON_PATHS: Array[String] = [
 
 	# Passive talent icons — talent panel on profile/skills
 	"res://assets/general_icons/passive_talents/thick_skin.png",
-	"res://assets/general_icons/passive_talents/brutal_strike.png",
+	# "res://assets/general_icons/passive_talents/brutal_strike.png",  # asset missing
 	"res://assets/general_icons/passive_talents/guardian_shell.png",
 	"res://assets/general_icons/passive_talents/evasion_training.png",
 	"res://assets/general_icons/passive_talents/magic_ward.png",

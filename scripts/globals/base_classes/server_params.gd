@@ -14,6 +14,15 @@ var STATS_PROGRESSION_LEVELS
 var ACTIVITY_PROGRESSION_LEVELS
 var PASSIVE_TOTAL_TO_LEVEL
 var LOCATIONS: Dictionary = {}
+# Player profession levels {profession_name: level}. Seeded on login from the
+# account-data payload (account_manager.get_account_attrs), patched live from
+# activity-progress ticks. Used by the world map tooltip to show per-activity
+# availability (level >= req_skill).
+var profession_levels: Dictionary = {}
+# Title id -> display name, seeded from login_params.title_catalog (server's
+# achievement_system/title_config.TITLES). Lets any screen resolve a title_id
+# to a name (quest reward modal, profile) without the achievements payload.
+var title_names: Dictionary = {}
 var ACTIVITIES_SITES
 var GATHERING_ACTIVITIES
 var CRAFTING_ACTIVITIES
@@ -70,3 +79,14 @@ func on_login_params_received(data):
 	DIMINISHING_CONSTANT = data["data"]["item_generation_constants"]["diminishing"]
 	
 	SERVER_VERSION = data["data"]["server_version"]
+
+	title_names.clear()
+	for t in data["data"].get("title_catalog", []):
+		title_names[int(t.get("title_id", 0))] = String(t.get("default_name", ""))
+
+
+# Resolve a title_id to its display name, falling back to "Title #<id>" if the
+# catalog hasn't loaded or the id is unknown.
+func title_name(title_id) -> String:
+	var id_int: int = int(title_id)
+	return title_names.get(id_int, "Title #%d" % id_int)

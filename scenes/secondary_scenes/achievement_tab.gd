@@ -17,6 +17,16 @@ const TIER_HARD   = 3
 const TIER_META   = 4
 const TIER_SECRET = 5
 
+# Tier tabs (left → right), mirroring the Skills screen's tab pattern.
+# Medium renders as "Normal"; Meta renders as its own "Impossible" tab.
+const TIER_TABS = [
+	{"tier": 1, "label": "Easy",       "subtitle": "+2 primary stat"},
+	{"tier": 2, "label": "Normal",     "subtitle": "+5 primary stat"},
+	{"tier": 3, "label": "Hard",       "subtitle": "+10 + title"},
+	{"tier": 4, "label": "Impossible", "subtitle": "meta milestones"},
+	{"tier": 5, "label": "Hidden",     "subtitle": "reveal on discovery"},
+]
+
 const PRIMARY_STATS = ["STR", "AGI", "VIT", "INT", "SPI", "LCK"]
 
 const _REFRESH_DEBOUNCE_MSEC = 1200
@@ -33,10 +43,11 @@ var _trophy_wall_section: VBoxContainer = null
 var _trophy_wall_scroll: ScrollContainer = null
 var _trophy_wall_strip: HBoxContainer = null
 var _trophy_wall_empty: Label = null
-var _tier_easy_box: VBoxContainer = null
-var _tier_medium_box: VBoxContainer = null
-var _tier_hard_box: VBoxContainer = null
-var _secret_box: VBoxContainer = null
+var _tier_boxes: Dictionary = {}      # tier int -> cards VBoxContainer
+var _tier_wraps: Dictionary = {}      # tier int -> content wrapper (shown/hidden)
+var _tier_empties: Dictionary = {}    # tier int -> empty-state Label
+var _tier_buttons: Dictionary = {}    # tier int -> tab Button
+var _current_tier: int = 1
 var _card_by_id: Dictionary = {}
 var _titles_known: Array = []
 var _active_title: Variant = null
@@ -117,13 +128,11 @@ func _build_shell() -> void:
 	# now toggles the whole section instead.
 	_trophy_wall_empty = null
 
-	# Tier subtitles all use the same parchment-readable green. Tier identity
-	# is already communicated by the card left-edge and the medal framing;
-	# text legibility on cream trumps color coding here.
-	_tier_easy_box   = _build_section("Easy",   "+2 primary stat",   COLOR_PARCHMENT_ACCENT)
-	_tier_medium_box = _build_section("Medium", "+5 primary stat",   COLOR_PARCHMENT_ACCENT)
-	_tier_hard_box   = _build_section("Hard",   "+10 + title",       COLOR_PARCHMENT_ACCENT)
-	_secret_box      = _build_section("Hidden", "reveal on discovery", COLOR_PARCHMENT_ACCENT)
+	# Tier tabs (Easy / Normal / Hard / Impossible / Hidden) — only the active
+	# tier's cards render below, mirroring the Skills screen's tab pattern.
+	_build_tier_tabs()
+	_build_tier_contents()
+	_set_active_tier(TIER_EASY)
 
 
 func _build_header_bar() -> PanelContainer:
@@ -172,46 +181,117 @@ func _build_header_bar() -> PanelContainer:
 	return panel
 
 
-func _build_section(title_text: String, subtitle_text: String, accent: Color) -> VBoxContainer:
-	# Section header: uppercase title in dark brown + gold subtitle, gold underline.
-	var wrap = VBoxContainer.new()
-	wrap.add_theme_constant_override("separation", 2)
-	add_child(wrap)
+# ── Tier tabs ──────────────────────────────────────────────────────────────────
 
-	var header_row = HBoxContainer.new()
-	header_row.add_theme_constant_override("separation", 8)
-	wrap.add_child(header_row)
+func _build_tier_tabs() -> void:
+	# Segmented parchment pill bar — one button per tier, equal width.
+	var bar = HBoxContainer.new()
+	bar.add_theme_constant_override("separation", 0)
+	add_child(bar)
+	for i in TIER_TABS.size():
+		var cfg = TIER_TABS[i]
+		var t = int(cfg["tier"])
+		var btn = Button.new()
+		btn.text = String(cfg["label"])
+		btn.size_flags_horizontal = SIZE_EXPAND_FILL
+		btn.focus_mode = Control.FOCUS_NONE
+		btn.clip_text = true
+		btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		btn.pressed.connect(_set_active_tier.bind(t))
+		bar.add_child(btn)
+		_tier_buttons[t] = btn
 
-	var title_lbl = Label.new()
-	title_lbl.text = title_text.to_upper()
-	title_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
-	title_lbl.add_theme_font_size_override("font_size", 16)
-	title_lbl.add_theme_color_override("font_color", Styler.COLOR_SECTION_HDR)
-	header_row.add_child(title_lbl)
 
-	var subtitle_lbl = Label.new()
-	subtitle_lbl.text = "· " + subtitle_text
-	subtitle_lbl.add_theme_font_override("font", Styler.QUADRAT_FONT)
-	subtitle_lbl.add_theme_font_size_override("font_size", 12)
-	subtitle_lbl.add_theme_color_override("font_color", accent)
-	subtitle_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	header_row.add_child(subtitle_lbl)
+func _build_tier_contents() -> void:
+	# One content wrapper per tier (subtitle + cards box + empty state). Only the
+	# active tier's wrapper is visible; the rest are hidden so they take no space.
+	for cfg in TIER_TABS:
+		var t = int(cfg["tier"])
+		var tier_wrap = VBoxContainer.new()
+		tier_wrap.add_theme_constant_override("separation", 6)
+		tier_wrap.visible = false
+		add_child(tier_wrap)
 
-	# Gold underline — 1px horizontal rule, matches professions
-	var underline = Panel.new()
-	underline.custom_minimum_size = Vector2(0, 1)
-	var rule_sb = StyleBoxFlat.new()
-	rule_sb.bg_color = Styler.COLOR_GOLD
-	rule_sb.content_margin_left = 0
-	rule_sb.content_margin_right = 0
-	underline.add_theme_stylebox_override("panel", rule_sb)
-	underline.modulate = Color(1, 1, 1, 0.35)
-	wrap.add_child(underline)
+		var subtitle = Label.new()
+		subtitle.text = String(cfg["subtitle"])
+		subtitle.add_theme_font_override("font", Styler.QUADRAT_FONT)
+		subtitle.add_theme_font_size_override("font_size", 12)
+		subtitle.add_theme_color_override("font_color", COLOR_PARCHMENT_ACCENT)
+		tier_wrap.add_child(subtitle)
 
-	var vbox = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 6)
-	add_child(vbox)
-	return vbox
+		var box = VBoxContainer.new()
+		box.add_theme_constant_override("separation", 6)
+		tier_wrap.add_child(box)
+
+		var empty = Label.new()
+		empty.text = "No achievements in this tier yet."
+		empty.add_theme_font_override("font", Styler.QUADRAT_FONT)
+		empty.add_theme_font_size_override("font_size", 13)
+		empty.add_theme_color_override("font_color", Styler.COLOR_TEXT_MUTED)
+		empty.visible = false
+		tier_wrap.add_child(empty)
+
+		_tier_wraps[t] = tier_wrap
+		_tier_boxes[t] = box
+		_tier_empties[t] = empty
+
+
+func _set_active_tier(tier: int) -> void:
+	_current_tier = tier
+	for i in TIER_TABS.size():
+		var t = int(TIER_TABS[i]["tier"])
+		if _tier_buttons.has(t):
+			_style_tier_tab(_tier_buttons[t], i, t == tier)
+		if _tier_wraps.has(t):
+			_tier_wraps[t].visible = t == tier
+
+
+func _tab_accent(tier: int) -> Color:
+	match tier:
+		TIER_EASY:   return Styler.COLOR_TIER_BRONZE
+		TIER_MEDIUM: return Styler.COLOR_TIER_SILVER
+		TIER_HARD:   return Styler.COLOR_GOLD
+		TIER_META:   return Styler.COL_OFFENSE                 # Impossible = crimson
+		TIER_SECRET: return Color.from_rgba8(128, 60, 140)    # muted mythic purple
+	return Styler.COLOR_GOLD
+
+
+# Parchment segmented pill — active fills with the tier accent + white text;
+# inactive stays cream with a thin tinted border. First/last segments round out.
+func _style_tier_tab(btn: Button, idx: int, active: bool) -> void:
+	var accent = _tab_accent(int(TIER_TABS[idx]["tier"]))
+	var text_active = Color.WHITE
+	var text_inactive = Color.from_rgba8(70, 60, 45)
+	btn.add_theme_font_override("font", Styler.JANDA_FONT)
+	btn.add_theme_font_size_override("font_size", 12)
+	btn.add_theme_color_override("font_color", text_active if active else text_inactive)
+	btn.add_theme_color_override("font_hover_color", text_active if active else text_inactive.lightened(0.2))
+	btn.add_theme_color_override("font_pressed_color", text_active if active else text_inactive)
+	var first = idx == 0
+	var last = idx == TIER_TABS.size() - 1
+	for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
+		var sb = StyleBoxFlat.new()
+		if active:
+			sb.bg_color = accent
+			sb.border_color = accent.darkened(0.25)
+			sb.set_border_width_all(0)
+			sb.border_width_bottom = 2
+			sb.shadow_color = Color(accent, 0.45)
+			sb.shadow_size = 8
+		else:
+			sb.bg_color = Color.from_rgba8(220, 210, 190, 200)
+			sb.border_color = Color(accent, 0.35)
+			sb.set_border_width_all(1)
+		var r = 4
+		sb.corner_radius_top_left = r if first else 0
+		sb.corner_radius_bottom_left = r if first else 0
+		sb.corner_radius_top_right = r if last else 0
+		sb.corner_radius_bottom_right = r if last else 0
+		sb.content_margin_top = 6
+		sb.content_margin_bottom = 6
+		sb.content_margin_left = 2
+		sb.content_margin_right = 2
+		btn.add_theme_stylebox_override(state_name, sb)
 
 
 # ── Data → cards ──────────────────────────────────────────────────────────────
@@ -246,14 +326,9 @@ func _on_active_title_set(active_title) -> void:
 
 
 func _rebuild_cards(entries: Array) -> void:
-	for child in _tier_easy_box.get_children():
-		child.queue_free()
-	for child in _tier_medium_box.get_children():
-		child.queue_free()
-	for child in _tier_hard_box.get_children():
-		child.queue_free()
-	for child in _secret_box.get_children():
-		child.queue_free()
+	for t in _tier_boxes:
+		for child in _tier_boxes[t].get_children():
+			child.queue_free()
 	_card_by_id.clear()
 
 	var sorted: Array = entries.duplicate()
@@ -261,26 +336,21 @@ func _rebuild_cards(entries: Array) -> void:
 
 	for entry in sorted:
 		var card = AchievementCardScene.instantiate()
-		var tier = int(entry.get("tier", 0))
-		var target_box
-		match tier:
-			TIER_EASY:   target_box = _tier_easy_box
-			TIER_MEDIUM: target_box = _tier_medium_box
-			TIER_HARD:   target_box = _tier_hard_box
-			TIER_META:
-				match int(entry.get("meta_parent_tier", TIER_HARD)):
-					TIER_EASY:   target_box = _tier_easy_box
-					TIER_MEDIUM: target_box = _tier_medium_box
-					TIER_HARD:   target_box = _tier_hard_box
-					_:           target_box = _tier_hard_box
-			TIER_SECRET: target_box = _secret_box
-			_:           target_box = _tier_easy_box
+		# Meta (Impossible) now gets its own tab instead of folding into a parent.
+		var target_tier = int(entry.get("tier", 0))
+		if not _tier_boxes.has(target_tier):
+			target_tier = TIER_EASY
+		var target_box = _tier_boxes[target_tier]
 		target_box.add_child(card)
 		if card.has_method("set_data"):
 			card.set_data(entry)
 		if card.has_signal("claim_pressed"):
 			card.claim_pressed.connect(_on_card_claim_pressed)
 		_card_by_id[int(entry.get("id", 0))] = card
+
+	# Per-tier empty state.
+	for t in _tier_empties:
+		_tier_empties[t].visible = _tier_boxes[t].get_child_count() == 0
 
 
 func _rebuild_header(entries: Array) -> void:

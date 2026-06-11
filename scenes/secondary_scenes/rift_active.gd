@@ -119,20 +119,11 @@ func _build_ui() -> void:
 	_rift_lvl_label.add_theme_font_size_override("font_size", 13)
 	root_vbox.add_child(_rift_lvl_label)
 
-	# --- Progress bar ---
+	# --- Progress bar (painted, tier-colored) ---
 	_progress_bar = ProgressBar.new()
-	_progress_bar.custom_minimum_size = Vector2(0, 28)
+	_progress_bar.custom_minimum_size = Vector2(0, 22)
 	_progress_bar.show_percentage = false
-	var pb_bg = StyleBoxFlat.new()
-	pb_bg.bg_color = Color(1, 1, 1, 0.08)
-	pb_bg.set_corner_radius_all(14)
-	_progress_bar.add_theme_stylebox_override("background", pb_bg)
-	var pb_fill = StyleBoxFlat.new()
-	pb_fill.bg_color = Color(_tier_color, 0.8)
-	pb_fill.shadow_color = Color(_tier_color, 0.3)
-	pb_fill.shadow_size = 4
-	pb_fill.set_corner_radius_all(14)
-	_progress_bar.add_theme_stylebox_override("fill", pb_fill)
+	Styler.make_painted_progressbar(_progress_bar, _tier_color, _tier_color.darkened(0.45), 6)
 	root_vbox.add_child(_progress_bar)
 
 	_steps_label = Label.new()
@@ -374,12 +365,10 @@ func _refresh_active_view() -> void:
 				_encounter_card_vbox.add_child(resist_lbl)
 
 		var fight_btn = Button.new()
-		fight_btn.text = "FIGHT NOW"
-		fight_btn.custom_minimum_size = Vector2(0, 48)
+		fight_btn.text = "⚔  FIGHT NOW"
+		fight_btn.custom_minimum_size = Vector2(0, 52)
 		fight_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		Styler.style_button(fight_btn, Color.from_rgba8(180, 40, 40))
-		fight_btn.add_theme_color_override("font_color", Color.WHITE)
-		fight_btn.add_theme_font_size_override("font_size", 16)
+		_style_red_emboss_button(fight_btn)
 		fight_btn.pressed.connect(_on_quick_fight_pressed)
 		_encounter_card_vbox.add_child(fight_btn)
 	else:
@@ -554,3 +543,35 @@ func _on_rift_fights_received(data) -> void:
 		viewer.fight_log = fight_log
 		viewer.tree_exited.connect(func(): _pending_fight_request = {}, CONNECT_ONE_SHOT)
 		add_child(viewer)
+
+
+# Red embossed button — eye-grab "FIGHT NOW" CTA per P5.4 spec.
+func _style_red_emboss_button(btn: Button) -> void:
+	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	btn.add_theme_font_override("font", Styler.JANDA_FONT)
+	btn.add_theme_font_size_override("font_size", 18)
+	btn.add_theme_color_override("font_color", Color.WHITE)
+	btn.add_theme_color_override("font_hover_color", Color.WHITE)
+	btn.add_theme_color_override("font_pressed_color", Color.WHITE)
+	btn.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
+	btn.add_theme_constant_override("outline_size", 2)
+	for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
+		var sb = StyleBoxFlat.new()
+		sb.bg_color = Styler.COL_OFFENSE
+		sb.set_corner_radius_all(5)
+		sb.border_color = Color.from_rgba8(255, 144, 112)
+		sb.border_width_top = 1
+		sb.border_width_left = 1
+		sb.border_width_right = 1
+		sb.border_width_bottom = 2
+		sb.shadow_color = Color(Styler.COL_OFFENSE, 0.5)
+		sb.shadow_size = 12
+		match state_name:
+			"hover":
+				sb.bg_color = Styler.COL_OFFENSE.lightened(0.1)
+				sb.shadow_size = 18
+			"pressed":
+				sb.bg_color = Styler.COL_OFFENSE.darkened(0.08)
+				sb.shadow_size = 4
+				sb.content_margin_top = 2
+		btn.add_theme_stylebox_override(state_name, sb)

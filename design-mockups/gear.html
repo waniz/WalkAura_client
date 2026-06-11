@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>WalkAura — Gear Redesign</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+h2 { text-align: center; margin-top: 32px; font-family: 'Cinzel', serif; color: var(--gold); letter-spacing: 1px; font-size: 18px; }
+.row { display: flex; gap: 32px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
+.col { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.col h3 { font-family: 'Cinzel', serif; color: var(--gold-soft); font-size: 13px; letter-spacing: 0.8px; }
+.note {
+  max-width: 1000px; margin: 16px auto; padding: 14px;
+  background: rgba(255,255,255,0.04); border-left: 3px solid var(--gold);
+  border-radius: 4px; font-size: 12px; line-height: 1.55; color: #c8bfaa;
+}
+.note strong { color: var(--gold); }
+.note .pill { display: inline-block; background: rgba(255,200,66,0.12); color: var(--gold); padding: 1px 6px; border-radius: 3px; font-size: 11px; }
+
+/* GEAR LAYOUT */
+
+.gear-body {
+  background:
+    radial-gradient(ellipse at 50% 30%, #f8efd8 0%, var(--parchment-bg) 70%);
+  height: 100%;
+  display: flex; flex-direction: column;
+  overflow-y: auto;
+}
+
+/* iLvl ribbon: hero stat */
+.ilvl-ribbon {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 10px 12px;
+  background: linear-gradient(180deg, var(--parchment-darker), var(--parchment-card));
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+.ilvl-ribbon .left, .ilvl-ribbon .right {
+  display: flex; flex-direction: column; gap: 1px;
+}
+.ilvl-ribbon .right { text-align: right; }
+.ilvl-ribbon .lbl {
+  font-family: 'Cinzel', serif;
+  font-size: 8px; letter-spacing: 0.8px;
+  color: var(--parchment-text-muted);
+  text-transform: uppercase;
+}
+.ilvl-ribbon .v {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  color: var(--parchment-section-hdr);
+  font-variant-numeric: tabular-nums;
+}
+.ilvl-ribbon .center {
+  text-align: center;
+  padding: 4px 14px;
+  background: radial-gradient(circle at 30% 30%, #2a1f08, #0a0a10);
+  border: 2px solid var(--gold);
+  border-radius: var(--r-md);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4), 0 0 16px var(--gold-glow);
+}
+.ilvl-ribbon .center .ilvl-lbl {
+  font-family: 'Cinzel', serif;
+  font-size: 9px; letter-spacing: 1.2px;
+  color: var(--gold-soft);
+}
+.ilvl-ribbon .center .ilvl-num {
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 26px;
+  color: var(--gold);
+  letter-spacing: 1px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 8px var(--gold-glow);
+}
+
+/* Doll + side columns */
+.doll-row {
+  position: relative;
+  padding: 8px 4px 0;
+  display: grid;
+  grid-template-columns: 56px 1fr 56px;
+  gap: 4px;
+  align-items: start;
+}
+
+.slot-col { display: flex; flex-direction: column; gap: 6px; }
+
+/* Equipment slots — paper doll style */
+.eslot {
+  width: 56px; height: 64px;
+  background: var(--parchment-card);
+  border: 1.5px solid rgba(0,0,0,0.15);
+  border-radius: var(--r-sm);
+  position: relative;
+  display: grid; place-items: center;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.3);
+}
+.eslot:active { transform: scale(0.96); }
+
+/* Quality borders match inventory */
+.eslot.q1 { border-color: var(--q1); box-shadow: 0 0 6px rgba(255,255,255,0.3); }
+.eslot.q2 { border-color: var(--q2); box-shadow: 0 0 8px rgba(31,255,0,0.4); }
+.eslot.q3 { border-color: var(--q3); box-shadow: 0 0 8px rgba(0,112,222,0.4); }
+.eslot.q4 { border-color: var(--q4); box-shadow: 0 0 10px rgba(163,54,237,0.4); }
+.eslot.q5 { border-color: var(--q5); box-shadow: 0 0 10px rgba(255,128,0,0.4); }
+.eslot.q6 { border-color: var(--q6); box-shadow: 0 0 12px rgba(230,204,51,0.5); }
+
+.eslot.empty {
+  border-style: dashed;
+  border-color: rgba(0,0,0,0.18);
+  background: rgba(0,0,0,0.03);
+  box-shadow: none;
+}
+
+.eslot.empty .silhouette {
+  font-size: 28px;
+  opacity: 0.18;
+  filter: grayscale(1);
+}
+
+.eslot .lbl {
+  position: absolute;
+  bottom: -14px;
+  left: 50%; transform: translateX(-50%);
+  font-family: 'Cinzel', serif;
+  font-size: 8px;
+  letter-spacing: 0.5px;
+  color: var(--parchment-text-muted);
+  white-space: nowrap;
+}
+
+/* Filled slot: label gets quality color */
+.eslot.q3 + .lbl, .eslot.q3 .lbl { color: var(--q3); }
+.eslot.q4 .lbl { color: var(--q4); }
+.eslot.q5 .lbl { color: var(--q5); }
+.eslot.q6 .lbl { color: var(--q6); }
+.eslot.q2 .lbl { color: var(--btn-success); }
+.eslot.q1 .lbl { color: var(--parchment-text); }
+
+.eslot .ilvl-pip {
+  position: absolute;
+  top: -4px; right: -4px;
+  background: #2a1f08;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  font-family: 'Cinzel', serif;
+  font-size: 8px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-variant-numeric: tabular-nums;
+}
+
+.eslot.gemmed::after {
+  content: "✦";
+  position: absolute;
+  bottom: 2px; right: 3px;
+  color: var(--int);
+  font-size: 10px;
+  text-shadow: 0 0 4px rgba(150,60,240,0.6);
+}
+
+.eslot.upgrade::before {
+  content: "↑";
+  position: absolute;
+  top: 2px; left: 3px;
+  background: var(--btn-success);
+  color: #fff;
+  font-size: 9px;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-weight: 700;
+  box-shadow: 0 0 4px rgba(60,200,80,0.6);
+  z-index: 2;
+}
+
+/* Character viewport center */
+.doll-viewport {
+  position: relative;
+  background: radial-gradient(ellipse at 50% 60%, rgba(255,200,66,0.08), transparent 70%);
+  border-radius: var(--r-md);
+  min-height: 320px;
+  display: flex; align-items: end; justify-content: center;
+  padding: 8px 0 0;
+  margin: 0 4px;
+}
+
+.doll-viewport img {
+  max-height: 320px;
+  filter: drop-shadow(0 8px 20px rgba(0,0,0,0.25));
+}
+
+.doll-tools {
+  position: absolute;
+  top: 8px; left: 8px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.doll-tools .tbtn {
+  width: 28px; height: 28px;
+  background: rgba(10,10,16,0.7);
+  border: 1px solid var(--gold-soft);
+  color: var(--gold);
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.doll-loadout {
+  position: absolute;
+  top: 8px; right: 8px;
+  background: rgba(10,10,16,0.7);
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  padding: 4px 10px;
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.8px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+/* Loadout chips */
+.loadout-row {
+  padding: 18px 12px 8px;
+  display: flex; gap: 6px; overflow-x: auto;
+}
+.loadout-row::-webkit-scrollbar { display: none; }
+.loadout-chip {
+  flex-shrink: 0;
+  padding: 5px 10px;
+  background: var(--parchment-card);
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 14px;
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.6px;
+  color: var(--parchment-text);
+  display: flex; align-items: center; gap: 4px;
+  cursor: pointer;
+}
+.loadout-chip.active {
+  background: linear-gradient(180deg, var(--gold), #c89030);
+  border-color: var(--gold);
+  color: #14100a;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+.loadout-chip .ic { font-size: 12px; }
+.loadout-chip.add {
+  background: transparent;
+  border-style: dashed;
+  color: var(--parchment-text-muted);
+}
+
+/* Stat preview panel */
+.stat-preview {
+  margin: 8px 12px;
+  padding: 10px 12px;
+  background: var(--parchment-card);
+  border: 1px solid rgba(0,0,0,0.08);
+  border-left: 3px solid var(--gold);
+  border-radius: var(--r-md);
+}
+
+.stat-preview .ttl {
+  font-family: 'Cinzel', serif;
+  font-size: 10px; letter-spacing: 1px;
+  color: var(--parchment-section-hdr);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  display: flex; justify-content: space-between;
+}
+.stat-preview .ttl .info { color: var(--parchment-text-muted); font-weight: normal; letter-spacing: 0.3px; }
+
+.stat-preview .grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 12px;
+  font-size: 11px;
+}
+.stat-preview .grid .l { color: var(--parchment-text-muted); }
+.stat-preview .grid .v {
+  text-align: right;
+  font-family: 'Cinzel', serif;
+  color: var(--parchment-section-hdr);
+  font-variant-numeric: tabular-nums;
+}
+.stat-preview .grid .v .delta { color: var(--btn-success); font-size: 9px; margin-left: 4px; }
+.stat-preview .grid .v .delta.down { color: var(--error); }
+
+/* Set bonuses */
+.set-bonus {
+  margin: 0 12px 8px;
+  padding: 8px 10px;
+  background: rgba(163,54,237,0.08);
+  border: 1px dashed var(--q4);
+  border-radius: var(--r-sm);
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+.set-bonus .seal {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--q4), #4a1f7a);
+  display: grid; place-items: center;
+  font-size: 12px;
+  color: #fff;
+}
+.set-bonus .meta { display: flex; flex-direction: column; }
+.set-bonus .nm {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  color: var(--q4);
+  letter-spacing: 0.3px;
+}
+.set-bonus .desc {
+  font-size: 10px;
+  color: var(--parchment-text-muted);
+}
+.set-bonus .ratio {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  color: var(--q4);
+  font-variant-numeric: tabular-nums;
+}
+
+/* === Item compare overlay (right column variant) === */
+.compare-card {
+  position: absolute;
+  bottom: 88px; left: 12px; right: 12px;
+  background: linear-gradient(180deg, #181822, #0e0e16);
+  border: 1px solid var(--q4);
+  border-radius: var(--r-md);
+  padding: 12px;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.6), 0 0 16px rgba(163,54,237,0.25);
+  z-index: 10;
+}
+.compare-card .ch {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.compare-card .ch .ttl {
+  font-family: 'Cinzel', serif; font-size: 10px;
+  color: var(--gold-soft); letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.compare-card .ch .x {
+  color: var(--gold); cursor: pointer; font-size: 16px;
+}
+
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 16px 1fr;
+  gap: 6px;
+  align-items: stretch;
+}
+
+.compare-item {
+  background: rgba(0,0,0,0.3);
+  border-radius: var(--r-sm);
+  padding: 8px;
+}
+.compare-item.equipped { border: 1px solid var(--panel-border); }
+.compare-item.candidate { border: 1px solid var(--q4); box-shadow: inset 0 0 8px rgba(163,54,237,0.15); }
+.compare-item .eyebrow {
+  font-family: 'Cinzel', serif;
+  font-size: 8px; letter-spacing: 1px;
+  color: #8a7e68;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+.compare-item.candidate .eyebrow { color: var(--q4); }
+.compare-item .icon-row {
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 6px;
+}
+.compare-item .icon-row .ic {
+  width: 32px; height: 32px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--panel-border);
+  background: var(--panel-dark);
+  display: grid; place-items: center;
+  font-size: 18px;
+}
+.compare-item.candidate .icon-row .ic { border-color: var(--q4); }
+.compare-item .icon-row .nm {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  color: #c8bfaa;
+}
+.compare-item.candidate .icon-row .nm { color: var(--q4); }
+.compare-item .ilvl {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  color: var(--gold-soft);
+  margin-bottom: 4px;
+}
+.compare-item .stat-line {
+  font-size: 10px;
+  color: #b8ad95;
+  display: flex; justify-content: space-between;
+  padding: 1px 0;
+  font-variant-numeric: tabular-nums;
+}
+.compare-item .stat-line .v { font-family: 'Cinzel', serif; color: #e8e0cf; }
+.compare-arrow {
+  display: grid; place-items: center;
+  font-size: 16px;
+  color: var(--gold);
+}
+
+.compare-deltas {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.delta-pill {
+  background: rgba(60,130,70,0.15);
+  border: 1px solid var(--btn-success);
+  color: var(--success);
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  padding: 3px 6px;
+  border-radius: 3px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.delta-pill.down { background: rgba(220,80,80,0.15); border-color: var(--btn-destructive); color: #ff9080; }
+
+.compare-action {
+  margin-top: 8px;
+  width: 100%;
+  padding: 10px;
+  background: linear-gradient(180deg, var(--q4), #4a1f7a);
+  border: 1px solid #c971f5;
+  color: #fff;
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 1px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4), 0 0 12px rgba(163,54,237,0.4);
+}
+
+</style>
+</head>
+<body>
+
+<h2>GEAR — Redesigned</h2>
+
+<div class="row">
+
+<!-- ============ DEFAULT GEAR VIEW ============ -->
+<div class="col">
+  <h3>Default view — paper doll + stats</h3>
+  <div class="phone">
+    <div class="phone-screen">
+
+      <div class="top-hud three-bar">
+        <div class="avatar-frame"><img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&h=200&fit=crop" alt=""><div class="level-badge">17</div></div>
+        <div class="player-info">
+          <div class="player-name">test_user</div>
+          <div class="resource-bar"><div class="resource-fill hp"></div><div class="label">HP 160 / 150</div></div>
+          <div class="resource-bar"><div class="resource-fill shield"></div><div class="label">SH 60 / 100</div></div>
+          <div class="resource-bar"><div class="resource-fill mp"></div><div class="label">MP 220 / 200</div></div>
+        </div>
+        <div class="minimap-frame"><img src="https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=200&h=200&fit=crop" alt=""><div class="minimap-label">DRAGON LAIR</div><div class="location-d-badge">D</div></div>
+      </div>
+
+      <div class="body-area">
+        <div class="painted-tabs">
+          <div class="tab">INVENTORY</div>
+          <div class="tab active">GEAR</div>
+        </div>
+
+        <div class="gear-body">
+
+          <!-- iLvl ribbon: hero stat -->
+          <div class="ilvl-ribbon">
+            <div class="left">
+              <span class="lbl">Slotted</span>
+              <span class="v">8 / 16</span>
+              <span class="lbl" style="margin-top: 4px;">Avg iLvl</span>
+              <span class="v">18</span>
+            </div>
+            <div class="center">
+              <div class="ilvl-lbl">GEAR SCORE</div>
+              <div class="ilvl-num">142</div>
+            </div>
+            <div class="right">
+              <span class="lbl">Upgrades</span>
+              <span class="v" style="color: var(--btn-success);">↑ 3 in bag</span>
+              <span class="lbl" style="margin-top: 4px;">Empty</span>
+              <span class="v">8 slots</span>
+            </div>
+          </div>
+
+          <!-- Doll + slots -->
+          <div class="doll-row">
+
+            <!-- LEFT column -->
+            <div class="slot-col">
+              <div class="eslot q3 upgrade" style="font-size: 26px;">🪖<div class="lbl">Head · 18</div><div class="ilvl-pip">18</div></div>
+              <div class="eslot q5 gemmed" style="font-size: 26px;">⛑<div class="lbl">Shoulder · 22</div><div class="ilvl-pip">22</div></div>
+              <div class="eslot empty"><span class="silhouette">🧣</span><div class="lbl">Back</div></div>
+              <div class="eslot empty"><span class="silhouette">👕</span><div class="lbl">Chest</div></div>
+              <div class="eslot q6 gemmed" style="font-size: 26px;">⌚<div class="lbl">Wrist · 25</div><div class="ilvl-pip">25</div></div>
+              <div class="eslot q4 upgrade" style="font-size: 26px;">💍<div class="lbl">Ring · 19</div><div class="ilvl-pip">19</div></div>
+              <div class="eslot q4" style="font-size: 26px;">📿<div class="lbl">Trinket · 17</div><div class="ilvl-pip">17</div></div>
+              <div class="eslot empty"><span class="silhouette">🗡</span><div class="lbl">Main Hand</div></div>
+            </div>
+
+            <!-- CENTER doll -->
+            <div class="doll-viewport">
+              <img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&h=600&fit=crop" alt="" style="height: 280px; object-fit: cover; border-radius: 8px;">
+            </div>
+
+            <!-- RIGHT column -->
+            <div class="slot-col">
+              <div class="eslot empty"><span class="silhouette">📿</span><div class="lbl">Neck</div></div>
+              <div class="eslot empty"><span class="silhouette">🧤</span><div class="lbl">Gloves</div></div>
+              <div class="eslot empty"><span class="silhouette">🥋</span><div class="lbl">Belt</div></div>
+              <div class="eslot q2 upgrade" style="font-size: 26px;">👖<div class="lbl">Legs · 14</div><div class="ilvl-pip">14</div></div>
+              <div class="eslot empty"><span class="silhouette">👢</span><div class="lbl">Feet</div></div>
+              <div class="eslot empty"><span class="silhouette">💍</span><div class="lbl">Ring</div></div>
+              <div class="eslot empty"><span class="silhouette">📿</span><div class="lbl">Trinket</div></div>
+              <div class="eslot q3 gemmed" style="font-size: 26px;">📕<div class="lbl">Off Hand · 18</div><div class="ilvl-pip">18</div></div>
+            </div>
+          </div>
+
+          <!-- Stat preview -->
+          <div class="stat-preview">
+            <div class="ttl">
+              <span>⚔ From Gear</span>
+              <span class="info">Tap inventory item to compare</span>
+            </div>
+            <div class="grid">
+              <span class="l">Physical ATK</span><span class="v">+12 <span class="delta">+3</span></span>
+              <span class="l">Magic ATK</span><span class="v">+8</span>
+              <span class="l">Physical DEF</span><span class="v">+44</span>
+              <span class="l">Dodge</span><span class="v">+22</span>
+              <span class="l">Crit Chance</span><span class="v">+1.2%</span>
+              <span class="l">Haste</span><span class="v">+0.8%</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-tab"><div class="icon">👤</div><div class="label">Profile</div></div>
+        <div class="nav-tab active"><div class="icon">🎒</div><div class="label">Inventory</div></div>
+        <div class="nav-tab"><div class="icon">🗺</div><div class="label">Location</div></div>
+        <div class="nav-tab"><div class="icon">✨</div><div class="label">Skills</div></div>
+        <div class="nav-tab"><div class="icon">📜</div><div class="label">Quests</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ COMPARE OVERLAY VARIANT ============ -->
+<div class="col">
+  <h3>Comparing equip from inventory</h3>
+  <div class="phone">
+    <div class="phone-screen">
+
+      <div class="top-hud three-bar">
+        <div class="avatar-frame"><img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&h=200&fit=crop" alt=""><div class="level-badge">17</div></div>
+        <div class="player-info">
+          <div class="player-name">test_user</div>
+          <div class="resource-bar"><div class="resource-fill hp"></div><div class="label">HP 160 / 150</div></div>
+          <div class="resource-bar"><div class="resource-fill shield"></div><div class="label">SH 60 / 100</div></div>
+          <div class="resource-bar"><div class="resource-fill mp"></div><div class="label">MP 220 / 200</div></div>
+        </div>
+        <div class="minimap-frame"><img src="https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=200&h=200&fit=crop" alt=""><div class="minimap-label">DRAGON LAIR</div><div class="location-d-badge">D</div></div>
+      </div>
+
+      <div class="body-area" style="position: relative;">
+        <div class="painted-tabs">
+          <div class="tab">INVENTORY</div>
+          <div class="tab active">GEAR</div>
+        </div>
+
+        <div class="gear-body">
+
+          <div class="ilvl-ribbon">
+            <div class="left">
+              <span class="lbl">Slotted</span>
+              <span class="v">8 / 16</span>
+            </div>
+            <div class="center">
+              <div class="ilvl-lbl">GEAR SCORE</div>
+              <div class="ilvl-num">142</div>
+            </div>
+            <div class="right">
+              <span class="lbl">Preview</span>
+              <span class="v" style="color: var(--btn-success);">→ 156 <span style="font-size: 9px;">+14</span></span>
+            </div>
+          </div>
+
+          <div class="doll-row">
+            <div class="slot-col">
+              <div class="eslot q3" style="font-size: 26px;">🪖<div class="lbl">Head · 18</div></div>
+              <div class="eslot q5 gemmed" style="font-size: 26px;">⛑<div class="lbl">Shoulder · 22</div></div>
+              <div class="eslot empty"><span class="silhouette">🧣</span><div class="lbl">Back</div></div>
+              <div class="eslot q4" style="font-size: 26px; border-width: 2.5px; box-shadow: 0 0 14px rgba(163,54,237,0.6);">👕<div class="lbl" style="color: var(--q4);">Chest · ?</div></div>
+              <div class="eslot q6 gemmed" style="font-size: 26px;">⌚<div class="lbl">Wrist · 25</div></div>
+              <div class="eslot q4" style="font-size: 26px;">💍<div class="lbl">Ring · 19</div></div>
+              <div class="eslot q4" style="font-size: 26px;">📿<div class="lbl">Trinket · 17</div></div>
+              <div class="eslot empty"><span class="silhouette">🗡</span><div class="lbl">Main Hand</div></div>
+            </div>
+
+            <div class="doll-viewport">
+              <img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&h=600&fit=crop" alt="" style="height: 240px; object-fit: cover; border-radius: 8px;">
+            </div>
+
+            <div class="slot-col">
+              <div class="eslot empty"><span class="silhouette">📿</span><div class="lbl">Neck</div></div>
+              <div class="eslot empty"><span class="silhouette">🧤</span><div class="lbl">Gloves</div></div>
+              <div class="eslot empty"><span class="silhouette">🥋</span><div class="lbl">Belt</div></div>
+              <div class="eslot q2" style="font-size: 26px;">👖<div class="lbl">Legs · 14</div></div>
+              <div class="eslot empty"><span class="silhouette">👢</span><div class="lbl">Feet</div></div>
+              <div class="eslot empty"><span class="silhouette">💍</span><div class="lbl">Ring</div></div>
+              <div class="eslot empty"><span class="silhouette">📿</span><div class="lbl">Trinket</div></div>
+              <div class="eslot q3 gemmed" style="font-size: 26px;">📕<div class="lbl">Off Hand · 18</div></div>
+            </div>
+          </div>
+
+          <!-- COMPARE OVERLAY -->
+          <div class="compare-card">
+            <div class="ch">
+              <span class="ttl">COMPARE · CHEST</span>
+              <span class="x">×</span>
+            </div>
+
+            <div class="compare-grid">
+              <div class="compare-item equipped">
+                <div class="eyebrow">EQUIPPED</div>
+                <div class="icon-row">
+                  <div class="ic">👕</div>
+                  <div class="nm" style="color: #6a5e48; font-style: italic;">(empty)</div>
+                </div>
+                <div class="ilvl">iLvl —</div>
+                <div class="stat-line"><span>STR</span><span class="v">—</span></div>
+                <div class="stat-line"><span>VIT</span><span class="v">—</span></div>
+                <div class="stat-line"><span>Phys DEF</span><span class="v">—</span></div>
+              </div>
+
+              <div class="compare-arrow">→</div>
+
+              <div class="compare-item candidate">
+                <div class="eyebrow">CANDIDATE · EPIC</div>
+                <div class="icon-row">
+                  <div class="ic" style="background: radial-gradient(circle, rgba(163,54,237,0.3), transparent);">👕</div>
+                  <div class="nm">Wyvernhide Cuirass</div>
+                </div>
+                <div class="ilvl">iLvl 22 · Tier 3</div>
+                <div class="stat-line"><span>STR</span><span class="v">+4</span></div>
+                <div class="stat-line"><span>VIT</span><span class="v">+8</span></div>
+                <div class="stat-line"><span>Phys DEF</span><span class="v">+22</span></div>
+              </div>
+            </div>
+
+            <div class="compare-deltas">
+              <div class="delta-pill">PHYS DEF +22</div>
+              <div class="delta-pill">VIT +8</div>
+              <div class="delta-pill">SCORE +14</div>
+            </div>
+
+            <button class="compare-action">⚙ EQUIP CUIRASS</button>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-tab"><div class="icon">👤</div><div class="label">Profile</div></div>
+        <div class="nav-tab active"><div class="icon">🎒</div><div class="label">Inventory</div></div>
+        <div class="nav-tab"><div class="icon">🗺</div><div class="label">Location</div></div>
+        <div class="nav-tab"><div class="icon">✨</div><div class="label">Skills</div></div>
+        <div class="nav-tab"><div class="icon">📜</div><div class="label">Quests</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="note">
+  <strong>What the current Gear screen has wrong:</strong>
+  <ul style="margin: 8px 0 0 18px; line-height: 1.7;">
+    <li>Slot label colors (Head gold, Shoulder orange, Ring red…) look like quality tiers — but they're just decorative slot colors. Two color systems collide. Player can't tell at a glance which slots have epic vs. legendary items.</li>
+    <li>Empty slots look the same as filled slots (just no icon). No visual hint of what fits there.</li>
+    <li>"Average Gear Level: 0" is small grey text. It's the most important number on the screen — should be the hero.</li>
+    <li>~40% of the screen is dead space below the doll. No stat preview, no set bonuses, no loadouts, no "what should I upgrade next" affordance.</li>
+    <li>No item comparison flow. Player must tap inventory → memorize stats → tap gear → tap slot — too many steps.</li>
+  </ul>
+</div>
+
+<div class="note">
+  <strong>What changes in the redesign:</strong>
+  <ul style="margin: 8px 0 0 18px; line-height: 1.7;">
+    <li><span class="pill">GEAR SCORE RIBBON</span> — top ribbon with bold gold-bordered "GEAR SCORE 142" disc as hero, flanked by Slotted/Set Bonus left and Avg iLvl/Upgrades-in-bag right. Player sees power level immediately.</li>
+    <li><span class="pill">SLOT QUALITY = ITEM QUALITY</span> — slot border color matches equipped item's quality (epic purple, legendary orange, mythic gold). Empty slot = dashed gray. Label below colored to match. Replaces the random slot-decoration colors. Now player sees their epics glow purple from across the room.</li>
+    <li><span class="pill">EMPTY-SLOT SILHOUETTES</span> — empty slots show 18% opacity grayscale icon of expected item type (a faded helmet for Head, faded ring for Ring). Makes the doll feel "designed for me to fill" not "broken".</li>
+    <li><span class="pill">ITEM-LEVEL PIPS</span> — each filled slot has a small gold corner pip showing iLvl ("22"). Fast scan: which slot is dragging your average down?</li>
+    <li><span class="pill">UPGRADE INDICATORS</span> — green ↑ badge on slots where a better item exists in your inventory. The "Upgrades: ↑ 3 in bag" ribbon stat tells you the count.</li>
+    <li><span class="pill">GEMMED MARK</span> — small ✦ in corner for gemmed/socketed items.</li>
+    <li><span class="pill">STAT PREVIEW</span> — 6-stat grid showing what your gear contributes to derived stats. When you tap an inventory item, deltas show inline (green +3, red -2). Eliminates the "what does this even do" gap.</li>
+    <li><span class="pill">COMPARE OVERLAY</span> (right phone) — tap an inventory item while in Gear and a comparison card slides up: side-by-side equipped vs candidate, with delta pills (+22 Phys DEF, +14 Score) and a one-tap EQUIP button colored to candidate's quality. Score preview also updates in the top ribbon (142 → 156).</li>
+    <li><span class="pill">EMPTY-SLOT TAP</span> — tapping an empty slot opens inventory pre-filtered to that slot type. No more scrolling through 27 items hunting for a chestpiece.</li>
+  </ul>
+</div>
+
+</body>
+</html>

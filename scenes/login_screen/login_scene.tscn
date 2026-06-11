@@ -1,7 +1,8 @@
-[gd_scene load_steps=4 format=3 uid="uid://dlfywtlps2ee4"]
+[gd_scene load_steps=5 format=3 uid="uid://dlfywtlps2ee4"]
 
 [ext_resource type="Script" uid="uid://uvt4kiay25vo" path="res://scenes/login_screen/login_scene.gd" id="1_yxqlk"]
 [ext_resource type="Texture2D" uid="uid://cfbwlejx6tcu4" path="res://assets/background/background_login.png" id="2_7bkf2"]
+[ext_resource type="Script" uid="uid://c7hm815icc26x" path="res://scripts/components/parallax_background.gd" id="3_parx"]
 [ext_resource type="PackedScene" uid="uid://cvndrn0efp2w5" path="res://scenes/support_screens/debug_console.tscn" id="4_7bkf2"]
 
 [node name="LoginScene" type="Control"]
@@ -22,6 +23,10 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("2_7bkf2")
 expand_mode = 4
+script = ExtResource("3_parx")
+displacement_strength = 0.05
+idle_sway_amplitude = 0.35
+idle_sway_speed = 0.22
 
 [node name="DebugConsole" parent="." instance=ExtResource("4_7bkf2")]
 visible = false
