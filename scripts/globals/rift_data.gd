@@ -15,7 +15,13 @@ var TIER_COLORS = {
 
 # Keyed by location_id (= activity_site for raid rifts).
 # No legacy rifts (key 1 removed — unreachable from location hub).
-const RIFT_TABLE = {
+#
+# These baked-in values are a FALLBACK/default. The server is the source of
+# truth: login_params carries a "rift_catalog" (built from rift_config.py) and
+# update_from_catalog() overwrites these entries on login, so server retunes
+# (gates, total_steps, names, lore) propagate without editing this file. The
+# defaults keep rift screens working offline / before login_params arrives.
+var RIFT_TABLE = {
 	2: {"name": "Forest Breach", "tier": 1,
 		"req_rift_lvl": 1, "req_account_lvl": 5,
 		"total_steps": 4000, "encounter_count": 4,
@@ -48,8 +54,34 @@ const RIFT_TABLE = {
 		"gear_score_range": "280–450"},
 	10: {"name": "The Convergence", "tier": 3,
 		"req_rift_lvl": 8, "req_account_lvl": 20,
-		"total_steps": 12000, "encounter_count": 10,
+		"total_steps": 12000, "encounter_count": 5,
 		"description": "The ancient place thrums with unstable energy. Creatures from every rift converge here.",
 		"lore": "The barriers between rifts have shattered. What emerges is neither guardian nor sentinel, but something older. Something hungry.",
 		"gear_score_range": "300–500"},
 }
+
+
+# Overwrite the baked-in RIFT_TABLE with the server's authoritative catalog
+# (login_params.rift_catalog, serialized from rift_config.get_rift_catalog()).
+# Called from AccountManager.get_login_params on every login. Missing/malformed
+# input leaves the fallback defaults intact.
+func update_from_catalog(catalog) -> void:
+	if typeof(catalog) != TYPE_ARRAY:
+		return
+	for entry in catalog:
+		if typeof(entry) != TYPE_DICTIONARY:
+			continue
+		var loc_id: int = int(entry.get("location_id", 0))
+		if loc_id <= 0:
+			continue
+		RIFT_TABLE[loc_id] = {
+			"name": entry.get("name", ""),
+			"tier": int(entry.get("tier", 0)),
+			"req_rift_lvl": int(entry.get("req_rift_lvl", 0)),
+			"req_account_lvl": int(entry.get("req_account_lvl", 0)),
+			"total_steps": int(entry.get("total_steps", 0)),
+			"encounter_count": int(entry.get("encounter_count", 0)),
+			"description": entry.get("description", ""),
+			"lore": entry.get("lore", ""),
+			"gear_score_range": entry.get("gear_score_range", ""),
+		}
